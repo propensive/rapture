@@ -30,7 +30,7 @@ object Result {
 }
 
 class Catching[E <: Exception]() {
-  def apply[T](blk: => T)(implicit classTag: ClassTag[E]) = try Answer(blk) catch {
+  def apply[T](blk: => T)(implicit classTag: ClassTag[E]): Result[T, E] = try Answer(blk) catch {
     case e: E => Errata(Vector((?[ClassTag[E]], ("", e))))
     case e: Throwable => Unforeseen(e)
   }
