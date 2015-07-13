@@ -12,7 +12,7 @@
 \******************************************************************************************************************/
 package rapture.core
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 import language.higherKinds
 
 trait Functor[+F[x] <: Functor[F, x], A] { functor =>
@@ -30,7 +30,7 @@ trait Functor[+F[x] <: Functor[F, x], A] { functor =>
   
   // FIXME: Make this a value class
   class Emap[E <: Exception]() {
-    def apply[B](fn: A => B)(implicit tt: TypeTag[E]): F[B] { type Throws = functor.Throws with E } =
+    def apply[B](fn: A => B)(implicit tt: ClassTag[E]): F[B] { type Throws = functor.Throws with E } =
       functor.rawMap { case (a, m) =>
         try fn(a) catch { case e: Exception => m.exception[B, E](e.asInstanceOf[E]) }
       }.asInstanceOf[F[B] { type Throws = functor.Throws with E }]

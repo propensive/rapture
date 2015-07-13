@@ -19,7 +19,6 @@ import scala.annotation._
 
 import scala.reflect._
 import scala.reflect.macros._
-import reflect.runtime.universe.TypeTag
 import reflect.runtime.universe.WeakTypeTag
 import scala.util._
 
@@ -41,7 +40,7 @@ trait Mode[+Group <: MethodConstraint] { mode =>
   type Wrap[+_, _ <: Exception]
   def wrap[Result, E <: Exception](blk: => Result): Wrap[Result, E]
 
-  def flatWrap[Result, E <: Exception: TypeTag](blk: => Wrap[Result, E]): Wrap[Result, E] =
+  def flatWrap[Result, E <: Exception: ClassTag](blk: => Wrap[Result, E]): Wrap[Result, E] =
     wrap(unwrap(blk))
 
   var callPath = "_"
@@ -68,7 +67,7 @@ trait Mode[+Group <: MethodConstraint] { mode =>
       mode2.unwrap(mode.unwrap(value))
   }
 
-  def catching[E <: Exception: TypeTag: ClassTag, T](blk: => T) = try blk catch {
+  def catching[E <: Exception: ClassTag, T](blk: => T) = try blk catch {
     case e: E => exception(e)
     case e: Exception => throw e
   }
@@ -76,9 +75,9 @@ trait Mode[+Group <: MethodConstraint] { mode =>
   def safe[T](blk: => T): T = {
     try blk catch { case e: Exception => exception(e) }
   }
-  def exception[T, E <: Exception: TypeTag](e: E, continue: Boolean = true): T = throw e
+  def exception[T, E <: Exception: ClassTag](e: E, continue: Boolean = true): T = throw e
 
-  def wrapEither[Result, E <: Exception: TypeTag](blk: => Either[E, Result]): Wrap[Result, E] =
+  def wrapEither[Result, E <: Exception: ClassTag](blk: => Either[E, Result]): Wrap[Result, E] =
     wrap {
       blk match {
         case Left(e) => throw e
@@ -88,7 +87,7 @@ trait Mode[+Group <: MethodConstraint] { mode =>
 
   def wrapOption[Result](blk: => Option[Result]): Wrap[Result, Exception] = wrap(blk.get)
 
-  def wrapTry[Result, E <: Exception: TypeTag](blk: => Try[Result]): Wrap[Result, E] =
+  def wrapTry[Result, E <: Exception: ClassTag](blk: => Try[Result]): Wrap[Result, E] =
     wrap(blk.get)
 }
 
@@ -275,7 +274,7 @@ private[core] class ReturnFutureMode[+G <: MethodConstraint](implicit ec: Execut
   def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return =
     Await.result(value, duration.Duration.Inf)
   
-  override def flatWrap[Result, E <: Exception: TypeTag](blk: => Wrap[Result, E]): Wrap[Result, E] = blk
+  override def flatWrap[Result, E <: Exception: ClassTag](blk: => Wrap[Result, E]): Wrap[Result, E] = blk
   
   override def toString = "[modes.returnFuture]"
 }

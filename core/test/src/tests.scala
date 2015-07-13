@@ -78,5 +78,22 @@ object Tests extends TestSuite {
     )
   } returns Answer(10)
 
+  val `Catching success` = test {
+    Result.catching[AlphaException] {
+      "success"
+    }
+  } returns Answer("success")
+
+  val `Catching failure` = test {
+    Result.catching[AlphaException] {
+      throw AlphaException()
+    }
+  } satisfies (_.exceptions == Vector(AlphaException()))
+  
+  val `Catching unforeseen` = test {
+    Result.catching[AlphaException] {
+      throw BetaException()
+    }
+  } returns Unforeseen(BetaException())
 }
 
