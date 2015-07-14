@@ -105,7 +105,7 @@ lazy val publishSettings = Seq(
   pomExtra := (
     <developers>
       <developer>
-        <id>non</id>
+        <id>propensive</id>
         <name>Jon Petty</name>
         <url>http://github.com/propensive/rapture</url>
       </developer>
