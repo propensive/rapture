@@ -1,0 +1,24 @@
+language: scala
+git:
+  depth: 50
+scala:
+- 2.10.5
+- 2.11.7
+script:
+- if [[ "$TRAVIS_PULL_REQUEST" == "false" &&
+        "$TRAVIS_BRANCH" == "dev" &&
+        $(cat version.sbt) =~ "-SNAPSHOT"
+  ]]; then
+    sbt ++$TRAVIS_SCALA_VERSION coverage compile test coverageReport && bash <(curl -s https://codecov.io/bash) && sbt clean compile test publish gitSnapshots publish ;
+  else
+    sbt ++$TRAVIS_SCALA_VERSION coverage compile test coverageReport && bash <(curl -s https://codecov.io/bash) && sbt clean compile test publishLocal ;
+  fi
+notifications:
+  webhooks:
+    urls:
+    - https://webhooks.gitter.im/e/2d5ea16a2f66f60a590b // <- change
+    on_success: change
+    on_failure: always
+    on_start: false
+env:
+  global:
