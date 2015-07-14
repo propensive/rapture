@@ -1,5 +1,5 @@
 /******************************************************************************************************************\
-* Rapture URI, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
+* Rapture Test, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                     *
 *                                                                                                                  *
 * The primary distribution site is http://rapture.io/                                                              *
 *                                                                                                                  *
@@ -10,39 +10,33 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
+package rapture.test
 
-package rapture.uri
+import scala.language.experimental.macros
+import java.util.regex.Pattern
+import rapture.base._
 
-import rapture.core._
-import language.higherKinds
+object deferTypeErrors {
+  implicit def deferTypeErrorsConvertAnyToAny[T, S](t: T): S = ???
+  implicit def deferTypeErrorsResolveAnyImplicit[T]: T = ???
+}
 
-import language.experimental.macros
+object typeMismatch {
 
-object `package` {
+  def apply[T](fn: => T): Boolean = macro applyMacro[T]
 
-  type AnyPath = Path[_]
+  def applyMacro[T](c: BlackboxContext)(fn: c.Expr[T]): c.Expr[Boolean] = {
+    import c.universe._
 
-  /** Support for URI string literals */
-  implicit class EnrichedStringContext(sc: StringContext) {
-    def uri(content: String*): Any = macro UriMacros.uriMacro
+    val found = fn.tree.exists {
+      case Select(_, name) => name.decodedName.toString match {
+        case "deferTypeErrorsConvertAnyToAny" => true
+        case "deferTypeErrorsResolveAnyImplicit" => true
+        case _ => false
+      }
+      case _ => false
+    }
+
+    c.Expr[Boolean](Literal(Constant(found)))
   }
-
-  implicit class EnrichedUriContext(uc: UriContext.type) {
-    def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[List])
-  }
-
-  /** Convenient empty string for terminating a path (which should end in a /). */
-  val `$`: String = ""
-
-  /** The canonical root for a simple path */
-  val `^`: SimplePath = new SimplePath(Nil, Map())
-
-  type AfterPath = Map[Char, (String, Double)]
-  
-  implicit val simplePathsLinkable: Linkable[SimplePath, SimplePath] = SimplePathsLinkable
-
-  implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
-    new NavigableExtras(url)
-
 }

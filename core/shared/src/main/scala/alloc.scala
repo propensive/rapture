@@ -14,7 +14,6 @@ package rapture.core
 
 import language.experimental.macros
 import scala.reflect._
-import scala.reflect.macros._
 
 import annotation.unchecked._
 

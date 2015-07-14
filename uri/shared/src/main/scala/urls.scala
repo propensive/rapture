@@ -14,9 +14,6 @@
 package rapture.uri
 import rapture.core._
 
-import java.io._
-import java.net._
-
 object UriContext
 
 /** Represents a generic URL */

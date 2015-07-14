@@ -1,5 +1,5 @@
 /******************************************************************************************************************\
-* Rapture URI, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
+* Rapture Net, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
 *                                                                                                                  *
 * The primary distribution site is http://rapture.io/                                                              *
 *                                                                                                                  *
@@ -10,39 +10,20 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
+package rapture.net
 
-package rapture.uri
+import org.apache.commons.net.ftp._
 
-import rapture.core._
-import language.higherKinds
-
-import language.experimental.macros
-
-object `package` {
-
-  type AnyPath = Path[_]
-
-  /** Support for URI string literals */
-  implicit class EnrichedStringContext(sc: StringContext) {
-    def uri(content: String*): Any = macro UriMacros.uriMacro
+object ApacheCommonsFtpClient extends FtpSystem[FTPClient] {
+  def newConnection() = {
+    val ftp = new FTPClient()
+    val config = new FTPClientConfig()
+    ftp.configure(config)
+    ftp
   }
 
-  implicit class EnrichedUriContext(uc: UriContext.type) {
-    def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[List])
+  def input(ftpClient: FTPClient, path: String): java.io.InputStream = {
+    ftpClient.retrieveFileStream(path)
   }
-
-  /** Convenient empty string for terminating a path (which should end in a /). */
-  val `$`: String = ""
-
-  /** The canonical root for a simple path */
-  val `^`: SimplePath = new SimplePath(Nil, Map())
-
-  type AfterPath = Map[Char, (String, Double)]
-  
-  implicit val simplePathsLinkable: Linkable[SimplePath, SimplePath] = SimplePathsLinkable
-
-  implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
-    new NavigableExtras(url)
 
 }

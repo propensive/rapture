@@ -15,7 +15,6 @@ package rapture.core
 import rapture.base._
 
 import language.experimental.macros
-import reflect.macros._
 
 private[core] object CoreMacros {
   def enumerateMacro[Cls: c.WeakTypeTag, T: c.WeakTypeTag](c: BlackboxContext)(value: c.Expr[Cls]):
@@ -37,7 +36,6 @@ private[core] object CoreMacros {
 
   def assignedMethodNameMacro(c: BlackboxContext): c.Expr[MethodName] = {
     import c.universe._
-    import compatibility._
     
     val name = c.enclosingClass.find {
       case DefDef(_, name, _, _, _, rhs) => rhs.pos.isDefined && rhs.pos.point == c.macroApplication.pos.point

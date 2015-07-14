@@ -1,5 +1,5 @@
 /******************************************************************************************************************\
-* Rapture URI, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
+* Rapture Log, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
 *                                                                                                                  *
 * The primary distribution site is http://rapture.io/                                                              *
 *                                                                                                                  *
@@ -10,39 +10,40 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
+package rapture.log
 
-package rapture.uri
+trait LogLevel
+trait Trace extends LogLevel
+trait Debug extends Trace
+trait Info extends Debug
+trait Warn extends Info
+trait Error extends Warn
+trait Fatal extends Error
 
-import rapture.core._
-import language.higherKinds
-
-import language.experimental.macros
-
-object `package` {
-
-  type AnyPath = Path[_]
-
-  /** Support for URI string literals */
-  implicit class EnrichedStringContext(sc: StringContext) {
-    def uri(content: String*): Any = macro UriMacros.uriMacro
-  }
-
-  implicit class EnrichedUriContext(uc: UriContext.type) {
-    def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[List])
-  }
-
-  /** Convenient empty string for terminating a path (which should end in a /). */
-  val `$`: String = ""
-
-  /** The canonical root for a simple path */
-  val `^`: SimplePath = new SimplePath(Nil, Map())
-
-  type AfterPath = Map[Char, (String, Double)]
+object logLevel {
   
-  implicit val simplePathsLinkable: Linkable[SimplePath, SimplePath] = SimplePathsLinkable
+  object trace {
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(0, "trace")
+  }
 
-  implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
-    new NavigableExtras(url)
+  object debug {
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(1, "debug")
+  }
 
+  object info {
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(2, "info")
+  }
+
+  object warn {
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(3, "warn")
+  }
+
+  object error {
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(4, "error")
+  }
+
+  object fatal {
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(5, "fatal")
+  }
 }
+

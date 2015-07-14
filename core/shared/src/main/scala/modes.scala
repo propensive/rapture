@@ -15,10 +15,7 @@ package rapture.core
 import language.higherKinds
 import language.experimental.macros
 
-import scala.annotation._
-
 import scala.reflect._
-import scala.reflect.macros._
 import reflect.runtime.universe.WeakTypeTag
 import scala.util._
 

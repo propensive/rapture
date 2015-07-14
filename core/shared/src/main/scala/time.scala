@@ -12,8 +12,6 @@
 \******************************************************************************************************************/
 package rapture.core
 
-import scala.annotation._
-
 object TimeSystem {
   type ByInstant[T] = TimeSystem[T, _]
   type ByDuration[T] = TimeSystem[_, T]

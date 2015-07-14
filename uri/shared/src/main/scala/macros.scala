@@ -17,7 +17,6 @@ import rapture.base._
 import rapture.core._
 
 import language.experimental.macros
-import scala.reflect.macros._
 
 object Paramable {
   implicit val stringParamable = new Paramable[String] { def paramize(s: String): String = s }

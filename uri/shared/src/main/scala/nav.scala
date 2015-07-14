@@ -14,9 +14,6 @@
 package rapture.uri
 import rapture.core._
 
-import java.io._
-import java.net._
-
 trait `Navigable#children` extends MethodConstraint
 trait `Navigable#descendants` extends MethodConstraint
 trait `Navigable#isDirectory` extends MethodConstraint

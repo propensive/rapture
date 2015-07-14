@@ -1,5 +1,5 @@
 /******************************************************************************************************************\
-* Rapture URI, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
+* Rapture JSON, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                     *
 *                                                                                                                  *
 * The primary distribution site is http://rapture.io/                                                              *
 *                                                                                                                  *
@@ -10,39 +10,40 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-
-package rapture.uri
+package rapture.json.jsonBackends.jawn
 
 import rapture.core._
-import language.higherKinds
+import rapture.data._
+import rapture.json._
 
-import language.experimental.macros
+import jawn.{Parser => JawnParser, _}
+import jawn.ast._
 
-object `package` {
+import scala.collection.mutable.{ListBuffer, HashMap}
+import scala.collection.JavaConverters
 
-  type AnyPath = Path[_]
-
-  /** Support for URI string literals */
-  implicit class EnrichedStringContext(sc: StringContext) {
-    def uri(content: String*): Any = macro UriMacros.uriMacro
-  }
-
-  implicit class EnrichedUriContext(uc: UriContext.type) {
-    def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[List])
-  }
-
-  /** Convenient empty string for terminating a path (which should end in a /). */
-  val `$`: String = ""
-
-  /** The canonical root for a simple path */
-  val `^`: SimplePath = new SimplePath(Nil, Map())
-
-  type AfterPath = Map[Char, (String, Double)]
+private[jawn] class JawnStringParser(implicit f: Facade[_]) extends Parser[String, JsonBufferAst] {
   
-  implicit val simplePathsLinkable: Linkable[SimplePath, SimplePath] = SimplePathsLinkable
+  override def toString = "<JawnStringParser>"
+  
+  val ast = JawnAst
+  def parse(s: String): Option[Any] = JawnParser.parseFromString(s).toOption
+}
 
-  implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
-    new NavigableExtras(url)
+private[jawn] class JawnByteBufferParser(implicit f: Facade[_]) extends Parser[java.nio.ByteBuffer,
+    JsonBufferAst] {
+  
+  override def toString = "<JawnByteBufferParser>"
+  
+  val ast = JawnAst
+  def parse(buf: java.nio.ByteBuffer): Option[Any] =
+    JawnParser.parseFromByteBuffer(buf).toOption
+}
 
+private[jawn] class JawnFileParser(implicit f: Facade[_]) extends Parser[java.io.File, JsonBufferAst] {
+  
+  override def toString = "<JawnFileParser>"
+  
+  val ast = JawnAst
+  def parse(file: java.io.File): Option[Any] = JawnParser.parseFromFile(file).toOption
 }
