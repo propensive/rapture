@@ -5,14 +5,12 @@ scala:
 - 2.10.5
 - 2.11.7
 script:
-- if [[ "$TRAVIS_PULL_REQUEST" == "false" &&
-        "$TRAVIS_BRANCH" == "dev" &&
-        $(cat version.sbt) =~ "-SNAPSHOT"
-  ]]; then
-    sbt ++$TRAVIS_SCALA_VERSION coverage compile test coverageReport && bash <(curl -s https://codecov.io/bash) && sbt clean compile test publish gitSnapshots publish ;
-  else
-    sbt ++$TRAVIS_SCALA_VERSION coverage compile test coverageReport && bash <(curl -s https://codecov.io/bash) && sbt clean compile test publishLocal ;
-  fi
+- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "dev" && $(cat version.sbt)
+  =~ "-SNAPSHOT" ]]; then sbt ++$TRAVIS_SCALA_VERSION coverage compile test coverageReport
+  && bash <(curl -s https://codecov.io/bash) && sbt clean compile test publish gitSnapshots
+  publish ; else sbt ++$TRAVIS_SCALA_VERSION coverage compile test coverageReport
+  && bash <(curl -s https://codecov.io/bash) && sbt clean compile test publishLocal
+  ; fi
 notifications:
   webhooks:
     urls:
@@ -23,3 +21,5 @@ notifications:
     on_start: false
 env:
   global:
+  - secure: bBvJrVC+JQzI0fbdXD0Jbi9HY74vVmhVLWGJegiDIV3zl+LyPjVMCzEIJimrKhSYSVuiNaauSrnbcZ4vBkTg3KgM6eHkIopCiUA+OwIdP0S3VL0dAn2yxI6tI8CAeLFML94PTHnOt+Q3wz//+DEeSbs+dy3Rn89eB0HI4o3sV9k=
+  - secure: WogxNRzYouYwV9n0c8cbef2Mly4J0Ht5gDx6Ndx4JMBAQU/uj6soIdphBYZsMvs2hWoFx5350RsBH18hULMUkPnka7qVoh8ZrHZNhfHSopOpac9ajC3kP8e86SE56UdKJdAQF17ZAD0SUAH6guOIoHz3/VW+Mz4WJm2Nuowq2OA=
