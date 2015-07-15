@@ -68,7 +68,7 @@ private[jawn] object JawnAst extends JsonBufferAst {
   def getDouble(double: Any): Double = double match {
     case DoubleNum(d) => d
     case LongNum(v) => v.toDouble
-    case DeferNum(v) => v.toDouble
+    case DeferNum(v) => java.lang.Double.valueOf(v)
     case _ => throw TypeMismatchException(getType(double), DataTypes.Number)
   }
   
