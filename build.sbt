@@ -126,7 +126,7 @@ lazy val mimeJS = mime.js
 lazy val net = crossProject.dependsOn(io)
   .settings(moduleName := "rapture-net")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies ++= Seq("commons-net" % "commons-net" % "2.0"))
+  .settings(libraryDependencies += "commons-net" % "commons-net" % "2.0")
  
 lazy val netJVM = net.jvm
 lazy val netJS = net.js
@@ -213,14 +213,14 @@ lazy val jsonJVM = json.jvm
 lazy val jsonJS = json.js
 
 // rapture-json-jawn
-lazy val jsonJawn = crossProject.dependsOn(json)
+lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies ++= Seq("org.spire-math" % "jawn-parser_2.11" % "0.7.4"))
-  .settings(libraryDependencies ++= Seq("org.spire-math" % "jawn-ast_2.11" % "0.7.4"))
+  .settings(libraryDependencies += "org.spire-math" % "jawn-parser_2.11" % "0.7.4")
+  .settings(libraryDependencies += "org.spire-math" % "jawn-ast_2.11" % "0.7.4")
  
-lazy val jsonJawnJVM = jsonJawn.jvm
-lazy val jsonJawnJS = jsonJawn.js
+lazy val jsonJawnJVM = `json-jawn`.jvm
+lazy val jsonJawnJS = `json-jawn`.js
 
 
 lazy val publishSettings = Seq(
