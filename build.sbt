@@ -14,19 +14,19 @@ lazy val buildSettings = Seq(
 
 lazy val commonSettings = Seq(
   scalacOptions ++= Seq(
- /*   "-deprecation",
+    "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
-    "-language:existentials",
+    "-unchecked",
+    "-Xlint",
+    "-Ywarn-dead-code",
+ /*   "-language:existentials",
     "-language:higherKinds",
     "-language:implicitConversions",
     "-language:experimental.macros",
-    "-unchecked",
     "-Xfatal-warnings",
-    "-Xlint",
     "-Yinline-warnings",
     "-Yno-adapted-args",
-    "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
     "-Xfuture" */
@@ -207,7 +207,6 @@ lazy val dataJS = data.js
 lazy val json = crossProject.dependsOn(data)
   .settings(moduleName := "rapture-json")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies ++= Seq("org.scala-lang.modules" % "scala-parser-combinators_2.11" % "1.0.2"))
  
 lazy val jsonJVM = json.jvm
 lazy val jsonJS = json.js
@@ -216,8 +215,8 @@ lazy val jsonJS = json.js
 lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.spire-math" % "jawn-parser_2.11" % "0.7.4")
-  .settings(libraryDependencies += "org.spire-math" % "jawn-ast_2.11" % "0.7.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.7.4")
  
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
