@@ -36,7 +36,7 @@ lazy val commonSettings = Seq(
   }),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
-  scalaJSStage in Test := FastOptStage,
+//  scalaJSStage in Test := FastOptStage,
   scmInfo := Some(ScmInfo(url("https://github.com/propensive/rapture"),
     "scm:git:git@github.com:propensive/rapture.git")),
   commands += gitSnapshots
