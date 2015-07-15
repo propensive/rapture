@@ -12,8 +12,6 @@
 \******************************************************************************************************************/
 package rapture.json
 
-import rapture.data._
-
 object JsonVerifier {
 
   case class VerifierException(strNo: Int, pos: Int, expected: String, found: Char) extends Exception

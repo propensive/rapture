@@ -13,12 +13,7 @@
 package rapture.data
 
 import rapture.core._
-
-import scala.reflect.macros._
 import scala.annotation._
-
-import language.experimental.macros
-import language.higherKinds
 
 @implicitNotFound("Cannot serialize type ${T} to ${D}. Please provide an implicit Serializer "+
     "of type ${T}.")

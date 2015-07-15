@@ -15,9 +15,6 @@ package rapture.json
 import rapture.core._
 import rapture.data._
 
-import scala.reflect.macros._
-import scala.annotation._
-
 import language.experimental.macros
 import language.higherKinds
 

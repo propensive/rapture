@@ -16,7 +16,6 @@ import rapture.base._
 import rapture.core._
 
 import language.experimental.macros
-import scala.reflect.macros._
 
 object patternMatching {
   object exactArrays {

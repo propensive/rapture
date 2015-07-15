@@ -15,9 +15,6 @@ package rapture.json
 import rapture.core._
 import rapture.data._
 
-import scala.util.Try
-import scala.collection.JavaConverters
-
 /** Represents a JSON ast implementation which is used throughout this library */
 trait JsonAst extends DataAst {
 

@@ -14,7 +14,6 @@ package rapture.data
 
 import rapture.core._
 
-import scala.reflect.macros._
 import scala.reflect.runtime.universe.TypeTag
 import scala.annotation._
 

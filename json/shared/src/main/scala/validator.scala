@@ -12,8 +12,6 @@
 \******************************************************************************************************************/
 package rapture.json
 
-import rapture.data._
-
 private[json] object JsonValidator {
 
   case class ValidationException(strNo: Int, pos: Int, expected: String, found: Char)

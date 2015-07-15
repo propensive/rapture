@@ -17,7 +17,6 @@ import rapture.core._
 import rapture.data._
 
 import language.experimental.macros
-import scala.reflect.macros._
 
 private[json] object JsonDataMacros extends DataContextMacros[Json, JsonAst] {
   
