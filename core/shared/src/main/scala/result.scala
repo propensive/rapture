@@ -24,7 +24,14 @@ object Result {
   def apply[T](result: => T): Result[T, Nothing] =
     try Answer[T, Nothing](result) catch { case e: Throwable => Unforeseen[T, Nothing](e) }
 
-  def catching[E <: Exception]: Catching[E] = new Catching[E]()  
+  def catching[E <: Exception]: Catching[E] = new Catching[E]()
+
+  /** Construct an answer. */
+  def answer[T, E <: Exception]: T => Result[T, E] = Answer(_)
+
+  /** Construct an errata. */
+  def errata[T, E <: Exception]: E => Result[T, E] = Errata(_)
+
 }
 
 class Catching[E <: Exception]() {
@@ -73,13 +80,104 @@ sealed class Result[+T, E <: Exception](val answer: T, val errors: Seq[(ClassTag
     val hs = handlers.map { case Each(e, typ) => typ -> e }.toMap[ClassTag[_], E2 => E3]
     errors.map { case (t, (p, e)) => hs(t)(e.asInstanceOf[E2]) }
   }
+
+  /** Return `true` if this result contains errors. */
+  def isErrata: Boolean =
+    this match {
+      case Errata(_) => true
+      case _ => false
+    }
+
+  /** Return `true` if this result is an Answer. */
+  def isAnswer: Boolean =
+    this match {
+      case Answer(_) => true
+      case _ => false
+    }
+
+  /** Return `true` if this result is Unforeseen. */
+  def isUnforeseen: Boolean =
+    this match {
+      case Unforeseen(_) => true
+      case _ => false
+    }
+
+  /** Catamorphism. Run the first given function if answer, otherwise, the second given function over the errata. */
+  def fold[X](l: T => X, r: Seq[E] => X): X =
+    this match {
+      case Answer(a) => l(a)
+      case Errata(_) => r(errata)
+    }
+
+  /** Return `true` if this result is an answer satisfying the given predicate. */
+  def exists[TT >: T](p: TT => Boolean): Boolean =
+    this match {
+      case Answer(b) => p(b)
+      case _ => false
+    }
+
+  /** Return `true` if this result is an errata or the answer satisfies the given predicate. */
+  def forall[TT >: T](p: TT => Boolean): Boolean =
+    this match {
+      case Answer(b) => p(b)
+      case _ => true
+    }
+
+  /** Return an empty list or list with one element on the answer of this result. */
+  def toList: List[T] =
+    this match {
+      case Answer(b) => b :: Nil
+      case _ => Nil
+    }
+
+  /** Return an empty stream or stream with one element on the answer of this result. */
+  def toStream: Stream[T] =
+    this match {
+      case Answer(b) => Stream(b)
+      case _ => Stream()
+    }
+
+  /** Return an empty option or option with one element on the answer of this result. Useful to sweep errors under the carpet. */
+  def toOption: Option[T] =
+    this match {
+      case Answer(b) => Some(b)
+      case _ => None
+    }
+
+  /** Convert to a core `scala.Either` at your own peril. blows up if an unforeseen exception is found */
+  def toEither: Either[Seq[E], T] =
+    this match {
+      case Answer(b) => Right(b)
+      case Errata(a) => Left(errata)
+      case Unforeseen(e) => throw e
+    }
+
+  /** Return the answer of this result or the given default if errata. Alias for `|` */
+  def getOrElse[BB >: T](x: => BB): BB =
+    this match {
+      case Answer(b) => b
+      case _ => x
+    }
+
+  /** Return the answer value of this result or the given default if errata. Alias for `getOrElse` */
+  def |[BB >: T](x: => BB): BB =
+    getOrElse(x)
+
+  /** Return the answer of this result or run the given function on the errata. */
+  def valueOr[BB >: T](x: Seq[E] => BB): BB =
+    this match {
+      case Answer(b) => b
+      case Errata(a) => x(errata)
+      case Unforeseen(e) => throw e
+    }
+
 }
 
 object Resolved {
   def unapply[T, E <: Exception](res: Result[T, E]): Option[(T, Option[Throwable])] =
     Some(res.answer -> res.unforeseen)
 
-  def apply[T, E <: Exception](answer: T, unforeseen: Option[E]) = if(unforeseen == None) Answer(answer) else Unforeseen(unforeseen.get)
+  def apply[T, E <: Exception](answer: T, unforeseen: Option[E]) = if(unforeseen.isEmpty) Answer(answer) else Unforeseen(unforeseen.get)
 }
 sealed class Resolved[+T, E <: Exception](answer: T, unforeseen: Option[Throwable])
     extends Result[T, E](answer, Seq(), unforeseen) {
@@ -97,7 +195,7 @@ case class Answer[T, E <: Exception](override val answer: T) extends Resolved[T,
 
 case class Errata[T, E <: Exception](override val errors: Seq[(ClassTag[_], (String, Exception))]) extends
     Result[T, E](null.asInstanceOf[T], errors) {
-  override def toString = "Errata(\n"+(errors.map { case (t, (p, e)) => s"$t: ${e.getMessage} [$p]" })+"\n)"
+  override def toString = "Errata(\n"+ errors.map { case (t, (p, e)) => s"$t: ${e.getMessage} [$p]" } +"\n)"
 }
 
 case class Unforeseen[T, E <: Exception](e: Throwable) extends Resolved[T, E](null.asInstanceOf[T], Some(e))
