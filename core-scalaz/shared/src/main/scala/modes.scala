@@ -32,7 +32,7 @@ object `package` {
   class ReturnTasks[+Group <: MethodConstraint](implicit pool: ExecutorService) extends Mode[Group] {
     type Wrap[+T, E <: Exception] = Task[T]
     def wrap[T, E <: Exception](t: => T): Task[T] = Task.delay(t)
-    def unwrap[T](t: => Wrap[T, _ <: Exception]): T = ???
+    def unwrap[T](t: => Wrap[T, _ <: Exception]): T = t.attemptRun.valueOr { throw _ }
   }
 
   // FIXME: This should be modified to collect multiple failures
@@ -40,14 +40,14 @@ object `package` {
   class ReturnValidation[+Group <: MethodConstraint] extends Mode[Group] {
     type Wrap[+T, E <: Exception] = Validation[E, T]
     def wrap[T, E <: Exception](t: => T): Validation[E, T] = try Success(t) catch { case e: E => Failure(e) }
-    def unwrap[T](t: => Validation[_ <: Exception, T]): T = ???
+    def unwrap[T](t: => Validation[_ <: Exception, T]): T = t.valueOr { throw _ }
   }
 
   implicit def returnDisjunction[Group <: MethodConstraint] = new ReturnDisjunction[Group]
   class ReturnDisjunction[+Group <: MethodConstraint] extends Mode[Group] {
     type Wrap[+T, E <: Exception] = \/[E, T]
     def wrap[T, E <: Exception](t: => T): \/[E, T] = try \/-(t) catch { case e: E => -\/(e) }
-    def unwrap[T](t: => \/[_ <: Exception, T]): T = ???
+    def unwrap[T](t: => \/[_ <: Exception, T]): T = t.valueOr { throw _ }
   }
 
 }
