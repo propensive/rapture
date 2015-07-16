@@ -226,7 +226,8 @@ lazy val jsonJawnJS = `json-jawn`.js
 lazy val `core-scalaz` = crossProject.dependsOn(core)
   .settings(moduleName := "rapture-core-scalaz")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.3")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.2")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.1.2")
  
 lazy val coreScalazJVM = `core-scalaz`.jvm
 lazy val coreScalazJS = `core-scalaz`.js
