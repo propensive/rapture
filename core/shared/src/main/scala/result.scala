@@ -154,18 +154,18 @@ sealed abstract class Result[+T, +E <: Exception](val answer: T, val errors: Seq
     }
 
   /** Return the answer of this result or the given default if errata. Alias for `|` */
-  def getOrElse[BB >: T](x: => BB): BB =
+  def getOrElse[TT >: T](x: => TT): TT =
     this match {
       case Answer(b) => b
       case _ => x
     }
 
   /** Return the answer value of this result or the given default if errata. Alias for `getOrElse` */
-  def |[BB >: T](x: => BB): BB =
+  def |[TT >: T](x: => TT): TT =
     getOrElse(x)
 
   /** Return the answer of this result or run the given function on the errata. */
-  def valueOr[BB >: T](x: Seq[(ClassTag[_], (String, Exception))] => BB): BB =
+  def valueOr[TT >: T](x: Seq[(ClassTag[_], (String, Exception))] => TT): TT =
     this match {
       case Answer(b) => b
       case Errata(a) => x(a)
