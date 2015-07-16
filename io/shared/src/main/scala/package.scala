@@ -39,8 +39,8 @@ object `package` {
   implicit def classpathStreamByteReader(implicit cl: ClassLoader): JavaInputStreamReader[ClasspathUrl] =
     ClasspathStream.classpathStreamByteReader
 
-  def ensuring[Result, Stream](create: Stream)(body: Stream => Result)(close: Stream => Unit):
-      Result = Utils.ensuring[Result, Stream](create)(body)(close)
+  def ensuring[Res, Strm](create: Strm)(body: Strm => Res)(close: Strm => Unit):
+      Res = Utils.ensuring[Res, Strm](create)(body)(close)
 
   implicit def stringMethods(s: String): StringMethods = alloc(s)
   implicit def copyable[Res](res: Res): Copyable.Capability[Res] = alloc(res)

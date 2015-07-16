@@ -80,7 +80,7 @@ class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
     val langs = map.keys.map(_.runtimeClass.getName.takeRight(2).toLowerCase).mkString("|")
     val content: Option[T] = map.get(implicitly[ClassTag[En]])
     lazy val first: Option[T] = map.headOption.flatMap { case (k, v) => map.get(k) }
-    val value = content.orElse(first).getOrElse("") match {
+    val value = content.orElse(first).map(_.toString).getOrElse("") match {
       case string: String => string
       case other => s""""$other""""
     }
