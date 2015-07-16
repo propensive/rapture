@@ -12,11 +12,9 @@
 \******************************************************************************************************************/
 package rapture.core
 
-import scala.reflect._
+import scala.language.existentials
+import scala.language.experimental.macros
 import scala.reflect.ClassTag
-
-import language.experimental.macros
-import language.existentials
 
 object Result {
   private[core] def apply[T, E <: Exception](result: => T, errors: Seq[(ClassTag[_], (String, Exception))]) = try {
