@@ -194,7 +194,7 @@ object Tests extends TestSuite {
 
   val `toEither errata` = test {
     Result.errata[Int, AlphaException](AlphaException()).toEither
-  } returns Left(Seq(AlphaException()))
+  } satisfies (v => v.isLeft)
 
   val `getOrElse answer` = test {
     Result.answer(1).getOrElse(0)

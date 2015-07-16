@@ -27,10 +27,10 @@ object Result {
   def catching[E <: Exception]: Catching[E] = new Catching[E]()
 
   /** Construct an answer. */
-  def answer[T, E <: Exception](a : T): Result[T, E] = Answer(a)
+  def answer[T, E <: Exception](a : T): Result[T, E] = Answer[T, E](a)
 
   /** Construct an errata. */
-  def errata[T, E <: Exception](e : E)(implicit cte : ClassTag[E]) = Errata(e)
+  def errata[T, E <: Exception](e : E)(implicit cte : ClassTag[E]) = Errata[T, E](e)
 
 }
 
