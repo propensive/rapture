@@ -16,6 +16,8 @@ import scala.language.existentials
 import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
+import scala.annotation.unchecked._
+
 object Result {
   private[core] def apply[T, E <: Exception](result: => T, errors: Seq[(ClassTag[_], (String, Exception))]) = try {
     if(errors.isEmpty) Answer[T, E](result) else Errata[T, E](errors)
@@ -124,21 +126,17 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
       case _ => true
     }
 
-  /** Return an empty list or list with one element on the answer of this result. */
-  def toList: List[T] =
-    this match {
-      case Answer(b) => b :: Nil
-      case _ => Nil
-    }
+  /** Return a collection containing -- if the result was successful -- the answer. */
+  def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, T, Col[T @uncheckedVariance]]): Col[T @uncheckedVariance] = this match {
+    case Answer(ans) =>
+      val builder = cbf()
+      builder += ans
+      builder.result
+    case _ =>
+      cbf().result
+  }
 
-  /** Return an empty stream or stream with one element on the answer of this result. */
-  def toStream: Stream[T] =
-    this match {
-      case Answer(b) => Stream(b)
-      case _ => Stream()
-    }
-
-  /** Return an empty option or option with one element on the answer of this result. Useful to sweep errors under the carpet. */
+  /** Return `None` or a `Some` of the answer. Useful to sweep errors under the carpet. */
   def toOption: Option[T] =
     this match {
       case Answer(b) => Some(b)
