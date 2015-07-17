@@ -56,14 +56,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM)
-  .dependsOn(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM)
+  .aggregate(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, coreScalazJVM)
+  .dependsOn(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, coreScalazJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS)
-  .dependsOn(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS)
+  .aggregate(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, coreScalazJS)
+  .dependsOn(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, coreScalazJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -221,6 +221,16 @@ lazy val `json-jawn` = crossProject.dependsOn(json)
  
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
+
+// rapture-core-scalaz
+lazy val `core-scalaz` = crossProject.dependsOn(core)
+  .settings(moduleName := "rapture-core-scalaz")
+  .settings(raptureSettings:_*)
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.2")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.1.2")
+ 
+lazy val coreScalazJVM = `core-scalaz`.jvm
+lazy val coreScalazJS = `core-scalaz`.js
 
 
 lazy val publishSettings = Seq(
