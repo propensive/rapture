@@ -41,7 +41,7 @@ class Catching[E <: Exception]() {
   }
 }
 
-sealed abstract class Result[+T, +E <: Exception](val answer: T, val errors: Seq[(ClassTag[_], (String, Exception))],
+sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[(ClassTag[_], (String, Exception))],
     val unforeseen: Option[Throwable] = None) {
  
   def errata[E2 >: E: ClassTag]: Seq[E2] =
@@ -67,7 +67,7 @@ sealed abstract class Result[+T, +E <: Exception](val answer: T, val errors: Seq
 
   def map[T2](fn: T => T2) = Result[T2, E](fn(answer), errors)
 
-  def resolve[E2, T2 >: T](handlers: Each[E2, T2]*): Resolved[T2, Nothing] = this match {
+  def resolve[E2, T2 >: T](handlers: Each[E2, T2]*)(implicit ev: E2 <:< E): Resolved[T2, Nothing] = this match {
     case Unforeseen(e) =>
       Unforeseen[T2, Nothing](e)
     case Answer(a) =>
@@ -210,7 +210,7 @@ case class Unforeseen[T, E <: Exception](e: Throwable) extends Resolved[T, E](nu
 case class AbortException() extends Exception
 
 private[core] class ReturnResultMode[+Group <: MethodConstraint] extends Mode[Group] {
-  type Wrap[+R, +E <: Exception] = Result[R, E]
+  type Wrap[+R, E <: Exception] = Result[R, E]
   
   def wrap[R, E <: Exception](blk: => R): Result[R, E] = {
     try {
