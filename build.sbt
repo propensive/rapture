@@ -39,8 +39,7 @@ lazy val commonSettings = Seq(
 //  scalaJSStage in Test := FastOptStage,
   concurrentRestrictions in Global ++= Seq(Tags.limitSum(2, Tags.CPU, Tags.Untagged), Tags.limit(Tags.Test, 1)),
   scmInfo := Some(ScmInfo(url("https://github.com/propensive/rapture"),
-    "scm:git:git@github.com:propensive/rapture.git")),
-  commands += gitSnapshots
+    "scm:git:git@github.com:propensive/rapture.git"))
 ) ++ scalaMacroDependencies
 
 lazy val raptureSettings = buildSettings ++ commonSettings ++ publishSettings ++ releaseSettings
@@ -322,11 +321,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   }
 )
 
-def gitSnapshots = Command.command("gitSnapshots") { state =>
-  val extracted = Project extract state
-  val newVersion = Seq(version in ThisBuild := git.gitDescribedVersion.value.get + "-SNAPSHOT")
-  extracted.append(newVersion, state)
-}
+addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
 // For Travis CI - see http://www.cakesolutions.net/teamblogs/publishing-artefacts-to-oss-sonatype-nexus-using-sbt-and-travis-ci
 credentials ++= (for {
