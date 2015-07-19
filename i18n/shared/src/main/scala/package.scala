@@ -222,18 +222,18 @@ object `package` {
 
 object Macros {
   
-  def missingTranslationsMacro[To <: Language: c.WeakTypeTag, From <: Language: c.WeakTypeTag](c:
-      BlackboxContext)(from: c.Expr[I18n[String, From]]): c.Expr[I18n[String, To]] = {
+  def missingTranslationsMacro[ToLang <: Language: c.WeakTypeTag, FromLang <: Language: c.WeakTypeTag](c:
+      BlackboxContext)(from: c.Expr[I18n[String, FromLang]]): c.Expr[I18n[String, ToLang]] = {
     
     import c.universe._
     import compatibility._
 
-    val fromLangs = (normalize(c)(weakTypeOf[From]) match {
+    val fromLangs = (normalize(c)(weakTypeOf[FromLang]) match {
       case rt: RefinedType => rt.parents
       case typ: Type => List(typ)
     }).map(_.toString.split("\\.").last.toLowerCase).to[Set]
 
-    val toLangs = (normalize(c)(weakTypeOf[To]) match {
+    val toLangs = (normalize(c)(weakTypeOf[ToLang]) match {
       case rt: RefinedType => rt.parents
       case typ: Type => List(typ)
     }).map(_.toString.split("\\.").last.toLowerCase).to[Set]
@@ -257,6 +257,6 @@ object Macros {
     if(!missing.isEmpty)
       c.abort(c.enclosingPosition, s"""Some language translations were not provided: ${missing.mkString(", ")}""")
     else
-      reify(from.splice.asInstanceOf[I18n[String, To]])
+      reify(from.splice.asInstanceOf[I18n[String, ToLang]])
   }
 }

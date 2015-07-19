@@ -49,7 +49,7 @@ abstract class ConnectionPool[Resource, Key] {
     else dispose(resource)
   }
 
-  def using[Result](key: Key)(fn: Resource => Result): Result = {
+  def using[Res](key: Key)(fn: Resource => Res): Res = {
     val res = acquire(key)
     try fn(res) finally release(key, res)
   }

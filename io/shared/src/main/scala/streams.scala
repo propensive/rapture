@@ -24,7 +24,7 @@ import language.higherKinds
 object Utils {
 
   /** Safely closes a stream after processing */
-  def ensuring[Result, Stream](create: Stream)(blk: Stream => Result)(close: Stream => Unit) = {
+  def ensuring[Res, Strm](create: Strm)(blk: Strm => Res)(close: Strm => Unit) = {
     val stream = create
     val result = try { blk(stream) } catch {
       case e: Throwable => try { close(stream) } catch { case e2: Exception => () }
@@ -116,8 +116,8 @@ object Appendable {
     def appendOutput[Data](implicit sa: Appender[Res, Data], mode: Mode[`Appendable#appendOutput`]) =
       sa.appendOutput(res)
     
-    def handleAppend[Data, Result](body: Output[Data] => Result)(implicit sw:
-        Appender[Res, Data]): Result = {
+    def handleAppend[Data, Res2](body: Output[Data] => Res2)(implicit sw:
+        Appender[Res, Data]): Res2 = {
       ensuring(appendOutput[Data])(body) { out =>
         out.flush()
         if(!sw.doNotClose) out.close()
@@ -175,10 +175,10 @@ object Readable {
       * handled will have no effect.
       *
       * @tparam Data The type of data the stream should carry
-      * @tparam Result The type of body's result
+      * @tparam Res2 The type of body's result
       * @param body The code to be executed upon the this Input before it is closed */
-    def handleInput[Data, Result](body: Input[Data] => Result)(implicit sr:
-        Reader[Res, Data]): Result =
+    def handleInput[Data, Res2](body: Input[Data] => Res2)(implicit sr:
+        Reader[Res, Data]): Res2 =
       ensuring(input[Data])(body) { in => if(!sr.doNotClose) in.close() }
   }
 }
@@ -197,8 +197,8 @@ object Writable {
       *
       * @param body The code to be executed upon this `Output` before being closed.
       * @return The result from executing the body */
-    def handleOutput[Data, Result](body: Output[Data] => Result)(implicit sw:
-        Writer[Res, Data]): Result =
+    def handleOutput[Data, Res2](body: Output[Data] => Res2)(implicit sw:
+        Writer[Res, Data]): Res2 =
       ensuring(output[Data])(body) { out =>
         out.flush()
         if(!sw.doNotClose) out.close()
