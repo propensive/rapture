@@ -62,7 +62,7 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   class BrowserUrl(url: HttpUrl) {
 
-    def httpGet[I, D]()(implicit httpTimeout: HttpTimeout, httpCertificateConfig: HttpCertificateConfig,
+    def httpGet[D]()(implicit httpTimeout: HttpTimeout, httpCertificateConfig: HttpCertificateConfig,
         httpRedirectConfig: HttpRedirectConfig) = url.httpGet()
     
     def httpPost[C: PostType, D](

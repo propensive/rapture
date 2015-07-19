@@ -20,8 +20,8 @@ import language.experimental.macros
 import language.implicitConversions
 
 object Locale {
-  implicit def upcastLocale[From <: Language, To <: From](loc: Locale[From]): Locale[To] =
-    loc.asInstanceOf[Locale[To]]
+  implicit def upcastLocale[From <: Language, ToLang <: From](loc: Locale[From]): Locale[ToLang] =
+    loc.asInstanceOf[Locale[ToLang]]
 }
 case class Locale[L <: Language: ClassTag]() {
   val classTag: ClassTag[L] = implicitly[ClassTag[L]]
@@ -53,8 +53,8 @@ class LocaleParser[L <: Language](val locales: Map[String, Locale[_ >: L <: Lang
 
 object I18n {
  
-  implicit def upcast[To <: Language, From <: Language](from: I18n[String, From]): I18n[String, To] =
-    macro Macros.missingTranslationsMacro[To, From]
+  implicit def upcast[ToLang <: Language, FromLang <: Language](from: I18n[String, FromLang]): I18n[String, ToLang] =
+    macro Macros.missingTranslationsMacro[ToLang, FromLang]
   
   implicit def convertToType[T, L <: Language, L2 >: L <: Language: DefaultLanguage](i18n: I18n[T, L]): T =
     i18n.map(implicitly[DefaultLanguage[L2]].tag)
