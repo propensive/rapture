@@ -23,7 +23,7 @@ import rapture.log._
 import annotation.tailrec
 
 import encodings.system._
-import logLevel.trace._
+import logLevels.trace._
 
 import scala.collection.immutable.ListMap
 

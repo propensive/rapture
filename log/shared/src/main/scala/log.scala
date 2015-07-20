@@ -51,7 +51,7 @@ object LogAction {
     new LogAction { def level = -1 }
 }
 
-@implicitNotFound("You have not specified a valid logging level. Please import one of logLevel"+
+@implicitNotFound("You have not specified a valid logging level. Please import one of logLevels"+
     ".{trace._, debug._, info._, warn._, error._, fatal._}.")
 trait LogAction {
   def level: Int
@@ -124,7 +124,7 @@ abstract class Spec {
 }
 
 /*object Main extends App {
-  import logLevel.debug._
+  import logLevels.debug._
   import encodings.system
   implicit val output = Logger(Stdout)
   implicit val spec = log"  "

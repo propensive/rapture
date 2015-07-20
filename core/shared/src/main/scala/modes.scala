@@ -164,7 +164,7 @@ package modes {
     def apply[D: TimeSystem.ByDuration, G <: MethodConstraint] = modeImplicit[D, G]
   }
 
-  class Explicit[+Res, E <: Exception](blk: => Res) {
+  class Explicitly[+Res, E <: Exception](blk: => Res) {
     def get: Res = blk
     def opt: Option[Res] = returnOption[Nothing].wrap(blk)
     def getOrElse[Res2 >: Res](t: Res2): Res2 = opt.getOrElse(blk)
@@ -192,10 +192,10 @@ private[core] class ThrowExceptionsMode[+G <: MethodConstraint] extends Mode[G] 
 }
 
 private[core] class ExplicitMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[+T, E <: Exception] = modes.Explicit[T, E]
-  
-  def wrap[T, E <: Exception](t: => T): modes.Explicit[T, E] =
-    new modes.Explicit[T, E](t)
+  type Wrap[+T, E <: Exception] = modes.Explicitly[T, E]
+
+  def wrap[T, E <: Exception](t: => T): modes.Explicitly[T, E] =
+    new modes.Explicitly[T, E](t)
   
   def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value.get
 }
