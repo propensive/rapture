@@ -75,7 +75,7 @@ object UriMacros {
     reify {
       new QueryType[AnyPath, T] {
         def extras(existing: Map[Char, (String, Double)], t: T): Map[Char, (String, Double)] =
-          existing ++ Map('?' -> (listOfParams.splice.mkString("&"), 1.0))
+          existing + ('?' -> (listOfParams.splice.mkString("&") -> 1.0))
       }
     }
   }

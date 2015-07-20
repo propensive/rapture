@@ -25,9 +25,9 @@ case object Ignore extends ActorResponse[Nothing, Nothing]
 
 object Actor {
   class ActorOf[Msg] {
-    def apply[Result, State](init: State)(fn: Transition[Msg, State] => ActorResponse[Result, State])(implicit ec: ExecutionContext): Actor[Msg, Result, State] =
-      new Actor[Msg, Result, State](init) {
-        def handle(trans: Transition[Msg, State]): ActorResponse[Result, State] = fn(trans)
+    def apply[Res, State](init: State)(fn: Transition[Msg, State] => ActorResponse[Res, State])(implicit ec: ExecutionContext): Actor[Msg, Res, State] =
+      new Actor[Msg, Res, State](init) {
+        def handle(trans: Transition[Msg, State]): ActorResponse[Res, State] = fn(trans)
       }
   }
 
@@ -36,13 +36,13 @@ object Actor {
 
 case class IgnoredException() extends Exception("Message was ignored")
 
-abstract class Actor[Msg, Result, State](init: State)(implicit executionContext: ExecutionContext) {
+abstract class Actor[Msg, Res, State](init: State)(implicit executionContext: ExecutionContext) {
  
-  private var future: Future[Result] = Future.successful(null.asInstanceOf[Result])
+  private var future: Future[Res] = Future.successful(null.asInstanceOf[Res])
   private var stateVar: State = init
 
-  protected def enqueue(fn: => ActorResponse[Result, State]): Future[Result] = future.synchronized {
-    val promise = Promise[Result]
+  protected def enqueue(fn: => ActorResponse[Res, State]): Future[Res] = future.synchronized {
+    val promise = Promise[Res]
     future = future.andThen { case _ =>
       val result = Try(fn) match {
         case Success(Ignore) =>
@@ -61,9 +61,9 @@ abstract class Actor[Msg, Result, State](init: State)(implicit executionContext:
 
   def state: State = stateVar
 
-  def cue(msg: Msg): Future[Result] = enqueue { handle(Transition(msg, stateVar)) }
+  def cue(msg: Msg): Future[Res] = enqueue { handle(Transition(msg, stateVar)) }
 
-  def handle(trans: Transition[Msg, State]): ActorResponse[Result, State]
+  def handle(trans: Transition[Msg, State]): ActorResponse[Res, State]
 }
 
 case class Transition[Msg, State](msg: Msg, state: State)

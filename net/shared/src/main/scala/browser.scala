@@ -58,11 +58,11 @@ class Browser[I: TimeSystem.ByInstant]() {
         c._1+"="+c._2.maxBy(_.pathString.length).value.urlEncode } mkString "; "
   }
 
-  def accept[I, D](c: Cookie[I, D]): Boolean = c.domain.split("\\.").length > 1
+  def accept[I2, D](c: Cookie[I2, D]): Boolean = c.domain.split("\\.").length > 1
 
   class BrowserUrl(url: HttpUrl) {
 
-    def httpGet[I, D]()(implicit httpTimeout: HttpTimeout, httpCertificateConfig: HttpCertificateConfig,
+    def httpGet[D]()(implicit httpTimeout: HttpTimeout, httpCertificateConfig: HttpCertificateConfig,
         httpRedirectConfig: HttpRedirectConfig) = url.httpGet()
     
     def httpPost[C: PostType, D](
