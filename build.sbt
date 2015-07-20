@@ -55,14 +55,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, coreScalazJVM)
-  .dependsOn(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, coreScalazJVM)
+  .aggregate(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM)
+  .dependsOn(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, coreScalazJS)
-  .dependsOn(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, coreScalazJS)
+  .aggregate(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS)
+  .dependsOn(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -231,6 +231,29 @@ lazy val `core-scalaz` = crossProject.dependsOn(core)
 lazy val coreScalazJVM = `core-scalaz`.jvm
 lazy val coreScalazJS = `core-scalaz`.js
 
+// rapture-core-test
+lazy val `core-test` = crossProject.dependsOn(core, test)
+  .settings(moduleName := "rapture-core-test")
+  .settings(raptureSettings:_*)
+ 
+lazy val coreTestJVM = `core-test`.jvm
+lazy val coreTestJS = `core-test`.js
+
+// rapture-i18n-test
+lazy val `i18n-test` = crossProject.dependsOn(i18n, test)
+  .settings(moduleName := "rapture-i18n-test")
+  .settings(raptureSettings:_*)
+ 
+lazy val i18nTestJVM = `i18n-test`.jvm
+lazy val i18nTestJS = `i18n-test`.js
+
+// rapture-cli-test
+lazy val `cli-test` = crossProject.dependsOn(cli, test)
+  .settings(moduleName := "rapture-cli-test")
+  .settings(raptureSettings:_*)
+ 
+lazy val cliTestJVM = `cli-test`.jvm
+lazy val cliTestJS = `cli-test`.js
 
 lazy val publishSettings = Seq(
   homepage := Some(url("http://rapture.io/")),
