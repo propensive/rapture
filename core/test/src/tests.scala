@@ -165,19 +165,19 @@ object Tests extends TestSuite {
   } returns true
 
   val `toList answer` = test {
-    Result.answer(1).toList
+    Result.answer(1).to[List]
   } returns List(1)
 
   val `toList errata` = test {
-    Result.errata[Int, AlphaException](AlphaException()).toList
+    Result.errata[Int, AlphaException](AlphaException()).to[List]
   } returns Nil
 
   val `toStream answer` = test {
-    Result.answer(1).toStream
+    Result.answer(1).to[Stream]
   } returns Stream(1)
 
   val `toStream errata` = test {
-    Result.errata[Int, AlphaException](AlphaException()).toStream
+    Result.errata[Int, AlphaException](AlphaException()).to[Stream]
   } returns Stream.empty[Int]
 
   val `toOption answer` = test {
@@ -219,6 +219,34 @@ object Tests extends TestSuite {
   val `valueOr errata` = test {
     Result.errata[Int, AlphaException](AlphaException()).valueOr(_ => 0)
   } returns 0
+
+  val `filter answer` = test {
+    Result.answer(1) filter (_ == 1)
+  } returns Answer(1)
+
+  val `filter answer` = test {
+    Result.answer(1) filter (_ == 0)
+  } returns Errata(Nil)
+
+  val `filter errata` = test {
+    Errata[String, Nothing](Nil) filter (_.isEmpty)
+  } returns Errata(Nil)
+
+  val `withFilter errata monadic` = test {
+    for {
+      x <- Answer(1)
+      if x == 0
+      y = x + 1
+    } yield y
+  } returns Errata(Nil)
+
+  val `withFilter answer monadic` = test {
+    for {
+      x <- Answer(1)
+      if x == 1
+      y = x + 1
+    } yield y
+  } returns Answer(2)
 
 }
 
