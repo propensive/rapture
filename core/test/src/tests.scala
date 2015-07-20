@@ -95,5 +95,130 @@ object Tests extends TestSuite {
       throw BetaException()
     }
   } returns Unforeseen(BetaException())
+
+  val `Checking isErrata with errata` = test {
+    Result.errata(AlphaException()).isErrata
+  } returns true
+
+  val `Checking isErrata with answer` = test {
+    Result.answer(1).isErrata
+  } returns false
+
+  val `Checking isAnswer with errata` = test {
+    Result.errata(AlphaException()).isAnswer
+  } returns false
+
+  val `Checking isAnswer with answer` = test {
+    Result.answer(1).isAnswer
+  } returns true
+
+  val `Checking isUnforeseen with answer` = test {
+    Result.answer(1).isUnforeseen
+  } returns false
+
+  val `Checking isUnforeseen with errata` = test {
+    Result.errata(AlphaException()).isUnforeseen
+  } returns false
+
+  val `Checking isUnforeseen with unforeseen` = test {
+    Result.catching[AlphaException] {
+      throw BetaException()
+    }.isUnforeseen
+  } returns true
+
+  val `Fold answer` = test {
+    Result.answer(1).fold(
+      a => a + 1,
+      e => 0
+    )
+  } returns 2
+
+  val `Fold errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).fold(
+      a => a + 1,
+      e => 0
+    )
+  } returns 0
+
+  val `Exists answer` = test {
+    Result.answer(1).exists(_ == 1)
+  } returns true
+
+  val `Exists answer none found` = test {
+    Result.answer(1).exists(_ == 0)
+  } returns false
+
+  val `Exists errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).exists(_ == 1)
+  } returns false
+
+  val `Forall answer` = test {
+    Result.answer(1).forall(_ == 1)
+  } returns true
+
+  val `Forall answer none found` = test {
+    Result.answer(1).forall(_ == 0)
+  } returns false
+
+  val `Forall errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).forall(_ == 1)
+  } returns true
+
+  val `toList answer` = test {
+    Result.answer(1).toList
+  } returns List(1)
+
+  val `toList errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).toList
+  } returns Nil
+
+  val `toStream answer` = test {
+    Result.answer(1).toStream
+  } returns Stream(1)
+
+  val `toStream errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).toStream
+  } returns Stream.empty[Int]
+
+  val `toOption answer` = test {
+    Result.answer(1).toOption
+  } returns Some(1)
+
+  val `toOption errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).toOption
+  } returns None
+
+  val `toEither answer` = test {
+    Result.answer(1).toEither
+  } returns Right(1)
+
+  val `toEither errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).toEither
+  } satisfies (v => v.isLeft)
+
+  val `getOrElse answer` = test {
+    Result.answer(1).getOrElse(0)
+  } returns 1
+
+  val `getOrElse errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).getOrElse(0)
+  } returns 0
+
+  val `| answer` = test {
+    Result.answer(1) | 0
+  } returns 1
+
+  val `| errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()) | 0
+  } returns 0
+
+  val `valueOr answer` = test {
+    Result.answer(1).valueOr(_ => 0)
+  } returns 1
+
+  val `valueOr errata` = test {
+    Result.errata[Int, AlphaException](AlphaException()).valueOr(_ => 0)
+  } returns 0
+
 }
 
