@@ -171,14 +171,20 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     }
 
   /** Filter on the answer of this result. */
-  def filter(p: T => Boolean): Result[T, E] =
+  def filter[TT >: T](p: T => Boolean): Result[TT, E with NotMatchingFilter] =
     this match {
-      case Answer(b) => if(p(b)) this else Errata[T, E](Nil)
-      case _ => this
+      case Answer(b) =>
+        val t = this.get
+        if(p(b))
+          Answer(t)
+        else
+          Errata[T, E with NotMatchingFilter](Seq((implicitly[ClassTag[NotMatchingFilter]], ("", NotMatchingFilter(t)))))
+      case Errata(e) => Errata[T, E with NotMatchingFilter](e)
+      case Unforeseen(e) => Unforeseen[T, E with NotMatchingFilter](e)
     }
 
   /** Alias for filter */
-  def withFilter(p: T => Boolean): Result[T, E] =
+  def withFilter[TT >: T](p: T => Boolean): Result[TT, E with NotMatchingFilter] =
     filter(p)
 
 }
@@ -264,5 +270,6 @@ case class EachUnapplied[E]() {
   def apply[R](fn: E => R)(implicit classTag: ClassTag[E]): Each[E, R] = Each(fn, classTag)
 }
 
+case class NotMatchingFilter(value : Any) extends Exception(s"value '$value' did not match filter")
 
 
