@@ -13,6 +13,7 @@
 package rapture.core
 
 import scala.language.existentials
+import scala.language.higherKinds
 import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
@@ -170,6 +171,22 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
       case Unforeseen(e) => throw e
     }
 
+  /** Filter on the answer of this result. */
+  def filter(p: T => Boolean): Result[T, E with NotMatchingFilter] =
+    this match {
+      case Answer(b) =>
+        val t = this.get
+        if(p(b))
+          Answer(t)
+        else
+          Errata[T, E with NotMatchingFilter](Seq((implicitly[ClassTag[NotMatchingFilter]], ("", NotMatchingFilter(t)))))
+      case Errata(e) => Errata[T, E with NotMatchingFilter](e)
+      case Unforeseen(e) => Unforeseen[T, E with NotMatchingFilter](e)
+    }
+
+  /** Alias for filter */
+  def withFilter(p: T => Boolean): Result[T, E with NotMatchingFilter] = filter(p)
+
 }
 
 object Resolved {
@@ -253,5 +270,6 @@ case class EachUnapplied[E]() {
   def apply[R](fn: E => R)(implicit classTag: ClassTag[E]): Each[E, R] = Each(fn, classTag)
 }
 
+case class NotMatchingFilter(value : Any) extends Exception(s"value '$value' did not match filter")
 
 
