@@ -173,8 +173,8 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
   /** Filter on the answer of this result. */
   def filter(p: T => Boolean): Result[T, E] =
     this match {
-      case Errata(_) => this
       case Answer(b) => if(p(b)) this else Errata[T, E](Nil)
+      case _ => this
     }
 
   /** Alias for filter */
