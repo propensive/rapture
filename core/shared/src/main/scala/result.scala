@@ -13,6 +13,7 @@
 package rapture.core
 
 import scala.language.existentials
+import scala.language.higherKinds
 import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
@@ -171,7 +172,7 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     }
 
   /** Filter on the answer of this result. */
-  def filter[TT >: T](p: T => Boolean): Result[TT, E with NotMatchingFilter] =
+  def filter(p: T => Boolean): Result[T, E with NotMatchingFilter] =
     this match {
       case Answer(b) =>
         val t = this.get
@@ -184,8 +185,7 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     }
 
   /** Alias for filter */
-  def withFilter[TT >: T](p: T => Boolean): Result[TT, E with NotMatchingFilter] =
-    filter(p)
+  def withFilter(p: T => Boolean): Result[T, E with NotMatchingFilter] = filter(p)
 
 }
 
