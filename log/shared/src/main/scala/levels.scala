@@ -20,7 +20,7 @@ trait Warn extends Info
 trait Error extends Warn
 trait Fatal extends Error
 
-object logLevel {
+object logLevels {
   
   object trace {
     implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(0, "trace")

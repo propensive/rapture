@@ -23,7 +23,7 @@ import scalaz.concurrent._
 
 object `package` {
 
-  implicit class ScalazExplicits[+T, E <: Exception](explicit: modes.Explicit[T, E]) {
+  implicit class ScalazExplicits[+T, E <: Exception](explicit: modes.Explicitly[T, E]) {
     def task(implicit pool: ExecutorService): Task[T] = returnTasks.wrap(explicit.get)
     def validation: Validation[E, T] = returnValidations.wrap(explicit.get)
   }
