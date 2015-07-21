@@ -14,7 +14,7 @@ object Tests extends TestSuite {
     else if(x == 1) throw MiscException()
     else 0
   }
-  
+
   def beta(x: Int)(implicit mode: Mode[_]): mode.Wrap[Int, BetaException] = mode.wrap {
     if(x == 0) mode.exception(BetaException())
     else if(x == 1) throw MiscException()
@@ -89,7 +89,7 @@ object Tests extends TestSuite {
       throw AlphaException()
     }
   } satisfies (_.exceptions == Vector(AlphaException()))
-  
+
   val `Catching unforeseen` = test {
     Result.catching[AlphaException] {
       throw BetaException()
