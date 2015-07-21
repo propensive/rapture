@@ -1,5 +1,4 @@
-package rapture.core.scalazResult
-
+package rapture.core.scalazInterop
 
 import rapture.core.{Errata, NotMatchingFilter, Result}
 
@@ -23,21 +22,21 @@ sealed trait ResultT[F[+ _], +T, E <: Exception] {
   val run: F[Result[T, E]]
 
   /** Map on the answer of this result. */
-  def map[C](f: T => C)(implicit F: Functor[F], cte : ClassTag[E]): ResultT[F, C, E] =
-    ResultT(F.map(run)(_.map(f)))
+  def map[C](f: T => C)(implicit functor: Functor[F], cte : ClassTag[E]): ResultT[F, C, E] =
+    ResultT(functor.map(run)(_.map(f)))
 
   /** Bind through the answer of this result. */
-  def flatMap[C](f: T => ResultT[F, C, E])(implicit F: Monad[F], cte : ClassTag[E]): ResultT[F, C, E] =
-    ResultT[F, C, E](F.bind(run)(_.fold(a => f(a).run, b => F.point(Errata[C, E](b)))))
+  def flatMap[C](f: T => ResultT[F, C, E])(implicit functor: Monad[F], cte : ClassTag[E]): ResultT[F, C, E] =
+    ResultT[F, C, E](functor.bind(run)(_.fold(a => f(a).run, b => functor.point(Errata[C, E](b)))))
 
   /** Filter on the answer of this result. */
-  def filter(p: T => Boolean)(implicit F: Functor[F], cte : ClassTag[E]): ResultT[F, T, E with NotMatchingFilter] =
-    ResultT(F.map(run)(_.filter(p)))
+  def filter(p: T => Boolean)(implicit functor: Functor[F], cte : ClassTag[E]): ResultT[F, T, E with NotMatchingFilter] =
+    ResultT(functor.map(run)(_.filter(p)))
 
   /** Alias for `filter`.
     * @since 7.0.2
     */
-  def withFilter(p: T => Boolean)(implicit F: Functor[F], cte : ClassTag[E]): ResultT[F, T, E with NotMatchingFilter] =
+  def withFilter(p: T => Boolean)(implicit functor: Functor[F], cte : ClassTag[E]): ResultT[F, T, E with NotMatchingFilter] =
     filter(p)
 
 }
@@ -48,16 +47,16 @@ object ResultT extends ResultTFunctions {
     resultT[F, T, E](a)
 
   /** Construct an answer value. */
-  def answer[F[+ _], T, E <: Exception : ClassTag](a: F[T])(implicit F: Functor[F]): ResultT[F, T, E] =
-    apply[F, T, E](F.map(a)(Result.answer[T, E]))
+  def answer[F[+ _], T, E <: Exception : ClassTag](a: F[T])(implicit functor: Functor[F]): ResultT[F, T, E] =
+    apply[F, T, E](functor.map(a)(Result.answer[T, E]))
 
   /** Construct an errata value. */
-  def errata[F[+ _], T, E <: Exception : ClassTag](a: F[E])(implicit F: Functor[F]): ResultT[F, T, E] =
-    apply[F, T, E](F.map(a)(Result.errata[T, E]))
+  def errata[F[+ _], T, E <: Exception : ClassTag](a: F[E])(implicit functor: Functor[F]): ResultT[F, T, E] =
+    apply[F, T, E](functor.map(a)(Result.errata[T, E]))
 
 }
 
-private[scalazResult] trait ResultTFunctions {
+private[scalazInterop] trait ResultTFunctions {
   def resultT[F[+ _], T, E <: Exception](a: F[Result[T, E]]): ResultT[F, T, E] = new ResultT[F, T, E] {
     val run = a
   }

@@ -1,10 +1,6 @@
-package rapture.core.scalazResult.test
+package rapture.core.scalazInterop.test
 
-import rapture.core._
-import rapture.core.scalazResult.test.Tests._
-import rapture.test.TestSuite
-import rapture.core._
-import rapture.core.scalazResult.ResultT
+import rapture.core._, scalazInterop._
 import rapture.test._
 import scalaz._
 import Scalaz._
