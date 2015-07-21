@@ -73,16 +73,18 @@ class I18nTests() extends TestSuite {
   } returns "Bonjour le monde"
 
   val `Adding existing language does not compile` = test {
-    illTyped("""
+    typeMismatch {
+      import deferTypeErrors._
       en"a" | fr"b" | en"c"
-    """)
-  } returns ()
+    }
+  } returns true
 
   val `Adding existing language does not compile (2)` = test {
-    illTyped("""
+    typeMismatch {
+      import deferTypeErrors._
       (en"a" | fr"b") | (de"c" | en"d")
-    """)
-  } returns ()
+    }
+  } returns true
 
   val `Get language string using runtime value` = test {
     val msg = en"Hello" | fr"Bonjour"
@@ -92,13 +94,14 @@ class I18nTests() extends TestSuite {
   } returns "Bonjour"
 
   val `Get language string from subset using runtime value` = test {
-    illTyped("""
+    typeMismatch {
+      import deferTypeErrors._
       val msg = en"Hello" | fr"Bonjour"
       val langs = en | fr | de
       implicit val loc = langs.parse("FR")
       msg: String
-    """)
-  } returns ()
+    }
+  } returns true
 
   val `Get language string from superset using runtime value` = test {
     val msg = en"Hello" | fr"Bonjour" | de"Hallo"
