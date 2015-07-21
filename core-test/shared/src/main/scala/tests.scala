@@ -224,7 +224,7 @@ object Tests extends TestSuite {
     Result.answer(1) filter (_ == 1)
   } returns Answer(1)
 
-  val `filter answer` = test {
+  val `filter answer 2` = test {
     Result.answer(1) filter (_ == 0)
   } returns Errata(Nil)
 

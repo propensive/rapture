@@ -2,7 +2,7 @@ package rapture.json.test
 
 import rapture.core._
 import rapture.json._
-import rapture.data._
+import rapture.data.{Parser, DataTypes}
 import rapture.test._
 
 import scala.util
@@ -21,22 +21,22 @@ case class E(e: F)
 case class F(f: Int)
 
 import jsonBackends._
-class ScalaJsonTests() extends JsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
-class PlayTests() extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
+//class ScalaJsonTests() extends JsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
+//class PlayTests() extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
 class JawnTests() extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
-class Json4sTests() extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
-class SprayTests() extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
-class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+//class Json4sTests() extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
+//class SprayTests() extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
+//class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
+//class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+//class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
-class MutableScalasonTests() extends MutableJsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
-class MutablePlayTests() extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
+//class MutableScalasonTests() extends MutableJsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
+//class MutablePlayTests() extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
 class MutableJawnTests() extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
-class MutableJson4sTests() extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
-class MutableSprayTests() extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-class MutableArgonautTests() extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-class MutableLiftTests() extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+//class MutableJson4sTests() extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
+//class MutableSprayTests() extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
+//class MutableArgonautTests() extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+//class MutableLiftTests() extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends TestSuite {
 
@@ -87,18 +87,15 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   
   val `Extract List[Int]` = test {
     source1.list.as[List[Int]]
-  } requires `Extract Int` returns List(1, 2, 3)
+  } returns List(1, 2, 3)
   
   val `Extract Vector[Int]` = test {
     source1.list.as[Vector[Int]]
-  } requires `Extract Int` returns Vector(1, 2, 3)
+  } returns Vector(1, 2, 3)
   
   val `Extract case class` = test {
     source1.foo.as[Foo]
-  } requires (
-    `Extract String`,
-    `Extract Int`
-  ) returns Foo("test", 1)
+  } returns Foo("test", 1)
   
   val `Extract case class with missing optional value` = test {
     source1.baz.as[Baz]
@@ -118,9 +115,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   
   val `Extract nested case class` = test {
     source1.bar.as[Bar]
-  } requires (
-    `Extract case class`
-  ) returns Bar(Foo("test2", 2), 2.7)
+  } returns Bar(Foo("test2", 2), 2.7)
   
   val `Extract deeply-nested case class` = test {
     json"""{ "a": { "b": { "c": { "d": { "e": { "f": 1 } } } } } }""".as[A]
@@ -128,15 +123,11 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
 
   val `Extract List element` = test {
     source1.list(1).as[Int]
-  } requires (
-    `Extract Int`
-  ) returns 2
+  } returns 2
   
   val `Extract object element` = test {
     source1.bar.foo.alpha.as[String]
-  } requires (
-    `Extract String`
-  ) returns "test2"
+  } returns "test2"
 
   val `Check type failure` = test {
     source1.string.as[Int]
@@ -313,12 +304,12 @@ abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonB
   val `Deep array insertion of integer` = test {
     source2.array(1)(2)(3)(4) = 1
     source2.array(1)(2)(3)(4).as[Int]
-  } requires `Array autopadding` returns 1
+  } returns 1
 
   val `Deep mixed insertion of string` = test {
     source2.mixed(4).foo.bar(2).baz = "Mixed"
     source2.mixed(4).foo.bar(2).baz.as[String]
-  } requires `Array autopadding` returns "Mixed"
+  } returns "Mixed"
 
   val `Mutable add array String` = test {
     source2.inner.newArray += "Hello"

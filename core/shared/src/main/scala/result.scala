@@ -114,14 +114,14 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     }
 
   /** Return `true` if this result is an answer satisfying the given predicate. */
-  def exists[TT >: T](p: TT => Boolean): Boolean =
+  def exists(p: T => Boolean): Boolean =
     this match {
       case Answer(b) => p(b)
       case _ => false
     }
 
   /** Return `true` if this result is an errata or the answer satisfies the given predicate. */
-  def forall[TT >: T](p: TT => Boolean): Boolean =
+  def forall(p: T => Boolean): Boolean =
     this match {
       case Answer(b) => p(b)
       case _ => true
@@ -153,18 +153,18 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     }
 
   /** Return the answer of this result or the given default if errata. Alias for `|` */
-  def getOrElse[TT >: T](x: => TT): TT =
+  def getOrElse[T2 >: T](x: => T2): T2 =
     this match {
       case Answer(b) => b
       case _ => x
     }
 
   /** Return the answer value of this result or the given default if errata. Alias for `getOrElse` */
-  def |[TT >: T](x: => TT): TT =
+  def |[T2 >: T](x: => T2): T2 =
     getOrElse(x)
 
   /** Return the answer of this result or run the given function on the errata. */
-  def valueOr[TT >: T](x: Seq[(ClassTag[_], (String, Exception))] => TT): TT =
+  def valueOr[T2 >: T](x: Seq[(ClassTag[_], (String, Exception))] => T2): T2 =
     this match {
       case Answer(b) => b
       case Errata(a) => x(a)
