@@ -28,7 +28,7 @@ class JawnTests() extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStrin
 //class SprayTests() extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
 //class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
 //class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-//class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 //class MutableScalasonTests() extends MutableJsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
 //class MutablePlayTests() extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
