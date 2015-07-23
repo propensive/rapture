@@ -21,16 +21,14 @@ case class E(e: F)
 case class F(f: Int)
 
 import jsonBackends._
-//class ScalaJsonTests() extends JsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
 class PlayTests() extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
 class JawnTests() extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
 class Json4sTests() extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
 class SprayTests() extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-//class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
+class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
 class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
 class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
-//class MutableScalasonTests() extends MutableJsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
 class MutablePlayTests() extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
 class MutableJawnTests() extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
 class MutableJson4sTests() extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
