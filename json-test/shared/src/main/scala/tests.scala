@@ -27,7 +27,7 @@ class JawnTests() extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStrin
 //class Json4sTests() extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
 class SprayTests() extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
 //class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
-//class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
 class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 //class MutableScalasonTests() extends MutableJsonTests(scalaJson.implicitJsonAst, scalaJson.implicitJsonStringParser)
@@ -35,15 +35,13 @@ class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStrin
 class MutableJawnTests() extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
 //class MutableJson4sTests() extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
 class MutableSprayTests() extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-//class MutableArgonautTests() extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-//class MutableLiftTests() extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+class MutableArgonautTests() extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+class MutableLiftTests() extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends TestSuite {
 
   implicit def implicitAst: JsonAst = ast
   implicit def implicitParser: Parser[String, JsonAst] = parser
-
-  import formatters.humanReadable._
 
   val source1 = json"""{
     "string": "Hello",
