@@ -215,8 +215,8 @@ lazy val jsonJS = json.js
 lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.7.4")
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.7.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.1")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.1")
  
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
@@ -235,7 +235,7 @@ lazy val jsonLiftJS = `json-lift`.js
 lazy val `json-play` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-play")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.0-M1")
+  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.2")
  
 lazy val jsonPlayJVM = `json-play`.jvm
 lazy val jsonPlayJS = `json-play`.js
@@ -244,7 +244,7 @@ lazy val jsonPlayJS = `json-play`.js
 lazy val `json-json4s` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-json4s")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.11")
+  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0.RC3")
  
 lazy val jsonJson4sJVM = `json-json4s`.jvm
 lazy val jsonJson4sJS = `json-json4s`.js
@@ -253,7 +253,7 @@ lazy val jsonJson4sJS = `json-json4s`.js
 lazy val `json-spray` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-spray")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.spray" %% "spray-json" % "1.3.1")
+  .settings(libraryDependencies += "io.spray" %% "spray-json" % "1.3.2")
  
 lazy val jsonSprayJVM = `json-spray`.jvm
 lazy val jsonSprayJS = `json-spray`.js
@@ -262,7 +262,7 @@ lazy val jsonSprayJS = `json-spray`.js
 lazy val `json-argonaut` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-argonaut")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.0.4")
+  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.1")
  
 lazy val jsonArgonautJVM = `json-argonaut`.jvm
 lazy val jsonArgonautJS = `json-argonaut`.js

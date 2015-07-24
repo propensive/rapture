@@ -24,9 +24,6 @@ private[jawn] trait Extractors {
   implicit val jawnJArrayExtractor: JsonCastExtractor[JArray] =
     JsonCastExtractor(JawnAst, DataTypes.Array)
   
-  implicit val jawnJContainerExtractor: JsonCastExtractor[JContainer] =
-    JsonCastExtractor(JawnAst, DataTypes.Container)
-  
   implicit val jawnDeferNumExtractor: JsonCastExtractor[DeferNum] =
     JsonCastExtractor(JawnAst, DataTypes.Number)
   
