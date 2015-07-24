@@ -215,8 +215,8 @@ lazy val jsonJS = json.js
 lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.1")
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.1")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.0")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.0")
  
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
