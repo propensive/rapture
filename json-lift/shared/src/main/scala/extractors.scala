@@ -10,38 +10,30 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.json.jsonBackends.jawn
+package rapture.json.jsonBackends.lift
 
-import rapture.data._
 import rapture.json._
+import rapture.data._
 
-import _root_.jawn.ast._
+import net.liftweb.json._
+import JsonAST._
 
-private[jawn] trait Extractors {
-  implicit val jawnJObjectExtractor: JsonCastExtractor[JObject] =
-    JsonCastExtractor(JawnAst, DataTypes.Object)
+private[lift] trait Extractors {
+  implicit val liftJValueExtractor: JsonCastExtractor[JValue] =
+    JsonCastExtractor(LiftAst, DataTypes.Any)
   
-  implicit val jawnJArrayExtractor: JsonCastExtractor[JArray] =
-    JsonCastExtractor(JawnAst, DataTypes.Array)
+  implicit val liftJStringExtractor: JsonCastExtractor[JString] =
+    JsonCastExtractor(LiftAst, DataTypes.String)
   
-  implicit val jawnDeferNumExtractor: JsonCastExtractor[DeferNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
+  implicit val liftJIntExtractor: JsonCastExtractor[JInt] =
+    JsonCastExtractor(LiftAst, DataTypes.Number)
   
-  implicit val jawnDoubleNumExtractor: JsonCastExtractor[DoubleNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
+  implicit val liftJDoubleExtractor: JsonCastExtractor[JDouble] =
+    JsonCastExtractor(LiftAst, DataTypes.Number)
   
-  implicit val jawnLongNumExtractor: JsonCastExtractor[LongNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
+  implicit val liftJArrayExtractor: JsonCastExtractor[JArray] =
+    JsonCastExtractor(LiftAst, DataTypes.Array)
   
-  implicit val jawnJNumExtractor: JsonCastExtractor[JNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
-  
-  implicit val jawnStringExtractor: JsonCastExtractor[JString] =
-    JsonCastExtractor(JawnAst, DataTypes.String)
-  
-  implicit val jawnAtomExtractor: JsonCastExtractor[JAtom] =
-    JsonCastExtractor(JawnAst, DataTypes.Scalar)
-  
-  implicit val jawnValueExtractor: JsonCastExtractor[JValue] =
-    JsonCastExtractor(JawnAst, DataTypes.Any)
+  implicit val liftJObjectExtractor: JsonCastExtractor[JObject] =
+    JsonCastExtractor(LiftAst, DataTypes.Object)
 }

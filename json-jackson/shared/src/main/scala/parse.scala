@@ -10,38 +10,24 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.json.jsonBackends.jawn
-
-import rapture.data._
+package rapture.json.jsonBackends.jackson
+import rapture.core._
 import rapture.json._
+import rapture.data._
 
-import _root_.jawn.ast._
+import scala.collection.mutable.{ListBuffer, HashMap}
 
-private[jawn] trait Extractors {
-  implicit val jawnJObjectExtractor: JsonCastExtractor[JObject] =
-    JsonCastExtractor(JawnAst, DataTypes.Object)
+import org.codehaus.jackson.{JsonParser => _, _}
+
+private[jackson] object JacksonParser extends Parser[String, JsonAst] {
   
-  implicit val jawnJArrayExtractor: JsonCastExtractor[JArray] =
-    JsonCastExtractor(JawnAst, DataTypes.Array)
+  val ast = JacksonAst
   
-  implicit val jawnDeferNumExtractor: JsonCastExtractor[DeferNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
+  override def toString = "<JacksonParser>"
   
-  implicit val jawnDoubleNumExtractor: JsonCastExtractor[DoubleNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
+  private val mapper = new map.ObjectMapper()
   
-  implicit val jawnLongNumExtractor: JsonCastExtractor[LongNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
-  
-  implicit val jawnJNumExtractor: JsonCastExtractor[JNum] =
-    JsonCastExtractor(JawnAst, DataTypes.Number)
-  
-  implicit val jawnStringExtractor: JsonCastExtractor[JString] =
-    JsonCastExtractor(JawnAst, DataTypes.String)
-  
-  implicit val jawnAtomExtractor: JsonCastExtractor[JAtom] =
-    JsonCastExtractor(JawnAst, DataTypes.Scalar)
-  
-  implicit val jawnValueExtractor: JsonCastExtractor[JValue] =
-    JsonCastExtractor(JawnAst, DataTypes.Any)
+  def parse(s: String): Option[Any] =
+    Some(mapper.readTree(s))
 }
+

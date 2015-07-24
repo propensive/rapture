@@ -4,6 +4,8 @@ git:
 scala:
 - 2.10.5
 - 2.11.7
+jdk:
+- oraclejdk8
 script:
 - if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "dev" && $(cat version.sbt) =~ "-SNAPSHOT" ]] ; then sbt ++$TRAVIS_SCALA_VERSION compile publish gitSnapshots publish ; else sbt ++$TRAVIS_SCALA_VERSION compile publishLocal; fi
 notifications:
