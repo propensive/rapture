@@ -281,14 +281,14 @@ lazy val jsonJacksonJS = `json-jackson`.js
 lazy val `core-scalaz` = crossProject.dependsOn(core)
   .settings(moduleName := "rapture-core-scalaz")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.2")
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.1.2")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.3")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.1.3")
  
 lazy val coreScalazJVM = `core-scalaz`.jvm
 lazy val coreScalazJS = `core-scalaz`.js
 
 // rapture-core-test
-lazy val `core-test` = crossProject.dependsOn(core, test)
+lazy val `core-test` = crossProject.dependsOn(core, `core-scalaz`, test)
   .settings(moduleName := "rapture-core-test")
   .settings(raptureSettings:_*)
  

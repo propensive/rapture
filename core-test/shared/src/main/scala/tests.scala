@@ -1,7 +1,10 @@
 package rapture.core.test
 
 import rapture.core._
+import rapture.core.scalazInterop.ResultT
 import rapture.test._
+
+import scalaz.Scalaz._
 
 object Tests extends TestSuite {
 
@@ -247,6 +250,40 @@ object Tests extends TestSuite {
       y = x + 1
     } yield y
   } returns Answer(2)
+
+  val `ResultT Checking isErrata with errata` = test {
+    ResultT.errata(Option(AlphaException())).run.get.isErrata
+  } returns true
+
+  val `ResultT Checking isErrata with answer` = test {
+    ResultT.answer(Option(1)).run.get.isErrata
+  } returns false
+
+  val `ResultT Checking isAnswer with errata` = test {
+    ResultT.errata(Option(AlphaException())).run.get.isAnswer
+  } returns false
+
+  val `ResultT Checking isAnswer with answer` = test {
+    ResultT.answer(Option(1)).run.get.isAnswer
+  } returns true
+
+  val `ResultT Checking isUnforeseen with answer` = test {
+    ResultT.answer(Option(1)).run.get.isUnforeseen
+  } returns false
+
+  val `ResultT Checking isUnforeseen with errata` = test {
+    ResultT.errata(Option(AlphaException())).run.get.isUnforeseen
+  } returns false
+
+  val `ResultT withFilter accumulating exceptions` = test {
+    val z: ResultT[Option, Int, NumberFormatException with IllegalArgumentException] = for {
+      x <- ResultT(Option(Result.catching[NumberFormatException]("1".toInt)))
+      y <- ResultT(Option(Result.catching[IllegalArgumentException]("1".toInt)))
+    } yield x + y
+    z.run.get.get
+  } returns 2
+
+
 
 }
 
