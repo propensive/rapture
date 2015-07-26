@@ -50,7 +50,7 @@ trait ObjectMatchingConfig { def checkSizes: Boolean }
 
 abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: DataAst] {
 
-  def parseSource(s: List[String]): Option[(Int, Int, String)]
+  def parseSource(s: List[String], stringsUsed: List[Boolean]): Option[(Int, Int, String)]
 
   def companion(c: BlackboxContext): c.Expr[DataCompanion[Data, AstType]]
 
@@ -62,32 +62,45 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
       case Select(Apply(Apply(_, List(Apply(_, rawParts))), _), _) =>
         val ys = rawParts.to[List]
         val text = rawParts map { case lit@Literal(Constant(part: String)) => part }
-        parseSource(text) foreach { case (n, offset, msg) =>
+       
+        val listExprs = c.Expr[List[ForcedConversion[Data]]](Apply(
+          Select(reify(List).tree, termName(c, "apply")),
+          exprs.map(_.tree).to[List]
+        ))
+        
+        val stringsUsed: List[Boolean] = (listExprs.tree match {
+          case Apply(_, bs) => bs.map {
+            case Apply(Apply(TypeApply(Select(_, TermName(nme)), _), _), _) => nme == "forceStringConversion"
+          }
+        })
+
+        parseSource(text, stringsUsed) foreach { case (n, offset, msg) =>
           val oldPos = ys(n).asInstanceOf[Literal].pos
           
           val newPos = oldPos.withPoint(oldPos.start + offset)
           c.error(newPos, msg)
         }
-        parseSource(text)
+        
         val listParts = c.Expr[List[String]](Apply(
           Select(reify(List).tree, termName(c, "apply")), 
           rawParts
         ))
-        val listExprs = c.Expr[List[ForcedConversion[Data]]](Apply(
-          Select(reify(List).tree, termName(c, "apply")),
-          exprs.map(_.tree).to[List]
-        ))
+        
         val comp = companion(c)
+       
         reify {
           val sb = new StringBuilder
           val textParts = listParts.splice.iterator
           val expressions: Iterator[ForcedConversion[_]] = listExprs.splice.iterator
+          
           sb.append(textParts.next())
+          
           while(textParts.hasNext) {
             sb.append(comp.splice.construct(MutableCell(expressions.next.value),
                 Vector())(parser.splice.ast).toString)
             sb.append(textParts.next)
           }
+          
           comp.splice.construct(MutableCell(parser.splice.parse(sb.toString).get), Vector())(
               parser.splice.ast)
         }

@@ -18,8 +18,10 @@ private[json] object JsonValidator {
       extends Exception
   
   case class DuplicateKeyException(strNo: Int, pos: Int, key: String) extends Exception
+  
+  case class NonStringKeyException(strNo: Int, pos: Int) extends Exception
 
-  def validate(parts: List[String]) = {
+  def validate(parts: List[String], stringsUsed: List[Boolean]) = {
     var i = 0
     var n = 0
     def s = parts(n)
@@ -80,11 +82,18 @@ private[json] object JsonValidator {
       var seen: Set[String] = Set()
       def takeKeyValue(): Unit = {
         val start = i
-        takeString()
-        val key = s.substring(start + 1, i - 1)
-        
-        if(seen contains key) duplicateKey(start, key) else seen += key
-        
+        cur match {
+          case '\u0000' =>
+            if(n + 1 < parts.length) {
+              if(!stringsUsed(n)) throw new NonStringKeyException(n, i)
+              n += 1
+              i = 0
+            } else fail("new token or interpolated value")
+          case '"' =>
+            takeString()
+            val key = s.substring(start + 1, i - 1)
+            if(seen contains key) duplicateKey(start, key) else seen += key
+        }
         takeWhitespace()
         cur match {
           case ':' =>
@@ -107,7 +116,7 @@ private[json] object JsonValidator {
       consume('{')
       takeWhitespace()
       cur match {
-        case '"' => takeKeyValue()
+        case '"' | '\u0000' => takeKeyValue()
         case '}' => consume('}')
         case _ => fail("'\"' or '}'")
       }
