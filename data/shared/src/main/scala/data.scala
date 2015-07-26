@@ -214,13 +214,17 @@ trait MutableDataType[+T <: DataType[T, AstType], AstType <: MutableDataAst]
 trait `Data#as` extends MethodConstraint
 trait `Data#normalize` extends MethodConstraint
 
-object ForcedConversion extends LowPriorityForcedConversion {
+object ForcedConversion extends ForcedConversion_1 {
   implicit def forceOptConversion[T, D](opt: Option[T])(implicit ser: Serializer[T, D]) =
     opt.map(t => ForcedConversion[D](ser.serialize(t), false)) getOrElse
         ForcedConversion[D](null, true)
+ 
+  // The name of this method is significant for some additional checking done in the macro `contextMacro`.
+  implicit def forceStringConversion[D](value: String)(implicit ser: Serializer[String, D]) =
+    ForcedConversion[D](ser.serialize(value), false)
 }
 
-trait LowPriorityForcedConversion {
+trait ForcedConversion_1 {
   implicit def forceConversion[T, D](t: T)(implicit ser: Serializer[T, D]) =
     ForcedConversion[D](ser.serialize(t), false)
 }
