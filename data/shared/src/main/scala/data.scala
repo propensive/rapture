@@ -220,8 +220,8 @@ object ForcedConversion extends ForcedConversion_1 {
         ForcedConversion[D](null, true)
  
   // The name of this method is significant for some additional checking done in the macro `contextMacro`.
-  implicit def forceStringConversion[D](value: String)(implicit ser: Serializer[String, D]) =
-    ForcedConversion[D](ser.serialize(value), false)
+  implicit def forceStringConversion[D, T: StringSerializer](value: T)(implicit ser: Serializer[String, D]) =
+    ForcedConversion[D](ser.serialize(?[StringSerializer[T]].serialize(value)), false)
 }
 
 trait ForcedConversion_1 {
