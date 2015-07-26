@@ -70,14 +70,14 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
         
         val stringsUsed: List[Boolean] = (listExprs.tree match {
           case Apply(_, bs) => bs.map {
-            case Apply(Apply(TypeApply(Select(_, TermName(nme)), _), _), _) => nme == "forceStringConversion"
+            case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => nme.toString == "forceStringConversion"
           }
         })
 
         parseSource(text, stringsUsed) foreach { case (n, offset, msg) =>
           val oldPos = ys(n).asInstanceOf[Literal].pos
           
-          val newPos = oldPos.withPoint(oldPos.start + offset)
+          val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
           c.error(newPos, msg)
         }
         
