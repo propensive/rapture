@@ -3,10 +3,10 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/propensive/rapture)
 [![Build Status](https://travis-ci.org/propensive/rapture.png?branch=dev)](https://travis-ci.org/propensive/rapture)
 
-Rapture is an evolving collection of *useful* libraries for solving common
-programming tasks, using advanced features of Scala to offer better type-safety
-through powerful APIs that all Scala developers, beginners and advanced users,
-should find intuitive.
+Rapture is an evolving collection of *useful* libraries for solving common,
+everyday programming tasks, using advanced features of Scala to offer better
+type-safety through powerful APIs that all Scala developers, beginners and
+advanced users, should find intuitive.
 
 Rapture consists of a number of modules, the most notable of which are:
 
