@@ -88,27 +88,23 @@ object Macros {
       ))
     } else {
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
-  
+
+      val defaults = weakTypeOf[T].companion.members.to[List].map(_.name.decodedName.toString).filter(_ startsWith "apply$default$").map(_.substring(14).toInt).to[Set]
+
       // FIXME integrate these into a fold
       var throwsTypes: Set[Type] = Set(typeOf[DataGetException])
 
-      val params = declarations(c)(weakTypeOf[T]) collect {
+      val params = declarations(c)(weakTypeOf[T]).collect {
         case m: MethodSymbol if m.isCaseAccessor => m.asMethod
-      } map { p =>
+      }.zipWithIndex map { case (p, idx) =>
        
-        val deref = Apply(
-          Select(
-            Ident(termName(c, "data")),
-            termName(c, "selectDynamic")
-          ),
-          List(
-            Literal(Constant(p.name.toString))
-          )
-        )
+        val deref = q"""data.selectDynamic(${Literal(Constant(p.name.toString))})"""
 
         val NothingType = weakTypeOf[Nothing]
         
-        val imp = try c.inferImplicitValue(appliedType(extractor, List(p.returnType, weakTypeOf[Data])), false, false) catch {
+        val imp = try c.inferImplicitValue(appliedType(extractor, List(p.returnType, weakTypeOf[Data])), false,
+            false) catch {
+          
           case e: Exception =>
             implicitSearchFailures(p.returnType.toString) ::= p.name.toString
             null
@@ -119,7 +115,7 @@ object Macros {
             case NothingType => List()
             case refinedType: RefinedType => refinedType.parents
             case typ: Type => List(typ)
-            case _ => println("Didn't match type: (1)"); ???
+            case _ => ???
           }
         } catch {
           case e: Exception =>
@@ -128,28 +124,22 @@ object Macros {
 
         throwsTypes ++= t
 
-        Apply(
-          Select(
-            Ident(termName(c, "mode")),
-            termName(c, "unwrap")
-          ),
-          List(
-            Apply(
-              Select(
-                deref,
-                termName(c, "as")
-              ),
-              List(
-                imp,
-                Select(
-                  Ident(termName(c, "mode")),
-                  termName(c, "generic")
-                )
-              )
-            ),
-            Literal(Constant("."+p.name.toString))
-          )
-        )
+        // Borrowed from Shapeless
+        def companionRef(tpe: Type): Tree = {
+          val global = c.universe.asInstanceOf[scala.tools.nsc.Global]
+          val gTpe = tpe.asInstanceOf[global.Type]
+          val pre = gTpe.prefix
+          val sym = gTpe.typeSymbol
+          val cSym = sym.companionSymbol
+          if(cSym != NoSymbol) global.gen.mkAttributedRef(pre, cSym).asInstanceOf[Tree]
+          else Ident(tpe.typeSymbol.name.toTermName)
+        }  
+
+        if(defaults.contains(idx + 1)) q"""
+          mode.unwrap(if($deref.is($imp)) $deref.as($imp, mode.generic) else mode.wrap(${companionRef(weakTypeOf[T])}.${TermName("apply$default$"+(idx + 1))}.asInstanceOf[${p.returnType}]), ${Literal(Constant("."+p.name))})
+        """ else q"""
+          mode.unwrap($deref.as($imp, mode.generic), ${Literal(Constant("."+p.name))})
+        """
       }
 
       if(!implicitSearchFailures.isEmpty) {
