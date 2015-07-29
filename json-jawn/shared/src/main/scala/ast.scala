@@ -60,14 +60,14 @@ private[jawn] object JawnAst extends JsonBufferAst {
   
   def getBigDecimal(bigDecimal: Any): BigDecimal = bigDecimal match {
     case DoubleNum(d) => BigDecimal(d)
-    case LongNum(v) => BigDecimal(v)
+    case DeferLong(v) => BigDecimal(v)
     case DeferNum(v) => BigDecimal(v)
     case _ => throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
   }
   
   def getDouble(double: Any): Double = double match {
     case DoubleNum(d) => d
-    case LongNum(v) => v.toDouble
+    case DeferLong(v) => v.toDouble
     case DeferNum(v) => java.lang.Double.valueOf(v)
     case _ => throw TypeMismatchException(getType(double), DataTypes.Number)
   }
@@ -110,7 +110,7 @@ private[jawn] object JawnAst extends JsonBufferAst {
   }
   
   def isNumber(num: Any): Boolean = num match {
-    case DoubleNum(_) | LongNum(_) | DeferNum(_) => true
+    case DoubleNum(_) | DeferLong(_) | DeferNum(_) => true
     case _ => false
   }
   
