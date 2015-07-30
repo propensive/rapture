@@ -89,7 +89,7 @@ object Macros {
     } else {
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
 
-      val defaults = weakTypeOf[T].companion.members.to[List].map(_.name.decodedName.toString).filter(_ startsWith "apply$default$").map(_.substring(14).toInt).to[Set]
+      val defaults = weakTypeOf[T].typeSymbol.companionSymbol.typeSignature.declarations.to[List].map(_.name.decodedName.toString).filter(_ startsWith "apply$default$").map(_.substring(14).toInt).to[Set]
 
       // FIXME integrate these into a fold
       var throwsTypes: Set[Type] = Set(typeOf[DataGetException])
@@ -136,7 +136,7 @@ object Macros {
         }  
 
         if(defaults.contains(idx + 1)) q"""
-          mode.unwrap(if($deref.is($imp)) $deref.as($imp, mode.generic) else mode.wrap(${companionRef(weakTypeOf[T])}.${TermName("apply$default$"+(idx + 1))}.asInstanceOf[${p.returnType}]), ${Literal(Constant("."+p.name))})
+          mode.unwrap(if($deref.is($imp)) $deref.as($imp, mode.generic) else mode.wrap(${companionRef(weakTypeOf[T])}.${termName(c, "apply$default$"+(idx + 1))}.asInstanceOf[${p.returnType}]), ${Literal(Constant("."+p.name))})
         """ else q"""
           mode.unwrap($deref.as($imp, mode.generic), ${Literal(Constant("."+p.name))})
         """
