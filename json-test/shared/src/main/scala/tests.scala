@@ -13,6 +13,9 @@ case class Bar(foo: Foo, gamma: Double)
 case class Baz(alpha: String, beta: Option[Int])
 case class Baz2(alpha: String, beta: util.Try[Int])
 
+case class HasDefault(alpha: String = "yes", beta: Int)
+case class HasDefault2(alpha: String, beta: Int = 1)
+
 case class A(a: B)
 case class B(b: C)
 case class C(c: D)
@@ -125,6 +128,18 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     source1.bar.foo.alpha.as[String]
   } returns "test2"
 
+  val `Extract missing value with case class default` = test {
+    json"""{"beta": 0}""".as[HasDefault]
+  } returns HasDefault("yes", 0)
+  
+  val `Extract missing value with case class default 2` = test {
+    json"""{"alpha": "no"}""".as[HasDefault2]
+  } returns HasDefault2("no", 1)
+  
+  val `Extract case class ignoring default value` = test {
+    json"""{"alpha": "no", "beta": 0}""".as[HasDefault2]
+  } returns HasDefault2("no", 0)
+  
   val `Check type failure` = test {
     source1.string.as[Int]
   } throws TypeMismatchException(DataTypes.String, DataTypes.Number)
@@ -223,6 +238,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Tabs should be escaped when serializing strings` = test {
     Json("\t").toString
   } returns """"\t""""
+
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {

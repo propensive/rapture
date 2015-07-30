@@ -118,6 +118,13 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
   def as[S](implicit ext: Extractor[S, T], mode: Mode[`Data#as`]):
       mode.Wrap[S, ext.Throws] = ext.extract(this.asInstanceOf[T], $ast, mode)
 
+  def is[S](implicit ext: Extractor[S, T]): Boolean = try {
+    ext.extract(this.asInstanceOf[T], $ast, modes.throwExceptions())
+    true
+  } catch {
+    case e: Exception => false
+  }
+
   def apply(i: Int = 0): T = $deref(Left(i) +: $path)
 
   override def equals(any: Any) = try { any match {
