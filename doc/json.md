@@ -253,7 +253,7 @@ the pattern should result in failure to match, then include the following
 import somewhere within the scope of the pattern match:
 
 ```scala
-import patternMatching.exactObjects
+import patternMatching.exactObjects._
 ```
 
 By default, array elements specified in a pattern are matched positionally, and
@@ -261,14 +261,14 @@ superfluous array elements in the tail of the array are ignored, and the match
 will be successful. If strict array matching is required, include:
 
 ```scala
-import patternMatching.exactArrays
+import patternMatching.exactArrays._
 ```
 
 If exact matching of both arrays and objects is required, then it is sufficient
 to import
 
 ```scala
-import patternMatching.exact
+import patternMatching.exact._
 ```
 
 ## Modifying `Json`
@@ -435,7 +435,7 @@ provide their own formatters for outputting to other types.
 For example,
 
 ```scala
-import formatters.compact
+import formatters.compact._
 val out = Json.format(json)
 ```
 
