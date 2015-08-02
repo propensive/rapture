@@ -3,8 +3,7 @@
 [![Build Status](https://travis-ci.org/propensive/rapture.png?branch=dev)](https://travis-ci.org/propensive/rapture)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.propensive/rapture-core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.propensive/rapture-core_2.11)
 [![License](http://img.shields.io/:license-Apache%202-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
-
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/propensive/rapture)
+[![Gitter](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/propensive/rapture)
 
 Rapture is an evolving collection of *useful* libraries for solving common,
 everyday programming tasks, using advanced features of Scala to offer better
@@ -15,7 +14,7 @@ Rapture consists of a number of modules, the most notable of which are:
 
  - `core` — a library of common utilities for other projects, notably *modes*
    and the `Result` type
- - `json` — comprehensive support for working with JSON data
+ - [`json`](doc/json.md) — comprehensive support for working with JSON data
  - `io` — I/O (network, filesystem) functionality and infrastructure
  - `i18n` — simple, typesafe representation of internationalized strings
  - `cli` — support for working with command-line applications and shell interaction
