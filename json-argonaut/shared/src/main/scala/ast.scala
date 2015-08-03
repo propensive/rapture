@@ -125,8 +125,8 @@ private[argonaut] object ArgonautAst extends JsonBufferAst {
   
   def fromArray(array: Seq[Any]): Any = jArray(array.to[List] map { case v: AJson => v })
   def fromBoolean(boolean: Boolean): Any = jBool(boolean)
-  def fromDouble(number: Double): Any = jNumber(number)
-  def fromBigDecimal(number: BigDecimal): Any = jNumber(number.toDouble)
+  def fromDouble(number: Double): Any = jNumber(number).get
+  def fromBigDecimal(number: BigDecimal): Any = jNumber(number.toDouble).get
   
   def fromObject(obj: Map[String,Any]): Any =
     AJson(obj.mapValues{ case v: AJson => v }.to[List]: _*)
