@@ -129,7 +129,7 @@ private[jfc] object JfcAst extends JsonBufferAst {
   def fromArray(array: Seq[Any]): Any = JfcJson.array(array.to[List].map { case v: JfcJson => v }: _*)
   def fromBoolean(boolean: Boolean): Any = JfcJson.bool(boolean)
   def fromDouble(number: Double): Any = JfcJson.number(number).get
-  def fromBigDecimal(number: BigDecimal): Any = JfcJson.number(number.toDouble).get // FIXME: Don't convert to double
+  def fromBigDecimal(number: BigDecimal): Any = JfcJson.bigDecimal(number)
   
   def fromObject(obj: Map[String,Any]): Any =
     JfcJson.obj(obj.mapValues{ case v: JfcJson => v }.to[List]: _*)
