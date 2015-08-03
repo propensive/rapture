@@ -30,6 +30,7 @@ class Json4sTests() extends JsonTests(json4s.implicitJsonAst, json4s.implicitJso
 class SprayTests() extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
 class JacksonTests() extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
 class ArgonautTests() extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+class JfcTests() extends JsonTests(jfc.implicitJsonAst, jfc.implicitJsonStringParser)
 class LiftTests() extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 class MutablePlayTests() extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
@@ -37,6 +38,7 @@ class MutableJawnTests() extends MutableJsonTests(jawn.implicitJsonAst, jawn.imp
 class MutableJson4sTests() extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
 class MutableSprayTests() extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
 class MutableArgonautTests() extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+class MutableJfcTests() extends MutableJsonTests(jfc.implicitJsonAst, jfc.implicitJsonStringParser)
 class MutableLiftTests() extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends TestSuite {
