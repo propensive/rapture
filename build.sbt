@@ -197,7 +197,7 @@ lazy val testJS = test.js
 
 // rapture-data
 lazy val data = crossProject.dependsOn(core)
-  .settings(moduleName := "rapture-test")
+  .settings(moduleName := "rapture-data")
   .settings(raptureSettings:_*)
  
 lazy val dataJVM = data.jvm
