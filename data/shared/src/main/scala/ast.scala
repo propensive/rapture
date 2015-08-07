@@ -37,7 +37,7 @@ trait Parser[-Source, +Ast <: DataAst] {
 }
 
 trait DataAst {
-  
+ 
   /** Dereferences the named element within the JSON object. */
   def dereferenceObject(obj: Any, element: String): Any =
     getObject(obj)(element)
@@ -77,6 +77,8 @@ trait DataAst {
   
   def getString(any: Any): Any
   def isString(any: Any): Boolean
+
+  def convert(any: Any, oldAst: DataAst): Any
 }
 
 trait MutableDataAst extends DataAst {

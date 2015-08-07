@@ -75,6 +75,39 @@ trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dy
 
 }
 
+object DataType {
+
+  implicit class DataClassOperations[T <: DataType[T, AstType], AstType <: DataAst](dataType: DataType[T, AstType]) {
+    def ++[S <: DataType[S, Rep] forSome { type Rep }](b: S): T = {
+      val ast = dataType.$ast
+      def merge(a: Any, b: Any): Any = {
+        if(ast.isObject(a) && ast.isObject(b)) {
+          ast.fromObject(ast.getKeys(b).foldLeft(ast.getObject(a)) { case (as, k) =>
+            as + (k -> {
+              if(as contains k) merge(as(k), ast.dereferenceObject(b, k)) else ast.dereferenceObject(b, k)
+            })
+          })
+        } else if(ast.isArray(a) && ast.isArray(b)) ast.fromArray(ast.getArray(a) ++ ast.getArray(b))
+        else b
+      }
+
+      val left = dataType.$normalize
+      val right = if(ast != b.$ast) ast.convert(b.$normalize, b.$ast.asInstanceOf[DataAst]) else b.$normalize
+      dataType.$wrap(merge(left, right), Vector())
+    }
+
+    def +(pv: (DynamicPath => DynamicPath, ForcedConversion[T])): T =
+      if(pv._2.nothing) dataType.$wrap(dataType.$normalize) else {
+        def add(path: List[Either[Int, String]], v: Any): Any = path match {
+          case Nil => v
+          case Right(next) :: list => dataType.$ast.fromObject(Map(next -> add(list, v)))
+          case Left(next) :: list => ??? // FIXME: Implement this!
+        }
+        ++(dataType.$wrap(add(pv._1(DynamicPath(Nil)).path.reverse, pv._2.value), Vector()))
+      }
+  }
+}
+
 trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
   val $root: MutableCell
   implicit def $ast: AstType
@@ -134,34 +167,6 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
 
   override def hashCode = $root.value.hashCode ^ 3271912
 
-  def ++[S <: DataType[S, Rep] forSome { type Rep }](b: S): T = {
-    def merge(a: Any, b: Any): Any = {
-      if($ast.isObject(b)) {
-        if($ast.isObject(a)) {
-          $ast.fromObject($ast.getKeys(b).foldLeft($ast.getObject(a)) { case (as, k) =>
-            as + (k -> {
-              if(as contains k) merge(as(k), $ast.dereferenceObject(b, k))
-              else $ast.dereferenceObject(b, k)
-            })
-          })
-        } else b
-      } else if($ast.isArray(b)) {
-        if($ast.isArray(a)) $ast.fromArray($ast.getArray(a) ++ $ast.getArray(b))
-        else b
-      } else b
-    }
-    $wrap(merge($normalize, b.$root.value), Vector())
-  }
-
-  def +(pv: (DynamicPath => DynamicPath, ForcedConversion[T])): T =
-    if(pv._2.nothing) $wrap($normalize) else {
-      def add(path: List[Either[Int, String]], v: Any): Any = path match {
-        case Nil => v
-        case Right(next) :: list => $ast.fromObject(Map(next -> add(list, v)))
-        case Left(next) :: list => ??? // FIXME: Implement this!
-      }
-      this ++ $wrap(add(pv._1(DynamicPath(Nil)).path.reverse, pv._2.value), Vector())
-    }
 }
 
 trait MutableDataType[+T <: DataType[T, AstType], AstType <: MutableDataAst]
