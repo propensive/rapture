@@ -409,10 +409,56 @@ will likely result in better performance.
 
 ## Converting JSON
 
-All JSON is represented by the same Scala type, `Json`, regardless of what type
-of value it contains, and which backend was used to create it.
+All JSON values are represented by the same Scala type, `Json`, regardless of
+whether they represents a JSON object, array, string, number or boolean, and
+regardless of which backend was used to create it.
 
-FIXME: Complete this
+In order to combine two `Json` values, which may be represented using different
+ASTs, it is sometimes necessary to convert the internal representations of the
+JSON values from one backend to another. In all cases, this happens seamlessly
+when required.
+
+For example, given the two values `j1` and `j2`,
+
+```scala
+import jsonBackends.jawn._
+val j1: Json = json"""{ "foo": "bar" }"""
+import jsonBackends.jfc._
+val j2: Json = json"""{ "baz": "quux" }"""
+```
+
+the two JSON objects can be merged with `j1 ++ j2`. This will traverse the AST
+of the value `j2`, converting it from a JFC to a Jawn representation, and then
+merge it with the value `j1` to produce a `Json` value, represented as a Jawn
+AST.
+
+Likewise, substitutions into other JSON values will invoke conversions, as
+necessary. So, given the previous two values `j1` and `j2`, we could substitute
+both into a new JSON object (represented by some third backend AST), and each
+will be converted to the new AST representation.
+
+```scala
+import jsonBackends.argonaut._
+val j3 = json"""{ "j1": $j1, "j2": $j2 }"""
+```
+
+Sometimes it is useful to eagerly force conversion of a `Json` value to the
+current JSON backend. This can be achieved in one of two ways:
+
+ - extract a `Json` type from the existing `Json` value, i.e. `jsonValue.as[Json]`
+ - construct a new `Json` value from the existing `Json` value, i.e. `Json(jsonValue)`
+
+These operations are equivalent, and usage is a matter of personal taste. If
+the value `jsonValue` is already represented by the currently-scoped JSON
+backend, these operations will be no-ops.
+
+Given that conversion happens seamlessly, on demand, the detail of which AST is
+used to represent the JSON is abstracted away from the user. It can, however,
+be revealed in a couple of ways:
+
+ - extracting an `Any` from the `Json` value using `jsonValue.as[Any]`; this
+   returns the underlying representation of the JSON value
+ - getting the `JsonAst` from the `Json` value using `Json.ast(jsonValue)`
 
 ## Outputting JSON
 
