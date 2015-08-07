@@ -445,8 +445,10 @@ val j3 = json"""{ "j1": $j1, "j2": $j2 }"""
 Sometimes it is useful to eagerly force conversion of a `Json` value to the
 current JSON backend. This can be achieved in one of two ways:
 
- - extract a `Json` type from the existing `Json` value, i.e. `jsonValue.as[Json]`
- - construct a new `Json` value from the existing `Json` value, i.e. `Json(jsonValue)`
+ - extract a `Json` type from the existing `Json` value, i.e.
+   `jsonValue.as[Json]`
+ - construct a new `Json` value from the existing `Json` value, i.e.
+   `Json(jsonValue)`
 
 These operations are equivalent, and usage is a matter of personal taste. If
 the value `jsonValue` is already represented by the currently-scoped JSON
@@ -487,4 +489,98 @@ val out = Json.format(json)
 
 ## Defining custom extractors and serializers
 
-FIXME: Complete this
+In order to be able to extract or serialize values of a particular Scala type,
+`T` to or from JSON, an implicit instance of `Extractor[T]` or `Serializer[T]`
+must be available in scope.
+
+### Extractors
+
+The easiest way to define an `Extractor` for a particular type is to start with
+an existing extractor, e.g. the `String` extractor, by summoning it with
+`Json.extractor[String]`. Extractors are functors, so you can `map` across the
+extractor to produce a new extractor for a different type. For example, to
+create an extractor for `java.util.Date`s, where these are stored as numbers in
+the JSON, we can write:
+
+```scala
+implicit val dateExtractor = Json.extractor[Long].map(new java.util.Date(_))
+```
+
+and it then becomes possible to extract a date, e.g.
+
+```scala
+val j = json"""{ "start": 1438967950000 }"""
+val d = j.start.as[java.util.Date]
+```
+
+Often, the most useful starting point for defining a new extractor is the no-op
+`Json` extractor, `Json.extractor[Json]`. This allows definitions such as:
+
+```scala
+implicit val rangeExt = Json.extractor[Json].map { j =>
+  Range(j.start.as[Int], j.end.as[Int])
+}
+```
+
+or
+
+```scala
+implicit val msgExtractor = Json.extractor[Json].map {
+  case json"""{ "ignore": true }""" =>
+    None
+  case json"""{ "message": $msg, "ignore": false }""" =>
+    Some(Message(str.as[String]))
+}
+```
+
+### Serializers
+
+Likewise, `Serializer`s are cofunctors, so new serializers may be created by
+`contramap`ping across an existing serializer. We can summon the serializer for
+a type `T` with `Json.serializer[T]`. To produce a serializer for a type `S`
+from this serializer, we need to provide the `contramap` method with a function
+`S => T`, though because Scala's type system can't infer the type `S` from a
+function literal, we need to specify this type explicitly to the `contramap`
+method.
+
+Here's an example:
+
+```scala
+implicit val exceptionSerializer = Json.serializer[String].contramap[Exception] { e =>
+  s"${e.getClass.getName}: ${e.getMessage}"
+}
+```
+
+The existence of this implicit serializer will then result in any `Exception`
+being serialized to a representative `String`, anywhere it needs to be
+converted into a `Json` value.
+
+As with `Extractor`s, the `Json` serializer is often a useful starting point:
+
+```scala
+implicit val eitherSerializer = Json.serializer[Json].contramap[Either[String, Int]] {
+  case Left(s) =>
+    json"""{ "branch": "left", "value": $s }"""
+  case Right(i) =>
+    json"""{ "branch": "right", "value": $i }"""
+}
+```
+
+### Fallback extractors
+
+Extractors may sometimes encounter JSON data that doesn't fit their expected
+pattern, and result in failure. It can be useful to provide alternative
+extractors for JSON in the event that the first one fails. Extractors can be
+composed in this way using the `orElse` combinator.
+
+For example, the following extractor redefines the `Int` extractor to also
+accept integers provided as JSON strings as a fallback option:
+
+```scala
+implicit val intExt = Json.extractor[Int] orElse Json.extractor[String].map(_.toInt)
+```
+
+Hopefully this demonstrates the concise and readable syntax Rapture JSON uses
+for defining extractors and serializers, and the ease with which they can be
+composed and transformed.
+
