@@ -93,6 +93,7 @@ object DataType {
 
       val left = dataType.$normalize
       val right = if(ast != b.$ast) ast.convert(b.$normalize, b.$ast.asInstanceOf[DataAst]) else b.$normalize
+      
       dataType.$wrap(merge(left, right), Vector())
     }
 
