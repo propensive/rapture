@@ -10,24 +10,21 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.xml
+package rapture.xml.xmlBackends.stdlib
 
 import rapture.core._
 import rapture.data._
+import rapture.xml._
 
-import language.experimental.macros
-import language.higherKinds
+import scala.collection.mutable.{ListBuffer, HashMap}
+import scala.collection.JavaConverters
 
-object formatters {
-  object compact {
-    def apply[Ast <: XmlAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } = xmlFormatterImplicit[Ast]
+import scala.xml._
 
-    implicit def xmlFormatterImplicit[Ast <: XmlAst](implicit ast: Ast): Formatter[Ast] { type Out = String } =
-      new Formatter[Ast] {
-        type Out = String
-        // FIXME: This is a lazy implementation
-        def format(xml: Any): String = xml.toString
-      }      
-  }
+private[stdlib] object StdlibStringParser extends Parser[String, XmlBufferAst] {
+  
+  override def toString = "<StdlibStringParser>"
+  
+  val ast = StdlibAst
+  def parse(s: String): Option[Any] = try Some(XML.loadString(s)) catch { case e: Exception => None }
 }
-

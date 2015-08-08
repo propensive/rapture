@@ -35,33 +35,6 @@ private[xml] trait Extractors extends Extractors_1 {
       def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[String, DataGetException] =
         mode.wrap(mode.catching[DataGetException, String](any.$ast.getString(any.$normalize)))
     }
-
-  implicit val doubleExtractor: Extractor[Double, Xml] { type Throws = DataGetException } =
-    new Extractor[Double, Xml] {
-      type Throws = DataGetException
-      def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[Double, Throws] =
-        mode.wrap(mode.catching[DataGetException, Double](any.$ast.getDouble(any.$normalize)))
-    }
-
-  implicit val intExtractor: Extractor[Int, Xml] { type Throws = DataGetException } =
-    doubleExtractor.smap(_.toInt)
-
-  implicit val booleanExtractor: Extractor[Boolean, Xml] { type Throws = DataGetException } =
-    new Extractor[Boolean, Xml] {
-      type Throws = DataGetException
-      def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[Boolean, DataGetException] =
-        mode.wrap(any.$ast.getBoolean(any.$normalize))
-    }
-  
-  implicit val bigDecimalExtractor: Extractor[BigDecimal, Xml] { type Throws = DataGetException } =
-    new Extractor[BigDecimal, Xml] {
-      type Throws = DataGetException
-      def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[BigDecimal, DataGetException] =
-        mode.wrap(any.$ast.getBigDecimal(any.$normalize))
-    }
-  
-  implicit val bigIntExtractor: Extractor[BigInt, Xml] { type Throws = DataGetException } =
-    bigDecimalExtractor.smap(_.toBigInt)
 }
 
 private[xml] trait Extractors_1 {

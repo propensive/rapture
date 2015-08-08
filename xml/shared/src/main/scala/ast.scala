@@ -15,18 +15,14 @@ package rapture.xml
 import rapture.core._
 import rapture.data._
 
+import scala.util._
+
 trait XmlAst extends DataAst {
 
-  def isScalar(any: Any) = isBoolean(any) || isNumber(any) || isString(any)
+  def isScalar(any: Any) = isString(any)
 
   def getScala(any: Any) = Try(getString(any)) getOrElse { throw new Exception }
 
-  /** Extracts a `Boolean` from the parsed XML. */
-  def getBoolean(boolean: Any): Boolean
-
-  def fromBoolean(boolean: Boolean): Any
-
-  /** Extracts a `String` from the parsed XML. */
   def getString(string: Any): String
 
   def fromString(string: String): Any
@@ -58,6 +54,8 @@ trait XmlAst extends DataAst {
     else if(oldAst.isObject(v)) fromObject(oldAst.getObject(v).mapValues(convert(_, oldAst)))
     else nullValue
   }
+
+  val nullValue = ""
 
   protected def typeTest(pf: PartialFunction[Any, Unit])(v: Any) = pf.isDefinedAt(v)
 }

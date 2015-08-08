@@ -44,36 +44,6 @@ private[xml] trait XmlDataCompanion[+Type <: XmlDataType[Type, AstType],
 
   type ParseMethodConstraint = `Xml.parse`
 
-  /** Formats the XML object for multi-line readability. */
-  private[xml] def doFormat(xml: Any, ln: Int, ast: AstType, pad: String = " ",
-      brk: String = "\n"): String = {
-    val indent = pad*ln
-    xml match {
-      case j =>
-        if(ast.isString(j)) {
-          "\""+ast.getString(j).replaceAll("\\\\", "\\\\\\\\").replaceAll("\r",
-              "\\\\r").replaceAll("\n", "\\\\n").replaceAll("\"", "\\\\\"")+"\""
-        } else if(ast.isBoolean(j)) {
-          if(ast.getBoolean(j)) "true" else "false"
-        } else if(ast.isNumber(j)) {
-          val n = ast.getDouble(j)
-          if(n == n.floor) n.toInt.toString else String(n)
-        } else if(ast.isArray(j)) {
-          val arr = ast.getArray(j)
-          if(arr.isEmpty) "[]" else List("[", arr map { v =>
-            s"${indent}${pad}${doFormat(v, ln + 1, ast, pad, brk)}"
-          } mkString s",${brk}", s"${indent}]") mkString brk
-        } else if(ast.isObject(j)) {
-          val keys = ast.getKeys(j)
-          if(keys.isEmpty) "{}" else List("{", keys map { k =>
-            val inner = ast.dereferenceObject(j, k)
-            s"""${indent}${pad}"${k}":${pad}${doFormat(inner, ln + 1, ast, pad, brk)}"""
-          } mkString s",${brk}", s"${indent}}") mkString brk
-        } else if(ast.isNull(j)) "null"
-        else if(j == DataCompanion.Empty) "empty"
-        else "undefined"
-    }
-  }
 }
 
 
