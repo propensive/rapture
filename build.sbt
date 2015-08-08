@@ -1,8 +1,5 @@
 import com.typesafe.sbt.pgp.PgpKeys.publishSigned
-import sbtrelease.ReleaseStep
-import sbtrelease.ReleasePlugin.ReleaseKeys.releaseProcess
-import sbtrelease.ReleaseStateTransformations._
-import sbtrelease.Utilities._
+import ReleaseTransformations._
 
 enablePlugins(GitBranchPrompt)
 
@@ -42,7 +39,7 @@ lazy val commonSettings = Seq(
     "scm:git:git@github.com:propensive/rapture.git"))
 ) ++ scalaMacroDependencies
 
-lazy val raptureSettings = buildSettings ++ commonSettings ++ publishSettings ++ releaseSettings
+lazy val raptureSettings = buildSettings ++ commonSettings ++ publishSettings
 
 lazy val rapture = project.in(file("."))
   .settings(moduleName := "root")
@@ -346,31 +343,19 @@ lazy val publishSettings = Seq(
   releaseProcess := Seq[ReleaseStep](
     checkSnapshotDependencies,
     inquireVersions,
+    runClean,
     runTest,
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
-    publishSignedArtifacts,
+    publishArtifacts,
     setNextVersion,
     commitNextVersion,
+    ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
     pushChanges
-  )
-)
-
-lazy val publishSignedArtifacts = ReleaseStep(
-  action = { st =>
-    val extracted = st.extract
-    val ref = extracted.get(thisProjectRef)
-    extracted.runAggregated(publishSigned in Global in ref, st)
-  },
-  check = { st =>
-    // getPublishTo fails if no publish repository is set up.
-    val ex = st.extract
-    val ref = ex.get(thisProjectRef)
-    Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
-    st
-  },
-  enableCrossBuild = true
+  ),
+  releaseCrossBuild := true,
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value
 )
 
 lazy val noPublishSettings = Seq(
