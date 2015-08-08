@@ -10,24 +10,13 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.xml
+package rapture.xml.xmlBackends.stdlib
 
 import rapture.core._
 import rapture.data._
+import rapture.xml._
 
-import language.experimental.macros
-import language.higherKinds
-
-object formatters {
-  object compact {
-    def apply[Ast <: XmlAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } = xmlFormatterImplicit[Ast]
-
-    implicit def xmlFormatterImplicit[Ast <: XmlAst](implicit ast: Ast): Formatter[Ast] { type Out = String } =
-      new Formatter[Ast] {
-        type Out = String
-        // FIXME: This is a lazy implementation
-        def format(xml: Any): String = xml.toString
-      }      
-  }
+object `package` extends Extractors with Serializers {
+  implicit val implicitXmlAst: XmlBufferAst = StdlibAst
+  implicit val implicitXmlStringParser: StdlibStringParser.type = StdlibStringParser
 }
-

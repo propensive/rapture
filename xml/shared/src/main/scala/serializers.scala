@@ -30,34 +30,34 @@ private[xml] trait Serializers {
     new Serializer[T, XmlBuffer] { def serialize(t: T): Any = ser.serialize(t) }
 
   implicit def intSerializer(implicit ast: XmlAst): Serializer[Int, Xml] =
-    BasicXmlSerializer(ast fromDouble _.toDouble)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def booleanSerializer(implicit ast: XmlAst): Serializer[Boolean, Xml] =
-    BasicXmlSerializer(ast fromBoolean _)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def stringSerializer(implicit ast: XmlAst): Serializer[String, Xml] =
     BasicXmlSerializer(ast fromString _)
 
   implicit def floatSerializer(implicit ast: XmlAst): Serializer[Float, Xml] =
-    BasicXmlSerializer(ast fromDouble _.toDouble)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def doubleSerializer(implicit ast: XmlAst): Serializer[Double, Xml] =
-    BasicXmlSerializer(ast fromDouble _)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def bigDecimalSerializer(implicit ast: XmlAst): Serializer[BigDecimal, Xml] =
-    BasicXmlSerializer(ast fromBigDecimal _)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def bigIntSerializer(implicit ast: XmlAst): Serializer[BigInt, Xml] =
-    BasicXmlSerializer(ast fromBigDecimal BigDecimal(_))
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def longSerializer(implicit ast: XmlAst): Serializer[Long, Xml] =
-    BasicXmlSerializer(ast fromDouble _.toDouble)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def shortSerializer(implicit ast: XmlAst): Serializer[Short, Xml] =
-    BasicXmlSerializer(ast fromDouble _.toDouble)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def byteSerializer(implicit ast: XmlAst): Serializer[Byte, Xml] =
-    BasicXmlSerializer(ast fromDouble _.toDouble)
+    BasicXmlSerializer(ast fromString _.toString)
 
   implicit def nilSerializer(implicit ast: XmlAst): Serializer[Nil.type, Xml] =
     BasicXmlSerializer(v => ast fromArray Nil)
