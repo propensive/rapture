@@ -16,6 +16,8 @@ Rapture consists of a number of modules, the most notable of which are:
    *modes* and the `Result` type
  - [JSON](doc/json.md) (`json`) — comprehensive support for working with JSON
    data
+ - XML (`xml`) — comprehensive, but experimental, support for working with XML
+   data
  - I/O (`io`) — I/O (network, filesystem) functionality and infrastructure
  - I18n (`i18n`) — simple, typesafe representation of internationalized strings
  - CLI (`cli`) — support for working with command-line applications and shell
