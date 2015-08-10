@@ -10,17 +10,18 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.json.jsonBackends.jfc
-
-import rapture.json._
+package rapture.json.jsonBackends.circe
+import rapture.core._
 import rapture.data._
+import rapture.json._
 
-import io.jfc.{Json => JfcJson, _}
+import io.circe.jawn._
 
-private[jfc] trait Extractors {
-  implicit val jfcJObjectExtractor: JsonCastExtractor[JsonObject] =
-    JsonCastExtractor(JfcAst, DataTypes.Object)
-  
-  implicit val jfcJValueExtractor: JsonCastExtractor[JfcJson] =
-    JsonCastExtractor(JfcAst, DataTypes.Object)
+private[circe] object CirceParser extends Parser[String, JsonBufferAst] {
+
+  val ast = CirceAst
+
+  def parse(s: String): Option[Any] = JfcSupportParser.parseFromString(s).toOption
+
+  override def toString = "<CirceParser>"
 }

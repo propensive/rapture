@@ -10,9 +10,13 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.json.jsonBackends.jfc
+package rapture.json.jsonBackends.circe
 
-object `package` extends Extractors with Serializers {
-  implicit val implicitJsonAst = JfcAst
-  implicit val implicitJsonStringParser = JfcParser
+import rapture.json._
+
+import io.circe.{Json => CirceJson}
+
+private[circe] trait Serializers {
+  implicit val circeJValueSerializer: DirectJsonSerializer[CirceJson] =
+    DirectJsonSerializer(CirceAst)
 }

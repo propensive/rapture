@@ -10,18 +10,9 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.json.jsonBackends.jfc
-import rapture.core._
-import rapture.data._
-import rapture.json._
+package rapture.json.jsonBackends.circe
 
-import io.jfc.jawn._
-
-private[jfc] object JfcParser extends Parser[String, JsonBufferAst] {
-
-  val ast = JfcAst
-
-  def parse(s: String): Option[Any] = JfcSupportParser.parseFromString(s).toOption
-
-  override def toString = "<JfcParser>"
+object `package` extends Extractors with Serializers {
+  implicit val implicitJsonAst = CirceAst
+  implicit val implicitJsonStringParser = CirceParser
 }
