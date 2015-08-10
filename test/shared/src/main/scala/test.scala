@@ -108,7 +108,7 @@ trait TestSuite {
     def action(): Return
     def check(run: () => Return): TestResult
     def name: String
-    def runCheck(): TestResult = check(action)
+    def runCheck(): TestResult = try check(action) catch { case e: Throwable => Error(e) }
 
     protected def compare[T](x: T, y: T): TestResult = if(x == y) Success else {
       Failure(s"Found $x, but expected $y")

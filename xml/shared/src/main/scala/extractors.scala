@@ -20,24 +20,30 @@ import language.higherKinds
 
 private[xml] case class XmlCastExtractor[T](ast: XmlAst, dataType: DataTypes.DataType)
 
-private[xml] trait Extractors extends Extractors_1 {
+private[xml] trait Extractors extends DataExtractors with Extractors_1 {
 
+  implicit def stringableExtractors[T](implicit ext: StringParser[T]): Extractor[T, Xml] {
+      type Throws = DataGetException with ext.Throws } = new Extractor[T, Xml] {
+    
+    type Throws = DataGetException with ext.Throws
+
+    def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException with ext.Throws] = mode.wrap {
+      val value: String = mode.catching[DataGetException, String](any.$ast.getString(any.$normalize))
+      mode.unwrap(ext.parse(value, mode))
+    }
+  }
+  
   implicit def xmlExtractor(implicit ast: XmlAst): Extractor[Xml, Xml] { type Throws = DataGetException } =
     new Extractor[Xml, Xml] {
       type Throws = DataGetException
       def extract(any: Xml, dataAst: DataAst, mode: Mode[_]): mode.Wrap[Xml, DataGetException] =
         mode.wrap(mode.catching[DataGetException, Xml](any.$wrap(any.$normalize)))
     }
-  
-  implicit val stringExtractor: Extractor[String, Xml] { type Throws = DataGetException } =
-    new Extractor[String, Xml] {
-      type Throws = DataGetException
-      def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[String, DataGetException] =
-        mode.wrap(mode.catching[DataGetException, String](any.$ast.getString(any.$normalize)))
-    }
+ 
 }
 
 private[xml] trait Extractors_1 {
+  
   implicit def xmlBufferExtractor[T](implicit xmlAst: XmlAst, ext: Extractor[T, Xml]):
       Extractor[T, XmlBuffer] { type Throws = ext.Throws } = new Extractor[T, XmlBuffer] {
     type Throws = ext.Throws

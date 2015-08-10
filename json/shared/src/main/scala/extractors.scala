@@ -20,7 +20,7 @@ import language.higherKinds
 
 private[json] case class JsonCastExtractor[T](ast: JsonAst, dataType: DataTypes.DataType)
 
-private[json] trait Extractors extends Extractors_1 {
+private[json] trait Extractors extends DataExtractors with Extractors_1 {
 
   implicit def jsonExtractor(implicit ast: JsonAst): Extractor[Json, Json] { type Throws = DataGetException } =
     new Extractor[Json, Json] {

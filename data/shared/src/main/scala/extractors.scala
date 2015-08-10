@@ -24,6 +24,51 @@ import scala.util._
 
 case class FilterException() extends Exception("value was removed by filter")
 
+trait DataExtractors {
+  
+  implicit def tryExtractor[T, Data <: DataType[Data, _ <: DataAst ]]
+      (implicit ext: Extractor[T, Data]): Extractor[Try[T], Data] { type Throws = Nothing } =
+    new Extractor[Try[T], Data] {
+      type Throws = Nothing
+      def extract(any: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Try[T], Throws] = mode.wrap {
+        try ext.extract(any.$wrap(any.$normalize), any.$ast, modes.returnTry()) catch {
+          case e: Exception => Failure(e)
+        }
+      }
+    }
+
+  implicit def optionExtractor[T, Data <: DataType[Data, _ <: DataAst]](implicit ext: Extractor[T, Data]):
+      Extractor[Option[T], Data] { type Throws = Nothing } = {
+
+    new Extractor[Option[T], Data] {
+      type Throws = Nothing
+      def extract(any: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Option[T], Throws] = mode.wrap {
+        try ext.extract(any.$wrap(any.$normalize), any.$ast, modes.returnOption()) catch {
+          case e: Exception => None
+        }
+      }
+    }
+  }
+  
+  implicit def genSeqExtractor[T, Coll[_], Data <: DataType[Data, _ <: DataAst]]
+      (implicit cbf: scala.collection.generic.CanBuildFrom[Nothing, T, Coll[T]], ext: Extractor[T, Data]):
+      Extractor[Coll[T], Data] { type Throws = ext.Throws } = {
+    
+    new Extractor[Coll[T], Data] {
+      type Throws = ext.Throws
+      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Coll[T], Throws] = mode.wrap {
+        mode.catching[DataGetException, Coll[T]] {
+          val v = value.$wrap(value.$normalize)
+          v.$ast.getArray(v.$root.value).to[List].zipWithIndex.map { case (e, i) =>
+            mode.unwrap(ext.safeExtract(v.$wrap(e), v.$ast, Some(Left(i)), mode), s"($i)")
+          }.to[Coll]
+        }
+      }
+    }
+  }
+
+}
+
 object Extractor {
   implicit def floatExtractor[Data](implicit ext: Extractor[Double, Data]): Extractor[Float, Data] { type Throws = ext.Throws } =
     ext.smap(_.toFloat)
@@ -55,44 +100,7 @@ object Extractor {
       }
     }
 
-  implicit def genSeqExtractor[T, Coll[_], Data <: DataType[Data, R] forSome { type R <:
-      DataAst }](implicit cbf: scala.collection.generic.CanBuildFrom[Nothing, T,
-      Coll[T]], ext: Extractor[T, Data]): Extractor[Coll[T], Data] { type Throws = ext.Throws } =
-    new Extractor[Coll[T], Data] {
-      type Throws = ext.Throws
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Coll[T], Throws] = mode.wrap {
-        mode.catching[DataGetException, Coll[T]] {
-          val v = value.$wrap(value.$normalize)
-          v.$ast.getArray(v.$root.value).to[List].zipWithIndex.map { case (e, i) =>
-            mode.unwrap(ext.safeExtract(v.$wrap(e), v.$ast, Some(Left(i)), mode), s"($i)")
-          }.to[Coll]
-        }
-      }
-    }
-
-  implicit def optionExtractor[T, Data <: DataType[Data, R] forSome { type R <: DataAst }]
-      (implicit ext: Extractor[T, Data]): Extractor[Option[T], Data] { type Throws = Nothing } =
-    new Extractor[Option[T], Data] {
-      type Throws = Nothing
-      def extract(any: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Option[T], Throws] = mode.wrap {
-        try ext.extract(any.$wrap(any.$normalize), any.$ast, modes.returnOption()) catch {
-          case e: Exception => None
-        }
-      }
-    }
-
-  implicit def tryExtractor[T, Data <: DataType[Data, R] forSome { type R <: DataAst }]
-      (implicit ext: Extractor[T, Data]): Extractor[Try[T], Data] { type Throws = Nothing } =
-    new Extractor[Try[T], Data] {
-      type Throws = Nothing
-      def extract(any: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Try[T], Throws] = mode.wrap {
-        try ext.extract(any.$wrap(any.$normalize), any.$ast, modes.returnTry()) catch {
-          case e: Exception => Failure(e)
-        }
-      }
-    }
-
-  implicit def mapExtractor[T, Data <: DataType[Data, R] forSome { type R <: DataAst }]
+  implicit def mapExtractor[T, Data <: DataType[Data, _ <: DataAst ]]
       (implicit ext: Extractor[T, Data]): Extractor[Map[String, T], Data] { type Throws = ext.Throws } =
     new Extractor[Map[String, T], Data] {
       type Throws = ext.Throws

@@ -31,6 +31,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
  
   override def getChildren(obj: Any): Seq[Any] = obj match {
     case n: Node => n.child.to[List]
+    case n: NodeSeq => n.flatMap(_.child).to[List]
     case _ => throw new Exception
   }
 
@@ -46,6 +47,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
   
   def getObject(obj: Any): Map[String, Any] = obj match {
     case n: Node => n.child.map { e => e.label -> e.child }.toMap
+    case n: NodeSeq => n.flatMap(_.child.map { e => e.label -> e.child }).toMap
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
  
@@ -118,6 +120,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
   
   def isObject(obj: Any): Boolean = obj match {
     case _: Node => true
+    case _: NodeSeq => true
     case _ => false
   }
   

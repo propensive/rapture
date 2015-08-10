@@ -55,7 +55,25 @@ trait StringParser[T] {
 case class InvalidBoolean(value: String) extends Exception(s"""The value "$value" is not a valid boolean.""")
 case class InvalidNumber(value: String, numberType: String) extends Exception(s"""The value "$value" is not a valid $numberType.""")
 
-object StringParser {
+trait StringParser_1 {
+  implicit def optParser[T: StringParser]: StringParser[Option[T]] { type Throws = Nothing } = new StringParser[Option[T]] {
+    type Throws = Nothing
+    def parse(s: String, mode: Mode[_]): mode.Wrap[Option[T], Nothing] = mode.wrap {
+      try Some(mode.unwrap(?[StringParser[T]].parse(s, mode))) catch {
+        case e: Exception => None
+      }
+    }
+  }
+  
+  implicit def tryParser[T: StringParser]: StringParser[Try[T]] { type Throws = Nothing } = new StringParser[Try[T]] {
+    type Throws = Nothing
+    def parse(s: String, mode: Mode[_]): mode.Wrap[Try[T], Nothing] = mode.wrap {
+      ?[StringParser[T]].parse(s, modes.returnTry())
+    }
+  }
+}
+
+object StringParser extends StringParser_1 {
   implicit def booleanParser(implicit bp: BooleanParser): StringParser[Boolean] { type Throws = InvalidBoolean } = new StringParser[Boolean] {
     type Throws = InvalidBoolean
     def parse(s: String, mode: Mode[_]): mode.Wrap[Boolean, InvalidBoolean] = bp.parse(s, mode.generic)
@@ -124,22 +142,6 @@ object StringParser {
       try java.lang.Float.parseFloat(s) catch {
         case e: NumberFormatException => mode.exception(InvalidNumber(s, "float"))
       }
-    }
-  }
-
-  implicit def optParser[T: StringParser]: StringParser[Option[T]] { type Throws = Nothing } = new StringParser[Option[T]] {
-    type Throws = Nothing
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Option[T], Nothing] = mode.wrap {
-      try Some(mode.unwrap(?[StringParser[T]].parse(s, mode))) catch {
-        case e: Exception => None
-      }
-    }
-  }
-  
-  implicit def tryParser[T: StringParser]: StringParser[Try[T]] { type Throws = Nothing } = new StringParser[Try[T]] {
-    type Throws = Nothing
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Try[T], Nothing] = mode.wrap {
-      ?[StringParser[T]].parse(s, modes.returnTry())
     }
   }
 }

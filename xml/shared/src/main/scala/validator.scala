@@ -24,8 +24,8 @@ private[xml] object XmlValidator {
     var n = 0
     var stack: List[String] = Nil
     def s = parts(n)
-    def cur = if(i >= s.length) '\0' else s(i)
-    def ahead(j: Int) = if(i + j >= s.length) '\0' else s(i + j)
+    def cur = if(i >= s.length) '\u0000' else s(i)
+    def ahead(j: Int) = if(i + j >= s.length) '\u0000' else s(i + j)
 
     def fail(expected: String) = throw ValidationException(n, i, expected, cur)
     def failPosition(expected: String) = throw ValidationException(n, i, expected, cur)
@@ -129,7 +129,7 @@ private[xml] object XmlValidator {
       case '&' =>
         takeEntity()
         takeText()
-      case '\0' =>
+      case '\u0000' =>
         fail(s"""closing tag "${stack.head}"""")
       case _ =>
         next()
