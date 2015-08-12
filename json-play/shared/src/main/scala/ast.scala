@@ -26,9 +26,9 @@ private[play] object PlayAst extends JsonBufferAst {
   override def toString = "<PlayAst>"
 
   override def dereferenceObject(obj: Any, element: String): Any = obj match {
-    case obj: JsObject => obj \ element match {
-      case v: JsUndefined => throw MissingValueException()
+    case obj@JsObject(_) => obj \ element match {
       case JsDefined(v) => v
+      case _ => throw MissingValueException()
     }
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
@@ -41,37 +41,40 @@ private[play] object PlayAst extends JsonBufferAst {
   
   override def dereferenceArray(array: Any, element: Int): Any =
     array match {
-      case v: JsValue => v(element)
+      case arr@JsArray(_) => arr(element) match {
+        case JsDefined(v) => v
+        case _ => throw MissingValueException()
+      }
       case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
     }
 
   def getArray(array: Any): List[Any] = array match {
-    case v: JsValue => v.asOpt[List[JsValue]].getOrElse(throw TypeMismatchException(getType(v), DataTypes.Array))
+    case JsArray(arr) => arr.to[List]
     case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
   }
 
   def getBoolean(boolean: Any): Boolean = boolean match {
-    case v: JsValue => v.asOpt[Boolean].getOrElse(throw TypeMismatchException(getType(v), DataTypes.Boolean))
+    case JsBoolean(v) => v
     case _ => throw TypeMismatchException(getType(boolean), DataTypes.Boolean)
   }
   
   def getBigDecimal(bigDecimal: Any): BigDecimal = bigDecimal match {
-    case v: JsValue => v.asOpt[BigDecimal].getOrElse(throw TypeMismatchException(getType(v), DataTypes.Number))
+    case JsNumber(n) => n
     case _ => throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
   }
   
   def getDouble(double: Any): Double = double match {
-    case v: JsValue => v.asOpt[Double].getOrElse(throw TypeMismatchException(getType(v), DataTypes.Number))
+    case JsNumber(n) => n.toDouble
     case _ => throw TypeMismatchException(getType(double), DataTypes.Number)
   }
   
   def getString(string: Any): String = string match {
-    case v: JsValue => v.asOpt[String].getOrElse(throw TypeMismatchException(getType(string), DataTypes.String))
+    case JsString(s) => s
     case _ => throw TypeMismatchException(getType(string), DataTypes.String)
   }
   
   def getObject(obj: Any): Map[String, Any] = obj match {
-    case v: JsValue => v.asOpt[Map[String, JsValue]].getOrElse(throw TypeMismatchException(getType(v), DataTypes.Object))
+    case JsObject(obj) => obj.toMap
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
   
@@ -96,52 +99,52 @@ private[play] object PlayAst extends JsonBufferAst {
   
   def isArray(array: Any): Boolean = try {
     array match {
-      case array: JsUndefined => false
-      case array: JsValue =>
-        array.as[Array[JsValue]]
-        true
+      case JsArray(_) => true
+      case _ => false
     }
   } catch { case e: Exception => false }
 
   def isBoolean(boolean: Any): Boolean = try {
     boolean match {
-      case boolean: JsUndefined => false
-      case boolean: JsValue =>
-        boolean.as[Boolean]
-        true
+      case JsBoolean(boolean) => true
+      case _ => false
     }
   } catch { case e: Exception => false }
 
   def isNumber(num: Any): Boolean = try {
     num match {
-      case num: JsUndefined => false
-      case num: JsValue =>
-        num.as[Double]
-        true
+      case JsNumber(_) => true
+      case _ => false
     }
   } catch { case e: Exception => false }
 
   def isString(string: Any): Boolean = try {
     string match {
-      case string: JsUndefined => false
-      case string: JsValue =>
-        string.as[String]
-        true
+      case JsString(s) => true
+      case _ => false
+      //case JsDefined(string) => string.asOpt[String].isDefined
     }
   } catch { case e: Exception => false }
 
   def isObject(obj: Any): Boolean = try {
     obj match {
-      case obj: JsUndefined => false
-      case obj: JsValue =>
-        obj.as[Map[String, JsValue]]
-        true
+      case JsObject(obj) => true
+      case _ => false
     }
   } catch { case e: Exception => false }
   
+<<<<<<< HEAD
   def isNull(obj: Any): Boolean = obj == JsNull
   
   def nullValue: Any = JsNull
+=======
+  def isNull(obj: Any): Boolean = obj match {
+    case JsDefined(JsNull) => true
+    case _ => false
+  }
+  
+  val nullValue: Any = JsNull
+>>>>>>> Fixes for JSON/Play integration
   
   def fromArray(array: Seq[Any]): Any = PJson.toJson(array.map(_.asInstanceOf[JsValue]))
   def fromBoolean(boolean: Boolean): Any = PJson.toJson(boolean)
