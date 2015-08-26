@@ -15,22 +15,24 @@ package rapture.xml
 import rapture.core._
 import rapture.data._
 
-import language.experimental.macros
+import scala.util._
+
 import language.higherKinds
 
 private[xml] case class XmlCastExtractor[T](ast: XmlAst, dataType: DataTypes.DataType)
 
-private[xml] trait Extractors extends DataExtractors with Extractors_1 {
+private[xml] trait Extractors extends Extractors_1 {
 
-  implicit def stringableExtractors[T](implicit ext: StringParser[T]): Extractor[T, Xml] {
-      type Throws = DataGetException with ext.Throws } = new Extractor[T, Xml] {
+  implicit def optionExtractor[T](implicit ext: Extractor[T, Xml]): Extractor[Option[T], Xml] { type Throws =
+      Nothing } = GeneralExtractors.optionExtractor[Xml, T]
+
+  implicit def tryExtractor[T](implicit ext: Extractor[T, Xml]): Extractor[Try[T], Xml] { type Throws =
+      Nothing } = GeneralExtractors.tryExtractor[Xml, T]
+
+  implicit def genSeqExtractor[T, Coll[_]](implicit cbf: scala.collection.generic.CanBuildFrom[Nothing, T, Coll[T]],
+      ext: Extractor[T, Xml]): Extractor[Coll[T], Xml] { type Throws = ext.Throws } = {
     
-    type Throws = DataGetException with ext.Throws
-
-    def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException with ext.Throws] = mode.wrap {
-      val value: String = mode.catching[DataGetException, String](any.$ast.getString(any.$normalize))
-      mode.unwrap(ext.parse(value, mode))
-    }
+    GeneralExtractors.genSeqExtractor[T, Coll, Xml]
   }
   
   implicit def xmlExtractor(implicit ast: XmlAst): Extractor[Xml, Xml] { type Throws = DataGetException } =
@@ -43,6 +45,17 @@ private[xml] trait Extractors extends DataExtractors with Extractors_1 {
 }
 
 private[xml] trait Extractors_1 {
+  
+  implicit def stringableExtractors[T](implicit ext: StringParser[T]): Extractor[T, Xml] {
+      type Throws = DataGetException with ext.Throws } = new Extractor[T, Xml] {
+    
+    type Throws = DataGetException with ext.Throws
+
+    def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException with ext.Throws] = mode.wrap {
+      val value: String = mode.catching[DataGetException, String](any.$ast.getString(any.$normalize))
+      mode.unwrap(ext.parse(value, mode))
+    }
+  }
   
   implicit def xmlBufferExtractor[T](implicit xmlAst: XmlAst, ext: Extractor[T, Xml]):
       Extractor[T, XmlBuffer] { type Throws = ext.Throws } = new Extractor[T, XmlBuffer] {
