@@ -15,12 +15,30 @@ package rapture.json
 import rapture.core._
 import rapture.data._
 
+import scala.util._
+
 import language.experimental.macros
 import language.higherKinds
 
 private[json] case class JsonCastExtractor[T](ast: JsonAst, dataType: DataTypes.DataType)
 
-private[json] trait Extractors extends DataExtractors with Extractors_1 {
+private[json] trait Extractors extends Extractors_1 {
+
+  implicit def optionExtractor[T](implicit ext: Extractor[T, Json]): Extractor[Option[T], Json] { type Throws =
+      Nothing } = GeneralExtractors.optionExtractor[Json, T] 
+
+  implicit def tryExtractor[T](implicit ext: Extractor[T, Json]): Extractor[Try[T], Json] { type Throws =
+      Nothing } = GeneralExtractors.tryExtractor[Json, T] 
+
+  implicit def genSeqExtractor[T, Coll[_]](implicit cbf: scala.collection.generic.CanBuildFrom[Nothing, T, Coll[T]],
+      ext: Extractor[T, Json]): Extractor[Coll[T], Json] { type Throws = ext.Throws } = {
+   
+    GeneralExtractors.genSeqExtractor[T, Coll, Json]
+  }  
+
+}
+
+private[json] trait Extractors_1 extends Extractors_2 {
 
   implicit def jsonExtractor(implicit ast: JsonAst): Extractor[Json, Json] { type Throws = DataGetException } =
     new Extractor[Json, Json] {
@@ -64,7 +82,8 @@ private[json] trait Extractors extends DataExtractors with Extractors_1 {
     bigDecimalExtractor.smap(_.toBigInt)
 }
 
-private[json] trait Extractors_1 {
+private[json] trait Extractors_2 {
+
   implicit def jsonBufferExtractor[T](implicit jsonAst: JsonAst, ext: Extractor[T, Json]):
       Extractor[T, JsonBuffer] { type Throws = ext.Throws } = new Extractor[T, JsonBuffer] {
     type Throws = ext.Throws

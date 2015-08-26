@@ -23,10 +23,11 @@ import language.higherKinds
 import scala.util._
 
 case class FilterException() extends Exception("value was removed by filter")
+case class NotEmptyException() extends Exception
 
-trait DataExtractors {
+object GeneralExtractors {
   
-  implicit def tryExtractor[T, Data <: DataType[Data, _ <: DataAst ]]
+  def tryExtractor[Data <: DataType[Data, _ <: DataAst ], T]
       (implicit ext: Extractor[T, Data]): Extractor[Try[T], Data] { type Throws = Nothing } =
     new Extractor[Try[T], Data] {
       type Throws = Nothing
@@ -37,7 +38,7 @@ trait DataExtractors {
       }
     }
 
-  implicit def optionExtractor[T, Data <: DataType[Data, _ <: DataAst]](implicit ext: Extractor[T, Data]):
+  def optionExtractor[Data <: DataType[Data, _ <: DataAst], T](implicit ext: Extractor[T, Data]):
       Extractor[Option[T], Data] { type Throws = Nothing } = {
 
     new Extractor[Option[T], Data] {
@@ -50,7 +51,17 @@ trait DataExtractors {
     }
   }
   
-  implicit def genSeqExtractor[T, Coll[_], Data <: DataType[Data, _ <: DataAst]]
+  def noneExtractor[Data <: DataType[_, DataAst]]: Extractor[None.type, Data] { type Throws = DataGetException with NotEmptyException } =
+    new Extractor[None.type, Data] {
+      type Throws = DataGetException with NotEmptyException
+      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[None.type, Throws] = mode.wrap {
+        val v = value.$wrap(value.$normalize)
+        if(ast.isObject(v) && ast.getKeys(v).size == 0) None
+        else mode.exception[None.type, NotEmptyException](NotEmptyException())
+      }
+    }
+
+  def genSeqExtractor[T, Coll[_], Data <: DataType[Data, _ <: DataAst]]
       (implicit cbf: scala.collection.generic.CanBuildFrom[Nothing, T, Coll[T]], ext: Extractor[T, Data]):
       Extractor[Coll[T], Data] { type Throws = ext.Throws } = {
     
@@ -67,6 +78,17 @@ trait DataExtractors {
     }
   }
 
+  def mapExtractor[T, Data <: DataType[Data, _ <: DataAst ]]
+      (implicit ext: Extractor[T, Data]): Extractor[Map[String, T], Data] { type Throws = ext.Throws } =
+    new Extractor[Map[String, T], Data] {
+      type Throws = ext.Throws
+      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Map[String, T], Throws] =
+        mode.wrap {
+          value.$ast.getObject(value.$root.value) map {
+            case (k, v) => k -> mode.unwrap(ext.safeExtract(value.$wrap(v), value.$ast, Some(Right(k)), mode))
+          }
+        }
+      }
 }
 
 object Extractor {
@@ -87,30 +109,6 @@ object Extractor {
       def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Any, Throws] =
         mode.wrap(value.$normalize)
     }
-  
-  case class NotEmptyException() extends Exception
-
-  implicit def noneExtractor[Data <: DataType[_, DataAst]]: Extractor[None.type, Data] { type Throws = DataGetException with NotEmptyException } =
-    new Extractor[None.type, Data] {
-      type Throws = DataGetException with NotEmptyException
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[None.type, Throws] = mode.wrap {
-        val v = value.$wrap(value.$normalize)
-        if(ast.isObject(v) && ast.getKeys(v).size == 0) None
-        else mode.exception[None.type, NotEmptyException](NotEmptyException())
-      }
-    }
-
-  implicit def mapExtractor[T, Data <: DataType[Data, _ <: DataAst ]]
-      (implicit ext: Extractor[T, Data]): Extractor[Map[String, T], Data] { type Throws = ext.Throws } =
-    new Extractor[Map[String, T], Data] {
-      type Throws = ext.Throws
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Map[String, T], Throws] =
-        mode.wrap {
-          value.$ast.getObject(value.$root.value) map {
-            case (k, v) => k -> mode.unwrap(ext.safeExtract(value.$wrap(v), value.$ast, Some(Right(k)), mode))
-          }
-        }
-      }
 }
 
 @implicitNotFound("cannot extract type ${T} from ${D}.")

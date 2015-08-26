@@ -26,7 +26,9 @@ import scala.xml._
 private[stdlib] object StdlibAst extends XmlBufferAst {
  
   override def dereferenceObject(obj: Any, element: String): Any = obj match {
-    case ns: NodeSeq => ns \ element
+    case n: Node if n.child.exists(_.label == element) => n \ element
+    case ns: NodeSeq if ns.exists(_.child.exists(_.label == element)) => ns \ element
+    case _ => throw MissingValueException()
   }
  
   override def getChildren(obj: Any): Seq[Any] = obj match {
