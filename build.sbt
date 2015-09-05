@@ -321,7 +321,6 @@ lazy val publishSettings = Seq(
   licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
   autoAPIMappings := true,
   publishMavenStyle := true,
-  publishArtifact in packageDoc := false,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
   publishTo := {
