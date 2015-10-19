@@ -133,6 +133,7 @@ private[spray] object SprayAst extends JsonBufferAst {
 
   def isNumber(num: Any): Boolean = try {
     num match {
+      case JsNull => false
       case num: JsValue =>
         num.convertTo[Double]
         true
