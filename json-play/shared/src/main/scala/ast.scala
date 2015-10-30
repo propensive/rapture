@@ -26,9 +26,9 @@ private[play] object PlayAst extends JsonBufferAst {
   override def toString = "<PlayAst>"
 
   override def dereferenceObject(obj: Any, element: String): Any = obj match {
-    case obj: JsValue => obj \ element match {
+    case obj: JsObject => obj \ element match {
       case v: JsUndefined => throw MissingValueException()
-      case v => v
+      case JsDefined(v) => v
     }
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
