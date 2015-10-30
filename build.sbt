@@ -268,8 +268,7 @@ lazy val jsonArgonautJS = `json-argonaut`.js
 lazy val `json-jackson` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jackson")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.codehaus.jackson" % "jackson-core-asl" % "1.9.13")
-  .settings(libraryDependencies += "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.13")
+  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3")
  
 lazy val jsonJacksonJVM = `json-jackson`.jvm
 lazy val jsonJacksonJS = `json-jackson`.js

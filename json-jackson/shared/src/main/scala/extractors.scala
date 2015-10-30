@@ -14,7 +14,7 @@ package rapture.json.jsonBackends.jackson
 
 import rapture.json._
 import rapture.data._
-import org.codehaus.jackson._
+import com.fasterxml.jackson.databind._
 
 private[jackson] trait Extractors {
   implicit val jacksonJsonNodeExtractor: JsonCastExtractor[JsonNode] =

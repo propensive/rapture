@@ -17,7 +17,7 @@ import rapture.data.DataTypes
 
 import scala.collection.mutable.{ListBuffer, HashMap}
 
-import org.codehaus.jackson.{JsonParser => _, _}
+import com.fasterxml.jackson.databind._
 import scala.collection.JavaConversions._
 
 /** A type class for Jackson parsing */
@@ -25,12 +25,12 @@ private[jackson] object JacksonAst extends JsonAst {
 
   override def toString = "<JacksonAst>"
 
-  private val mapper = new map.ObjectMapper()
-  mapper.enable(map.DeserializationConfig.Feature.USE_BIG_DECIMAL_FOR_FLOATS)
-  mapper.enable(map.DeserializationConfig.Feature.USE_BIG_INTEGER_FOR_INTS)
+  private val mapper = new ObjectMapper()
+    .configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+    .configure(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS, true)
   
   def getArray(array: Any): List[Any] = array match {
-    case list: JsonNode if list.isArray => list.getElements.to[List]
+    case list: JsonNode if list.isArray => list.elements.to[List]
     case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
   }
 
@@ -40,16 +40,16 @@ private[jackson] object JacksonAst extends JsonAst {
   }
   
   def getDouble(number: Any): Double = number match {
-    case number: JsonNode if number.isBigDecimal => number.getDecimalValue.doubleValue
-    case number: JsonNode if number.isBigInteger => number.getBigIntegerValue.doubleValue
+    case number: JsonNode if number.isBigDecimal => number.decimalValue.doubleValue
+    case number: JsonNode if number.isBigInteger => number.bigIntegerValue.doubleValue
     case number: JsonNode if number.isNumber => number.asDouble
     case number: Double => number
     case _ => throw TypeMismatchException(getType(number), DataTypes.Number)
   }
   
   def getBigDecimal(number: Any): BigDecimal = number match {
-    case number: JsonNode if number.isBigDecimal => BigDecimal(number.getDecimalValue)
-    case number: JsonNode if number.isBigInteger => BigDecimal(number.getBigIntegerValue)
+    case number: JsonNode if number.isBigDecimal => BigDecimal(number.decimalValue)
+    case number: JsonNode if number.isBigInteger => BigDecimal(number.bigIntegerValue)
     case number: JsonNode if number.isNumber => number.asDouble
     case number: Double => BigDecimal(number)
     case _ => throw TypeMismatchException(getType(number), DataTypes.Number)
@@ -63,7 +63,7 @@ private[jackson] object JacksonAst extends JsonAst {
   
   def getObject(obj: Any): Map[String, Any] = obj match {
     case obj: JsonNode if obj.isObject =>
-      (obj.getFieldNames map { case k => k -> Option(obj.get(k)).get }).toMap
+      (obj.fieldNames map { case k => k -> Option(obj.get(k)).get }).toMap
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
   
@@ -73,7 +73,7 @@ private[jackson] object JacksonAst extends JsonAst {
   }
 
   override def getKeys(obj: Any): Iterator[String] = obj match {
-    case obj: JsonNode if obj.isObject => obj.getFieldNames.to[Iterator]
+    case obj: JsonNode if obj.isObject => obj.fieldNames.to[Iterator]
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
 
@@ -83,7 +83,7 @@ private[jackson] object JacksonAst extends JsonAst {
   }
 
   def setObjectValue(obj: JsonNode, name: String, value: JsonNode): Unit = obj match {
-    case obj: node.ObjectNode => obj.put(name, value)
+    case obj: node.ObjectNode => obj.set(name, value)
   }
   
   def removeObjectValue(obj: JsonNode, name: String): Unit = obj match {
@@ -119,7 +119,7 @@ private[jackson] object JacksonAst extends JsonAst {
       case v: Boolean => newObject.put(k, v)
       case v: String => newObject.put(k, v)
       case v: Double => newObject.put(k, v)
-      case v: JsonNode => newObject.put(k, v)
+      case v: JsonNode => newObject.set(k, v)
       case null => newObject.putNull(k)
     }
     newObject
