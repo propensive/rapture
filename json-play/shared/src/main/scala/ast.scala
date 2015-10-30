@@ -139,12 +139,9 @@ private[play] object PlayAst extends JsonBufferAst {
     }
   } catch { case e: Exception => false }
   
-  def isNull(obj: Any): Boolean = obj match {
-    case n: JsValue if n.toString == "null" => true
-    case _ => false
-  }
+  def isNull(obj: Any): Boolean = obj == JsNull
   
-  def nullValue: Any = PJson.toJson(null)
+  def nullValue: Any = JsNull
   
   def fromArray(array: Seq[Any]): Any = PJson.toJson(array.map(_.asInstanceOf[JsValue]))
   def fromBoolean(boolean: Boolean): Any = PJson.toJson(boolean)
