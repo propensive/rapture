@@ -17,7 +17,7 @@ import rapture.data._
 
 import scala.collection.mutable.{ListBuffer, HashMap}
 
-import org.codehaus.jackson.{JsonParser => _, _}
+import com.fasterxml.jackson.databind.ObjectMapper
 
 private[jackson] object JacksonParser extends Parser[String, JsonAst] {
   
@@ -25,7 +25,7 @@ private[jackson] object JacksonParser extends Parser[String, JsonAst] {
   
   override def toString = "<JacksonParser>"
   
-  private val mapper = new map.ObjectMapper()
+  private val mapper = new ObjectMapper()
   
   def parse(s: String): Option[Any] =
     Some(mapper.readTree(s))
