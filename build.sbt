@@ -361,12 +361,12 @@ lazy val jsonTestJVM = `json-test`.jvm
 lazy val jsonTestJS = `json-test`.js
 
 // rapture-xml-test
-lazy val `xml-test` = crossProject.dependsOn(`xml-stdlib`, test)
-  .settings(moduleName := "rapture-xml-test")
-  .settings(raptureSettings:_*)
+//lazy val `xml-test` = crossProject.dependsOn(`xml-stdlib`, test)
+//  .settings(moduleName := "rapture-xml-test")
+//  .settings(raptureSettings:_*)
  
-lazy val xmlTestJVM = `xml-test`.jvm
-lazy val xmlTestJS = `xml-test`.js
+//lazy val xmlTestJVM = `xml-test`.jvm
+//lazy val xmlTestJS = `xml-test`.js
 
 lazy val publishSettings = Seq(
   homepage := Some(url("http://rapture.io/")),
