@@ -1,8 +1,5 @@
 import com.typesafe.sbt.pgp.PgpKeys.publishSigned
-import sbtrelease.ReleaseStep
-import sbtrelease.ReleasePlugin.ReleaseKeys.releaseProcess
-import sbtrelease.ReleaseStateTransformations._
-import sbtrelease.Utilities._
+import ReleaseTransformations._
 
 enablePlugins(GitBranchPrompt)
 
@@ -42,7 +39,7 @@ lazy val commonSettings = Seq(
     "scm:git:git@github.com:propensive/rapture.git"))
 ) ++ scalaMacroDependencies
 
-lazy val raptureSettings = buildSettings ++ commonSettings ++ publishSettings ++ releaseSettings
+lazy val raptureSettings = buildSettings ++ commonSettings ++ publishSettings
 
 lazy val rapture = project.in(file("."))
   .settings(moduleName := "root")
@@ -61,8 +58,8 @@ lazy val raptureJVM = project.in(file(".raptureJVM"))
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
-  .dependsOn(baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
+  .aggregate()//baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
+  .dependsOn()//baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -197,7 +194,7 @@ lazy val testJS = test.js
 
 // rapture-data
 lazy val data = crossProject.dependsOn(core)
-  .settings(moduleName := "rapture-test")
+  .settings(moduleName := "rapture-data")
   .settings(raptureSettings:_*)
  
 lazy val dataJVM = data.jvm
@@ -282,8 +279,7 @@ lazy val jsonArgonautJS = `json-argonaut`.js
 lazy val `json-jackson` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jackson")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.codehaus.jackson" % "jackson-core-asl" % "1.9.13")
-  .settings(libraryDependencies += "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.13")
+  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3")
  
 lazy val jsonJacksonJVM = `json-jackson`.jvm
 lazy val jsonJacksonJS = `json-jackson`.js
@@ -335,7 +331,6 @@ lazy val publishSettings = Seq(
   licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
   autoAPIMappings := true,
   publishMavenStyle := true,
-  publishArtifact in packageDoc := false,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
   publishTo := {
@@ -361,27 +356,14 @@ lazy val publishSettings = Seq(
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
-    publishSignedArtifacts,
+    publishArtifacts,
     setNextVersion,
     commitNextVersion,
+    ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
     pushChanges
-  )
-)
-
-lazy val publishSignedArtifacts = ReleaseStep(
-  action = { st =>
-    val extracted = st.extract
-    val ref = extracted.get(thisProjectRef)
-    extracted.runAggregated(publishSigned in Global in ref, st)
-  },
-  check = { st =>
-    // getPublishTo fails if no publish repository is set up.
-    val ex = st.extract
-    val ref = ex.get(thisProjectRef)
-    Classpaths.getPublishTo(ex.get(publishTo in Global in ref))
-    st
-  },
-  enableCrossBuild = true
+  ),
+  releaseCrossBuild := true,
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value
 )
 
 lazy val noPublishSettings = Seq(

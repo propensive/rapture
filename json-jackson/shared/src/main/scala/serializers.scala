@@ -15,7 +15,7 @@ package rapture.json.jsonBackends.jackson
 import rapture.json._
 
 private[jackson] trait Serializers {
-  import org.codehaus.jackson._
+  import com.fasterxml.jackson.databind._
   
   implicit val jacksonJsonNodeSerializer: DirectJsonSerializer[JsonNode] =
       DirectJsonSerializer(JacksonAst)

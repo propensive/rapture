@@ -95,6 +95,8 @@ object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
   def construct(any: MutableCell, path: Vector[Either[Int, String]])(implicit ast:
       JsonAst): Json = new Json(any, path)
 
+  def ast(json: Json): JsonAst = json.$ast
+
   def extractor[T](implicit ext: Extractor[T, Json]): Extractor[T, Json] { type Throws = ext.Throws } = ext
   def serializer[T](implicit ser: Serializer[T, Json]) = ser
 

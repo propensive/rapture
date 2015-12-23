@@ -26,9 +26,9 @@ private[play] object PlayAst extends JsonBufferAst {
   override def toString = "<PlayAst>"
 
   override def dereferenceObject(obj: Any, element: String): Any = obj match {
-    case obj: JsValue => obj \ element match {
+    case obj: JsObject => obj \ element match {
       case v: JsUndefined => throw MissingValueException()
-      case v => v
+      case JsDefined(v) => v
     }
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
@@ -139,12 +139,9 @@ private[play] object PlayAst extends JsonBufferAst {
     }
   } catch { case e: Exception => false }
   
-  def isNull(obj: Any): Boolean = obj match {
-    case n: JsValue if n.toString == "null" => true
-    case _ => false
-  }
+  def isNull(obj: Any): Boolean = obj == JsNull
   
-  def nullValue: Any = PJson.toJson(null)
+  def nullValue: Any = JsNull
   
   def fromArray(array: Seq[Any]): Any = PJson.toJson(array.map(_.asInstanceOf[JsValue]))
   def fromBoolean(boolean: Boolean): Any = PJson.toJson(boolean)

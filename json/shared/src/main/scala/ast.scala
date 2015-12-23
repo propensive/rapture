@@ -65,6 +65,16 @@ trait JsonAst extends DataAst {
     else if(isNull(any)) DataTypes.Null
     else throw MissingValueException()
 
+  def convert(v: Any, ast: DataAst): Any = {
+    val oldAst = ast.asInstanceOf[JsonAst]
+    if(oldAst.isString(v)) fromString(oldAst.getString(v))
+    else if(oldAst.isBoolean(v)) fromBoolean(oldAst.getBoolean(v))
+    else if(oldAst.isNumber(v)) fromDouble(oldAst.getDouble(v))
+    else if(oldAst.isArray(v)) fromArray(oldAst.getArray(v).map(convert(_, oldAst)))
+    else if(oldAst.isObject(v)) fromObject(oldAst.getObject(v).mapValues(convert(_, oldAst)))
+    else nullValue
+  }
+
   protected def typeTest(pf: PartialFunction[Any, Unit])(v: Any) = pf.isDefinedAt(v)
 }
 

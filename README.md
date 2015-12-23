@@ -12,12 +12,14 @@ advanced users, should find intuitive.
 
 Rapture consists of a number of modules, the most notable of which are:
 
- - `core` — a library of common utilities for other projects, notably *modes*
-   and the `Result` type
- - [`json`](doc/json.md) — comprehensive support for working with JSON data
- - `io` — I/O (network, filesystem) functionality and infrastructure
- - `i18n` — simple, typesafe representation of internationalized strings
- - `cli` — support for working with command-line applications and shell interaction
+ - Core (`core`) — a library of common utilities for other projects, notably
+   *modes* and the `Result` type
+ - [JSON](doc/json.md) (`json`) — comprehensive support for working with JSON
+   data
+ - I/O (`io`) — I/O (network, filesystem) functionality and infrastructure
+ - I18n (`i18n`) — simple, typesafe representation of internationalized strings
+ - CLI (`cli`) — support for working with command-line applications and shell
+   interaction
 
 # Themes in Rapture
 

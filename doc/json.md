@@ -254,7 +254,7 @@ the pattern should result in failure to match, then include the following
 import somewhere within the scope of the pattern match:
 
 ```scala
-import patternMatching.exactObjects
+import patternMatching.exactObjects._
 ```
 
 By default, array elements specified in a pattern are matched positionally, and
@@ -262,14 +262,14 @@ superfluous array elements in the tail of the array are ignored, and the match
 will be successful. If strict array matching is required, include:
 
 ```scala
-import patternMatching.exactArrays
+import patternMatching.exactArrays._
 ```
 
 If exact matching of both arrays and objects is required, then it is sufficient
 to import
 
 ```scala
-import patternMatching.exact
+import patternMatching.exact._
 ```
 
 ## Modifying `Json`
@@ -410,10 +410,58 @@ will likely result in better performance.
 
 ## Converting JSON
 
-All JSON is represented by the same Scala type, `Json`, regardless of what type
-of value it contains, and which backend was used to create it.
+All JSON values are represented by the same Scala type, `Json`, regardless of
+whether they represents a JSON object, array, string, number or boolean, and
+regardless of which backend was used to create it.
 
-FIXME: Complete this
+In order to combine two `Json` values, which may be represented using different
+ASTs, it is sometimes necessary to convert the internal representations of the
+JSON values from one backend to another. In all cases, this happens seamlessly
+when required.
+
+For example, given the two values `j1` and `j2`,
+
+```scala
+import jsonBackends.jawn._
+val j1: Json = json"""{ "foo": "bar" }"""
+import jsonBackends.jfc._
+val j2: Json = json"""{ "baz": "quux" }"""
+```
+
+the two JSON objects can be merged with `j1 ++ j2`. This will traverse the AST
+of the value `j2`, converting it from a JFC to a Jawn representation, and then
+merge it with the value `j1` to produce a `Json` value, represented as a Jawn
+AST.
+
+Likewise, substitutions into other JSON values will invoke conversions, as
+necessary. So, given the previous two values `j1` and `j2`, we could substitute
+both into a new JSON object (represented by some third backend AST), and each
+will be converted to the new AST representation.
+
+```scala
+import jsonBackends.argonaut._
+val j3 = json"""{ "j1": $j1, "j2": $j2 }"""
+```
+
+Sometimes it is useful to eagerly force conversion of a `Json` value to the
+current JSON backend. This can be achieved in one of two ways:
+
+ - extract a `Json` type from the existing `Json` value, i.e.
+   `jsonValue.as[Json]`
+ - construct a new `Json` value from the existing `Json` value, i.e.
+   `Json(jsonValue)`
+
+These operations are equivalent, and usage is a matter of personal taste. If
+the value `jsonValue` is already represented by the currently-scoped JSON
+backend, these operations will be no-ops.
+
+Given that conversion happens seamlessly, on demand, the detail of which AST is
+used to represent the JSON is abstracted away from the user. It can, however,
+be revealed in a couple of ways:
+
+ - extracting an `Any` from the `Json` value using `jsonValue.as[Any]`; this
+   returns the underlying representation of the JSON value
+ - getting the `JsonAst` from the `Json` value using `Json.ast(jsonValue)`
 
 ## Outputting JSON
 
@@ -436,10 +484,104 @@ provide their own formatters for outputting to other types.
 For example,
 
 ```scala
-import formatters.compact
+import formatters.compact._
 val out = Json.format(json)
 ```
 
 ## Defining custom extractors and serializers
 
-FIXME: Complete this
+In order to be able to extract or serialize values of a particular Scala type,
+`T` to or from JSON, an implicit instance of `Extractor[T]` or `Serializer[T]`
+must be available in scope.
+
+### Extractors
+
+The easiest way to define an `Extractor` for a particular type is to start with
+an existing extractor, e.g. the `String` extractor, by summoning it with
+`Json.extractor[String]`. Extractors are functors, so you can `map` across the
+extractor to produce a new extractor for a different type. For example, to
+create an extractor for `java.util.Date`s, where these are stored as numbers in
+the JSON, we can write:
+
+```scala
+implicit val dateExtractor = Json.extractor[Long].map(new java.util.Date(_))
+```
+
+and it then becomes possible to extract a date, e.g.
+
+```scala
+val j = json"""{ "start": 1438967950000 }"""
+val d = j.start.as[java.util.Date]
+```
+
+Often, the most useful starting point for defining a new extractor is the no-op
+`Json` extractor, `Json.extractor[Json]`. This allows definitions such as:
+
+```scala
+implicit val rangeExt = Json.extractor[Json].map { j =>
+  Range(j.start.as[Int], j.end.as[Int])
+}
+```
+
+or
+
+```scala
+implicit val msgExtractor = Json.extractor[Json].map {
+  case json"""{ "ignore": true }""" =>
+    None
+  case json"""{ "message": $msg, "ignore": false }""" =>
+    Some(Message(str.as[String]))
+}
+```
+
+### Serializers
+
+Likewise, `Serializer`s are cofunctors, so new serializers may be created by
+`contramap`ping across an existing serializer. We can summon the serializer for
+a type `T` with `Json.serializer[T]`. To produce a serializer for a type `S`
+from this serializer, we need to provide the `contramap` method with a function
+`S => T`, though because Scala's type system can't infer the type `S` from a
+function literal, we need to specify this type explicitly to the `contramap`
+method.
+
+Here's an example:
+
+```scala
+implicit val exceptionSerializer = Json.serializer[String].contramap[Exception] { e =>
+  s"${e.getClass.getName}: ${e.getMessage}"
+}
+```
+
+The existence of this implicit serializer will then result in any `Exception`
+being serialized to a representative `String`, anywhere it needs to be
+converted into a `Json` value.
+
+As with `Extractor`s, the `Json` serializer is often a useful starting point:
+
+```scala
+implicit val eitherSerializer = Json.serializer[Json].contramap[Either[String, Int]] {
+  case Left(s) =>
+    json"""{ "branch": "left", "value": $s }"""
+  case Right(i) =>
+    json"""{ "branch": "right", "value": $i }"""
+}
+```
+
+### Fallback extractors
+
+Extractors may sometimes encounter JSON data that doesn't fit their expected
+pattern, and result in failure. It can be useful to provide alternative
+extractors for JSON in the event that the first one fails. Extractors can be
+composed in this way using the `orElse` combinator.
+
+For example, the following extractor redefines the `Int` extractor to also
+accept integers provided as JSON strings as a fallback option:
+
+```scala
+implicit val intExt = Json.extractor[Int] orElse Json.extractor[String].map(_.toInt)
+```
+
+Hopefully this demonstrates the concise and readable syntax Rapture JSON uses
+for defining extractors and serializers, and the ease with which they can be
+composed and transformed.
+
