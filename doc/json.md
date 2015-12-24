@@ -33,6 +33,7 @@ The following backends are available:
  - Argonaut (`argonaut`)
  - Jackson (`jackson`)
  - Jawn (`jawn`)
+ - JFC (`jfc`)
  - JSON4S (`json4s`)
  - Lift (`lift`)
  - Play (`play`)

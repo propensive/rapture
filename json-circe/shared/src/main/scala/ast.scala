@@ -10,7 +10,7 @@
 * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License    *
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
-package rapture.json.jsonBackends.argonaut
+package rapture.json.jsonBackends.circe
 
 import rapture.core._
 import rapture.data.DataTypes
@@ -18,122 +18,125 @@ import rapture.json._
 
 import scala.collection.mutable.{ListBuffer, HashMap}
 import scala.collection.JavaConverters
-import argonaut.{Json => AJson, _}
-import Argonaut._
 
-private[argonaut] object ArgonautAst extends JsonBufferAst {
+import io.circe.{Json => CirceJson}
 
-  override def toString = "<ArgonautAst>"
+private[circe] object CirceAst extends JsonBufferAst {
 
-  override def dereferenceObject(obj: Any, element: String): Any =
+  override def toString = "<Circe>"
+
+  override def dereferenceObject(obj: Any, element: String): Any = {
+    def fail(): Nothing = throw TypeMismatchException(getType(obj), DataTypes.Object)
     obj match {
-      case j: AJson if j.isObject => j.field(element).getOrElse(throw MissingValueException())
-      case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
+      case j: CirceJson => j.asObject.getOrElse(fail())(element).get
+      case _ => fail()
     }
+  }
   
-  override def getKeys(obj: Any): Iterator[String] =
+  override def getKeys(obj: Any): Iterator[String] = {
+    def fail(): Nothing = throw TypeMismatchException(getType(obj), DataTypes.Object)
     obj match {
-      case j: AJson if j.isObject => j.objectFields.get.iterator
-      case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
+      case j: CirceJson => j.asObject.getOrElse(fail()).fields.to[Iterator]
+      case _ => fail()
     }
-  
-  override def dereferenceArray(array: Any, element: Int): Any =
-    array match {
-      case j: AJson if j.isArray => j.array.get(element)
-      case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
-    }
-
-  def getArray(array: Any): List[Any] = array match {
-    case j: AJson if j.isArray => j.array.get
-    case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
   }
 
-  def getBoolean(boolean: Any): Boolean = boolean match {
-    case j: AJson if j.isBool => j.bool.get
-    case _ => throw TypeMismatchException(getType(boolean), DataTypes.Boolean)
+  override def dereferenceArray(j: Any, elem: Int): Any = j match {
+    case j: CirceJson if j.isArray => j.asArray.get(elem)
+    case _ => throw TypeMismatchException(getType(j), DataTypes.Array)
+  }
+
+  def getArray(j: Any): List[Any] = j match {
+    case j: CirceJson if j.isArray => j.asArray.get
+    case _ => throw TypeMismatchException(getType(j), DataTypes.Array)
+  }
+
+  def getBoolean(j: Any): Boolean = j match {
+    case j: CirceJson if j.isBoolean => j.asBoolean.get
+    case _ => throw TypeMismatchException(getType(j), DataTypes.Boolean)
   }
   
   def getDouble(double: Any): Double = double match {
-    case j: AJson if j.isNumber => j.number.get.toDouble
+    case j: CirceJson if j.isNumber => j.asNumber.get.toDouble
     case _ => throw TypeMismatchException(getType(double), DataTypes.Number)
   }
   
   def getBigDecimal(bigDecimal: Any): BigDecimal = bigDecimal match {
-    case j: AJson if j.isNumber => BigDecimal(j.number.get.toDouble)
+    case j: CirceJson if j.isNumber => j.asNumber.get.toBigDecimal
     case _ => throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
   }
   
   def getString(string: Any): String = string match {
-    case j: AJson if j.isString => j.string.get
+    case j: CirceJson if j.isString => j.asString.get
     case _ => throw TypeMismatchException(getType(string), DataTypes.String)
   }
   
   def getObject(obj: Any): Map[String, Any] = obj match {
-    case j: AJson if j.isObject => j.obj.get.toMap.map{ case (k, v) => k.toString -> v }
+    case j: CirceJson if j.isObject => j.asObject.get.toMap.map{ case (k, v) => k.toString -> v }
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
   
   def setObjectValue(obj: Any, name: String, value: Any): Any = {
-    val contents = (name, value) :: obj.asInstanceOf[AJson].obj.get.toList.collect {
+    val contents = (name, value) :: obj.asInstanceOf[CirceJson].asObject.get.toList.collect {
         case (k, v) if k.toString != name => k.toString -> v }
     fromObject(contents.toMap)
   }
   
   def removeObjectValue(obj: Any, name: String): Any = {
-    val contents = obj.asInstanceOf[AJson].obj.get.toList.collect {
+    val contents = obj.asInstanceOf[CirceJson].asObject.get.toList.collect {
         case (k, v) if k.toString != name => k.toString -> v }
     fromObject(contents.toMap)
   }
   
   def addArrayValue(array: Any, value: Any): Any =
-    fromArray(array.asInstanceOf[AJson].array.get :+ value)
+    fromArray(array.asInstanceOf[CirceJson].asArray.get :+ value)
   
   def setArrayValue(array: Any, index: Int, value: Any): Any =
-    fromArray(array.asInstanceOf[AJson].array.get.padTo(index, nullValue).patch(index,
+    fromArray(array.asInstanceOf[CirceJson].asArray.get.padTo(index, nullValue).patch(index,
         Seq(value), 1))
   
   def isArray(array: Any): Boolean = array match {
-    case j: AJson if j.isArray => true
+    case j: CirceJson if j.isArray => true
     case _ => false
   }
 
   def isBoolean(boolean: Any): Boolean = boolean match {
-    case j: AJson if j.isBool => true
+    case j: CirceJson if j.isBoolean => true
     case _ => false
   }
   
   def isNumber(num: Any): Boolean = num match {
-    case j: AJson if j.isNumber => true
+    case j: CirceJson if j.isNumber => true
     case _ => false
   }
   
   def isString(string: Any): Boolean = string match {
-    case j: AJson if j.isString => true
+    case j: CirceJson if j.isString => true
     case _ => false
   }
   
   def isObject(obj: Any): Boolean = obj match {
-    case j: AJson if j.isObject => true
+    case j: CirceJson if j.isObject => true
     case _ => false
   }
   
   def isNull(obj: Any): Boolean = obj match {
-    case j: AJson if j.isNull => true
+    case j: CirceJson if j.isNull => true
     case _ => false
   }
   
   
-  def fromArray(array: Seq[Any]): Any = jArray(array.to[List] map { case v: AJson => v })
-  def fromBoolean(boolean: Boolean): Any = jBool(boolean)
-  def fromDouble(number: Double): Any = jNumber(number).get
-  def fromBigDecimal(number: BigDecimal): Any = jNumber(number.toDouble).get
+  def fromArray(array: Seq[Any]): Any = CirceJson.array(array.to[List].map { case v: CirceJson => v }: _*)
+  def fromBoolean(boolean: Boolean): Any = CirceJson.bool(boolean)
+  def fromDouble(number: Double): Any = CirceJson.number(number).get
+  def fromBigDecimal(number: BigDecimal): Any = CirceJson.bigDecimal(number)
   
   def fromObject(obj: Map[String,Any]): Any =
-    AJson(obj.mapValues{ case v: AJson => v }.to[List]: _*)
+    CirceJson.obj(obj.mapValues{ case v: CirceJson => v }.to[List]: _*)
   
-  def fromString(string: String): Any = jString(string)
+  def fromString(string: String): Any = CirceJson.string(string)
 
   // FIXME: Is there a better way of getting a JNull?
-  lazy val nullValue: Any = argonaut.Parse.parseOption("null").get
+  lazy val nullValue: Any = CirceJson.empty
 
 }
