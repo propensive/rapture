@@ -52,14 +52,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, jsonCirceJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM)
-  .dependsOn(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, jsonJawnJVM, jsonCirceJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM)
+  .aggregate(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonCirceJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM)
+  .dependsOn(baseJVM, coreJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonCirceJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate()//baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
-  .dependsOn()//baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
+  .aggregate()//baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, htmlJS, domJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
+  .dependsOn()//baseJS, coreJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, jsonJS, htmlJS, domJS, jsonJawnJS, jsonCirceJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -191,6 +191,22 @@ lazy val test = crossProject.dependsOn(cli, fs, text)
  
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
+
+// rapture-dom
+lazy val dom = crossProject.dependsOn(core)
+  .settings(moduleName := "rapture-dom")
+  .settings(raptureSettings:_*)
+ 
+lazy val domJVM = dom.jvm
+lazy val domJS = dom.js
+
+// rapture-html
+lazy val html = crossProject.dependsOn(net, mime, dom)
+  .settings(moduleName := "rapture-html")
+  .settings(raptureSettings:_*)
+ 
+lazy val htmlJVM = html.jvm
+lazy val htmlJS = html.js
 
 // rapture-data
 lazy val data = crossProject.dependsOn(core)
