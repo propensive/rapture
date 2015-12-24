@@ -21,7 +21,7 @@ private[circe] object CirceParser extends Parser[String, JsonBufferAst] {
 
   val ast = CirceAst
 
-  def parse(s: String): Option[Any] = JfcSupportParser.parseFromString(s).toOption
+  def parse(s: String): Option[Any] = CirceSupportParser.parseFromString(s).toOption
 
   override def toString = "<CirceParser>"
 }
