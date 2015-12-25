@@ -162,7 +162,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
     Xml(1648).toString
   } returns "1648"
 
-  val `Serialize array` = test {
+  /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
   } returns "123"
 
@@ -184,7 +184,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
   val `Extracting Option should not throw exception` = test {
     val x = xml"""{"foo":"bar"}"""
     j.as[Option[String]]
-  } returns None
+  } returns None*/
 
 
 }
