@@ -232,7 +232,6 @@ lazy val json = crossProject.dependsOn(data)
 lazy val jsonJVM = json.jvm
 lazy val jsonJS = json.js
 
-<<<<<<< HEAD
 // rapture-json-circe
 lazy val `json-circe` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-circe")
@@ -243,7 +242,6 @@ lazy val `json-circe` = crossProject.dependsOn(json)
 lazy val jsonCirceJVM = `json-circe`.jvm
 lazy val jsonCirceJS = `json-circe`.js
 
-=======
 // rapture-xml-stdlib
 lazy val `xml-stdlib` = crossProject.dependsOn(xml)
   .settings(moduleName := "rapture-xml-stdlib")
@@ -251,7 +249,6 @@ lazy val `xml-stdlib` = crossProject.dependsOn(xml)
  
 lazy val xmlStdlibJVM = `xml-stdlib`.jvm
 lazy val xmlStdlibJS = `xml-stdlib`.js
->>>>>>> Very basic functionality working
 
 // rapture-json-jawn
 lazy val `json-jawn` = crossProject.dependsOn(json)
