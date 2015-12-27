@@ -1,5 +1,5 @@
 /******************************************************************************************************************\
-* Rapture Web, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                                      *
+* Rapture HTTP/Jetty, version 2.0.0. Copyright 2010-2015 Jon Pretty, Propensive Ltd.                               *
 *                                                                                                                  *
 * The primary distribution site is http://rapture.io/                                                              *
 *                                                                                                                  *

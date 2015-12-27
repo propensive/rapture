@@ -52,14 +52,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, webJVM, webJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
-  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, webJVM, webJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
+  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
+  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, jsonLiftJVM, coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, webJS, webJettyJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
-  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, webJS, webJettyJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
+  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
+  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, jsonLiftJS, jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -136,23 +136,23 @@ lazy val time = crossProject.dependsOn(core)
 lazy val timeJVM = time.jvm
 lazy val timeJS = time.js
 
-// rapture-web
-lazy val web = crossProject.dependsOn(net, uri, json, html, fs, log, time)
-  .settings(moduleName := "rapture-web")
+// rapture-http
+lazy val http = crossProject.dependsOn(net, uri, json, html, fs, log, time)
+  .settings(moduleName := "rapture-http")
   .settings(raptureSettings:_*)
   .settings(libraryDependencies += "javax.servlet" % "servlet-api" % "2.5")
  
-lazy val webJVM = web.jvm
-lazy val webJS = web.js
+lazy val httpJVM = http.jvm
+lazy val httpJS = http.js
 
-// rapture-web-jetty
-lazy val `web-jetty` = crossProject.dependsOn(web)
-  .settings(moduleName := "rapture-web-jetty")
+// rapture-http-jetty
+lazy val `http-jetty` = crossProject.dependsOn(http)
+  .settings(moduleName := "rapture-http-jetty")
   .settings(raptureSettings:_*)
   .settings(libraryDependencies += "org.eclipse.jetty" % "jetty-servlet" % "7.6.10.v20130312")
  
-lazy val webJettyJVM = `web-jetty`.jvm
-lazy val webJettyJS = `web-jetty`.js
+lazy val httpJettyJVM = `http-jetty`.jvm
+lazy val httpJettyJS = `http-jetty`.js
 
 // rapture-fs
 lazy val fs = crossProject.dependsOn(io)
