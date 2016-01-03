@@ -200,19 +200,6 @@ private[core] class ExplicitMode[+G <: MethodConstraint] extends Mode[G] {
   def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value.get
 }
 
-/*private[core] class ReturnEitherMode[+Group <: MethodConstraint] extends Mode[Group] {
-  type Wrap[+Res, E <: Exception] = Either[E, Res]
-  def wrap[Res, E <: Exception](blk: => Res): Either[E, Res] = {
-    try Right(blk) catch {
-      case e: Throwable => if(implicitly[WeakTypeTag[E]].isTypeOf(e)) Left(e.asInstanceOf[E]) else throw e
-    }
-  }
-
-  def unwrap[Return](value: => Either[_ <: Exception, Return]): Return = value.right.get
-  
-  override def toString = "[modes.returnEither]"
-}*/
-
 private[core] class ReturnTryMode[+G <: MethodConstraint] extends Mode[G] {
   type Wrap[+T, E <: Exception] = Try[T]
   def wrap[T, E <: Exception](t: => T): Try[T] = Try(t)

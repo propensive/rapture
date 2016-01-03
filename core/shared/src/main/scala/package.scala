@@ -26,18 +26,6 @@ object `package` {
 
   def each[E <: Exception] = EachUnapplied[E]()
 
-  private val mirror = universe.runtimeMirror(getClass.getClassLoader)
-
-  implicit class EnrichedTypeTag[T](val tt: TypeTag[T]) extends AnyVal {
-    def isTypeOf(value: AnyRef): Boolean = {
-      val types = tt.tpe match {
-        case reflect.runtime.universe.RefinedType(ts, _) => ts
-        case other => List(other)
-      }
-      types.exists { t => mirror.runtimeClass(t.typeSymbol.asClass).isAssignableFrom(value.getClass) }
-    }
-  }
-
   implicit class EnrichedString(val string: String) extends AnyVal {
     def as[T](implicit parser: StringParser[T], mode: Mode[`String#as`]): mode.Wrap[T, parser.Throws] =
       parser.parse(string, mode)
