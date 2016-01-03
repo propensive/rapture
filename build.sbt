@@ -33,7 +33,7 @@ lazy val commonSettings = Seq(
   }),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
-//  scalaJSStage in Test := FastOptStage,
+  scalaJSStage in Test := FastOptStage,
   concurrentRestrictions in Global ++= Seq(Tags.limitSum(2, Tags.CPU, Tags.Untagged), Tags.limit(Tags.Test, 1)),
   scmInfo := Some(ScmInfo(url("https://github.com/propensive/rapture"),
     "scm:git:git@github.com:propensive/rapture.git"))
@@ -46,8 +46,8 @@ lazy val rapture = project.in(file("."))
   .settings(raptureSettings)
   .settings(noPublishSettings)
   .settings(noSourceSettings)
-  .aggregate(raptureJVM)//, raptureJS)
-  .dependsOn(raptureJVM)//, raptureJS)
+  .aggregate(raptureJVM, raptureJS)
+  .dependsOn(raptureJVM, raptureJS)
 
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
