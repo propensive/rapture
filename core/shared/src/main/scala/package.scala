@@ -42,15 +42,13 @@ object `package` {
     }
   }
 
-  private val parseExceptionTypeTag = implicitly[TypeTag[ParseException]]
-
   implicit class EnrichedCollection[Coll[X] <: Seq[X]](val coll: Coll[String]) extends AnyVal {
     def mapAs[T](implicit parser: StringParser[T], cbf: CanBuildFrom[Coll[String], T, Coll[T]], mode: Mode[`Seq#mapAs`]):
         mode.Wrap[Coll[T], parser.Throws] = mode.wrap[Coll[T], parser.Throws] {
       val b = cbf(coll)
       coll foreach { x => b += mode.unwrap(parser.parse(x, mode)) }
       b.result
-    }// (parseExceptionTypeTag)
+    }
   }
 
   private[rapture] type implicitNotFound = annotation.implicitNotFound
