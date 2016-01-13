@@ -55,10 +55,18 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
 }
 
-case class DynamicPath(path: List[Either[Int, String]]) extends Dynamic {
-  def selectDynamic(v: String) = DynamicPath(Right(v) :: path)
-  def applyDynamic(v: String)(i: Int) = DynamicPath(Left(i) :: Right(v) :: path)
-  def apply(i: Int) = DynamicPath(Left(i) :: path)
+case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion[D])
+
+case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
+  def selectDynamic(v: String) = DynamicPath[D](Right(v) :: path)
+  def applyDynamic(v: String)(i: Int) = DynamicPath[D](Left(i) :: Right(v) :: path)
+  def apply(i: Int) = DynamicPath[D](Left(i) :: path)
+
+  def updateDynamic(p: String)(value: ForcedConversion[D]) =
+    DynamicApplication(Right(p) :: path, value)
+  
+  def update(i: Int, value: ForcedConversion[D]) =
+    DynamicApplication(Left(i) :: path, value)
 }
 
 case class MutableCell(var value: Any)
@@ -77,9 +85,10 @@ trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dy
 
 object DataType {
 
-  implicit class DataClassOperations[T <: DataType[T, AstType], AstType <: DataAst](dataType: DataType[T, AstType]) {
+  class DataClassOperations[T <: DataType[T, AstType], AstType <: DataAst](dataType: T) {
     def ++[S <: DataType[S, Rep] forSome { type Rep }](b: S): T = {
       val ast = dataType.$ast
+      
       def merge(a: Any, b: Any): Any = {
         if(ast.isObject(a) && ast.isObject(b)) {
           ast.fromObject(ast.getKeys(b).foldLeft(ast.getObject(a)) { case (as, k) =>
@@ -97,15 +106,47 @@ object DataType {
       dataType.$wrap(merge(left, right), Vector())
     }
 
-    def +(pv: (DynamicPath => DynamicPath, ForcedConversion[T])): T =
-      if(pv._2.nothing) dataType.$wrap(dataType.$normalize) else {
-        def add(path: List[Either[Int, String]], v: Any): Any = path match {
-          case Nil => v
-          case Right(next) :: list => dataType.$ast.fromObject(Map(next -> add(list, v)))
-          case Left(next) :: list => ??? // FIXME: Implement this!
+    def +(pv: DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]]): T = add(pv)
+    
+    def add(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T =
+      pvs.foldLeft(dataType) { case (cur, pv) =>
+        
+	val dPath = pv(DynamicPath(Nil))
+	
+	if(dPath.application.nothing) dataType.$wrap(dataType.$normalize) else {
+ 
+	  def nav(path: List[Either[Int, String]], v: Any): Any = path match {
+            case Nil => v
+            case Right(next) :: list =>
+	      dataType.$ast.fromObject(Map(next -> nav(list, v)))
+            case Left(next) :: list =>
+	      dataType.$ast.fromArray(List(nav(list, v)))
+	  }
+
+	  doAdd(cur, dataType.$wrap(nav(dPath.path.reverse, dPath.application.value), Vector()))
         }
-        ++(dataType.$wrap(add(pv._1(DynamicPath(Nil)).path.reverse, pv._2.value), Vector()))
       }
+    
+    private def doAdd(dataType: T, b: T): T = {
+      val ast = dataType.$ast
+      
+      def merge(a: Any, b: Any): Any = {
+        if(ast.isObject(a) && ast.isObject(b)) {
+          ast.fromObject(ast.getKeys(b).foldLeft(ast.getObject(a)) { case (as, k) =>
+            as + (k -> {
+              if(as contains k) merge(as(k), ast.dereferenceObject(b, k)) else ast.dereferenceObject(b, k)
+            })
+          })
+        } else if(ast.isArray(a) && ast.isArray(b)) ast.fromArray(ast.getArray(a) ++ ast.getArray(b))
+        else b
+      }
+
+      val left = dataType.$normalize
+      val right = if(ast != b.$ast) ast.convert(b.$normalize, b.$ast.asInstanceOf[DataAst]) else b.$normalize
+      
+      dataType.$wrap(merge(left, right), Vector())
+    }
+
   }
 }
 
