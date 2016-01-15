@@ -379,8 +379,11 @@ object New {
   @implicitNotFound("product does not contain this value")
   trait ProductContainsParam[V, T]
 
-  object ProductContainsParam {
-    implicit def acceptable[V, T <: V]: ProductContainsParam[V, T] = null
+  object ProductContainsParam extends ProductContainsParam_1 {
+    implicit def optional[V <: OptionParams[_ <: Params], P <: Params]: ProductContainsParam[V, P] = null
+  }
+  trait ProductContainsParam_1 {
+    implicit def generic[V, T <: V]: ProductContainsParam[V, T] = null
   }
 
   @implicitNotFound("coproduct cannot contain this value")
