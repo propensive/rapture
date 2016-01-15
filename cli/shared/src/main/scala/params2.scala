@@ -391,7 +391,7 @@ object New {
   }
 
   case class Product[T <: Params](tmap: Map[Params, Any]) {
-    def apply[V <: Params](value: V)(implicit acc: ProductContainsParam[V, T]):
+    def apply[V <: Params](value: V)(implicit acc: ProductContainsParam[value.type, T]):
         value.Result = tmap(value).asInstanceOf[value.Result]
     
     override def toString = tmap.map { case (k, v) => s"$k: $v" }.mkString(", ")
