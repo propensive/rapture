@@ -73,7 +73,7 @@ private[i18n] object RequireLanguage { implicit def requireLanguage: RequireLang
 class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
   def apply[Lang >: Languages](implicit ct: ClassTag[Lang]): T = map(ct)
   
-  def |[L >: Languages <: Language, Lang2 <: L](s2: I18n[T, Lang2])(implicit ev: RequireLanguage[L]):
+  def &[L >: Languages <: Language, Lang2 <: L](s2: I18n[T, Lang2])(implicit ev: RequireLanguage[L]):
       I18n[T, Languages with Lang2] = new I18n[T, Languages with Lang2](map ++ s2.map)
 
   override def toString = {
