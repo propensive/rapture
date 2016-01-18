@@ -19,43 +19,43 @@ class I18nTests() extends TestSuite {
   } returns "Bonjour le monde"
   
   val `Create combined internationalized strings, getting English` = test {
-    val greeting = en"Hello world" | fr"Bonjour le monde"
+    val greeting = en"Hello world" & fr"Bonjour le monde"
     greeting[En]
   } returns "Hello world"
 
   val `Create combined internationalized strings, getting French` = test {
-    val greeting = en"Hello world" | fr"Bonjour le monde"
+    val greeting = en"Hello world" & fr"Bonjour le monde"
     greeting[Fr]
   } returns "Bonjour le monde"
 
   val `Check providing surplus language definitions allowed` = test {
-    val greeting = en"Hello world" | fr"Bonjour le monde"
+    val greeting = en"Hello world" & fr"Bonjour le monde"
     val en: I18n[String, En] = greeting
     val fr: I18n[String, Fr] = greeting
     val both: I18n[String, En with Fr] = greeting
   } returns ()
 
   val `Check internationalized substitution` = test {
-    val greeting = en"Hello world" | fr"Bonjour le monde"
+    val greeting = en"Hello world" & fr"Bonjour le monde"
     val msg = en"In English, we say '$greeting'"
     msg[En]
   } returns "In English, we say 'Hello world'"
 
   val `Check internationalized substitution (French)` = test {
-    val greeting = en"Hello world" | fr"Bonjour le monde"
+    val greeting = en"Hello world" & fr"Bonjour le monde"
     val msg = fr"En français, on dit '$greeting'"
     msg[Fr]
   } returns "En français, on dit 'Bonjour le monde'"
 
   val `Substitute ordinary string` = test {
     val lang = "Scala"
-    val msg = en"I speak $lang." | fr"Je parle $lang." | de"Ich spreche $lang."
+    val msg = en"I speak $lang." & fr"Je parle $lang." & de"Ich spreche $lang."
     msg[De]
   } returns "Ich spreche Scala."
 
 
   object MyMessages extends LanguageBundle[En with Fr] {
-    val greeting: IString = en"Hello world" | fr"Bonjour le monde"
+    val greeting: IString = en"Hello world" & fr"Bonjour le monde"
   }
 
   val `Test message bundle` = test {
@@ -75,19 +75,19 @@ class I18nTests() extends TestSuite {
   val `Adding existing language does not compile` = test {
     typeMismatch {
       import deferTypeErrors._
-      en"a" | fr"b" | en"c"
+      en"a" & fr"b" & en"c"
     }
   } returns true
 
   val `Adding existing language does not compile (2)` = test {
     typeMismatch {
       import deferTypeErrors._
-      (en"a" | fr"b") | (de"c" | en"d")
+      (en"a" & fr"b") & (de"c" & en"d")
     }
   } returns true
 
   val `Get language string using runtime value` = test {
-    val msg = en"Hello" | fr"Bonjour"
+    val msg = en"Hello" & fr"Bonjour"
     val langs = en | fr
     implicit val loc = langs.parse("FR")
     msg: String
@@ -96,7 +96,7 @@ class I18nTests() extends TestSuite {
   val `Get language string from subset using runtime value` = test {
     typeMismatch {
       import deferTypeErrors._
-      val msg = en"Hello" | fr"Bonjour"
+      val msg = en"Hello" & fr"Bonjour"
       val langs = en | fr | de
       implicit val loc = langs.parse("FR")
       msg: String
@@ -104,7 +104,7 @@ class I18nTests() extends TestSuite {
   } returns true
 
   val `Get language string from superset using runtime value` = test {
-    val msg = en"Hello" | fr"Bonjour" | de"Hallo"
+    val msg = en"Hello" & fr"Bonjour" & de"Hallo"
     val langs = en | fr
     implicit val loc = langs.parse("FR")
     msg: String
