@@ -65,7 +65,7 @@ class JettyHttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
         }
       }
       params.toMap
-    
+
     case MimeTypes.`application/x-www-form-urlencoded` =>
       val params = new HashMap[String, String]
       val enum = req.getParameterNames
@@ -75,6 +75,9 @@ class JettyHttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
           params(name) = value
       }
       params.toMap
+
+    case _ =>
+      Map.empty[String, String]
   }
 
   private val input = {
