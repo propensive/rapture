@@ -52,14 +52,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
-  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
+  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
+  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
-  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, i18nJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
+  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
+  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -193,6 +193,14 @@ lazy val i18n = crossProject.dependsOn(core)
  
 lazy val i18nJVM = i18n.jvm
 lazy val i18nJS = i18n.js
+
+// rapture-google-translate
+lazy val `google-translate` = crossProject.dependsOn(core, net, `json-jawn`, i18n)
+  .settings(moduleName := "rapture-google-translate")
+  .settings(raptureSettings:_*)
+ 
+lazy val googleTranslateJVM = `google-translate`.jvm
+lazy val googleTranslateJS = `google-translate`.js
 
 // rapture-text
 lazy val text = crossProject.dependsOn(core)

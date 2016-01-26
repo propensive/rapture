@@ -34,4 +34,6 @@ object `package` {
   implicit def jsonBufferStringContext(sc: StringContext)
       (implicit parser: Parser[String, JsonBufferAst]) =
     new JsonBufferStrings(sc)
+
+  implicit class JsonOperations(json: Json) extends DataType.DataClassOperations[Json, JsonAst](json)
 }
