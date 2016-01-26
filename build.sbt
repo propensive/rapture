@@ -195,7 +195,7 @@ lazy val i18nJVM = i18n.jvm
 lazy val i18nJS = i18n.js
 
 // rapture-google-translate
-lazy val `google-translate` = crossProject.dependsOn(core, net, `json-jawn`)
+lazy val `google-translate` = crossProject.dependsOn(core, net, `json-jawn`, i18n)
   .settings(moduleName := "rapture-google-translate")
   .settings(raptureSettings:_*)
  
