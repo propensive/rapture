@@ -55,17 +55,17 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
 }
 
-case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion[D])
+case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion2[D])
 
 case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
   def selectDynamic(v: String) = DynamicPath[D](Right(v) :: path)
   def applyDynamic(v: String)(i: Int) = DynamicPath[D](Left(i) :: Right(v) :: path)
   def apply(i: Int) = DynamicPath[D](Left(i) :: path)
 
-  def updateDynamic(p: String)(value: ForcedConversion[D]) =
+  def updateDynamic(p: String)(value: ForcedConversion2[D]) =
     DynamicApplication(Right(p) :: path, value)
   
-  def update(i: Int, value: ForcedConversion[D]) =
+  def update(i: Int, value: ForcedConversion2[D]) =
     DynamicApplication(Left(i) :: path, value)
 }
 
@@ -108,45 +108,49 @@ object DataType {
 
     def +(pv: DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]]): T = add(pv)
     
-    def add(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T =
-      pvs.foldLeft(dataType) { case (cur, pv) =>
+    def add(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
+      dataType.$wrap(pvs.foldLeft(dataType.$normalize) { case (cur, pv) =>
         
 	val dPath = pv(DynamicPath(Nil))
+	val ast = dataType.$ast
 	
-	if(dPath.application.nothing) dataType.$wrap(dataType.$normalize) else {
+	if(dPath.application.nothing) cur else {
  
-	  def nav(path: List[Either[Int, String]], v: Any): Any = path match {
-            case Nil => v
-            case Right(next) :: list =>
-	      dataType.$ast.fromObject(Map(next -> nav(list, v)))
-            case Left(next) :: list =>
-	      dataType.$ast.fromArray(List(nav(list, v)))
+	  def nav(path: List[Either[Int, String]], dest: Any, v: Any): Any = {
+	  path match {
+            case Nil =>
+	      v
+            
+	    case Right(next) :: list =>
+	      val d = if(ast.isObject(dest)) {
+		try ast.dereferenceObject(dest, next) catch {
+                  case e: Exception => ast.fromArray(List())
+		}
+	      } else ???
+	      
+              val addition = Map(next -> nav(list, d, v))
+
+	      if(ast.isObject(dest)) {
+		ast.fromObject(ast.getObject(dest) ++ addition)
+	      } else ???
+            
+	    case Left(next) :: list =>
+	      if(ast.isObject(dest)) {
+	        val addition = nav(list, ast.getObject(dest), v)
+	      } else if(ast.isArray(dest)) {
+
+	      }
+	     
+	      if(ast.isObject(dest)) {
+	        ast.fromObject(ast.getObject(dest) ++ Map())
+	      } else ???
+	  }
 	  }
 
-	  doAdd(cur, dataType.$wrap(nav(dPath.path.reverse, dPath.application.value), Vector()))
+	  nav(dPath.path.reverse, cur, dPath.application.value)
         }
-      }
-    
-    private def doAdd(dataType: T, b: T): T = {
-      val ast = dataType.$ast
-      
-      def merge(a: Any, b: Any): Any = {
-        if(ast.isObject(a) && ast.isObject(b)) {
-          ast.fromObject(ast.getKeys(b).foldLeft(ast.getObject(a)) { case (as, k) =>
-            as + (k -> {
-              if(as contains k) merge(as(k), ast.dereferenceObject(b, k)) else ast.dereferenceObject(b, k)
-            })
-          })
-        } else if(ast.isArray(a) && ast.isArray(b)) ast.fromArray(ast.getArray(a) ++ ast.getArray(b))
-        else b
-      }
-
-      val left = dataType.$normalize
-      val right = if(ast != b.$ast) ast.convert(b.$normalize, b.$ast.asInstanceOf[DataAst]) else b.$normalize
-      
-      dataType.$wrap(merge(left, right), Vector())
+      })
     }
-
   }
 }
 
@@ -245,7 +249,7 @@ trait MutableDataType[+T <: DataType[T, AstType], AstType <: MutableDataAst]
     }
 
   /** Updates the element `key` of the JSON object with the value `v` */
-  def updateDynamic(key: String)(v: ForcedConversion[T]): Unit =
+  def updateDynamic(key: String)(v: ForcedConversion2[T]): Unit =
     if(!v.nothing) $updateParents($path,
         $ast.setObjectValue(Try($normalize).getOrElse($ast.fromObject(Map())), key, v.value))
 
@@ -267,6 +271,19 @@ trait MutableDataType[+T <: DataType[T, AstType], AstType <: MutableDataAst]
 
 trait `Data#as` extends MethodConstraint
 trait `Data#normalize` extends MethodConstraint
+
+object ForcedConversion2 extends ForcedConversion2_1 {
+  implicit def forceOptConversion[T, D](opt: Option[T])(implicit ser: Serializer[T, D]) =
+    opt.map(t => ForcedConversion2[D](ser.serialize(t), false)) getOrElse
+        ForcedConversion2[D](null, true)
+}
+
+trait ForcedConversion2_1 {
+  implicit def forceConversion[T, D](t: T)(implicit ser: Serializer[T, D]) =
+    ForcedConversion2[D](ser.serialize(t), false)
+}
+
+case class ForcedConversion2[-D](value: Any, nothing: Boolean)
 
 object ForcedConversion extends ForcedConversion_1 {
   implicit def forceOptConversion[T, D](opt: Option[T])(implicit ser: Serializer[T, D]) =
