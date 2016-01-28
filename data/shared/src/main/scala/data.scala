@@ -289,15 +289,17 @@ object ForcedConversion extends ForcedConversion_1 {
   implicit def forceOptConversion[T, D](opt: Option[T])(implicit ser: Serializer[T, D]) =
     opt.map(t => ForcedConversion[D](ser.serialize(t), false)) getOrElse
         ForcedConversion[D](null, true)
- 
+}
+
+trait ForcedConversion_1 extends ForcedConversion_2 {
+  implicit def forceConversion[T, D](t: T)(implicit ser: Serializer[T, D]) =
+    ForcedConversion[D](ser.serialize(t), false)
+}
+
+trait ForcedConversion_2 {
   // The name of this method is significant for some additional checking done in the macro `contextMacro`.
   implicit def forceStringConversion[D, T: StringSerializer](value: T)(implicit ser: Serializer[String, D]) =
     ForcedConversion[D](ser.serialize(?[StringSerializer[T]].serialize(value)), false)
-}
-
-trait ForcedConversion_1 {
-  implicit def forceConversion[T, D](t: T)(implicit ser: Serializer[T, D]) =
-    ForcedConversion[D](ser.serialize(t), false)
 }
 
 case class ForcedConversion[-D](value: Any, nothing: Boolean)
