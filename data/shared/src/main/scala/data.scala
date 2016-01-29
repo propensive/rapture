@@ -47,8 +47,8 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
   def apply[T](t: T)(implicit ast: AstType, ser: Serializer[T, Type]): Type =
     construct(MutableCell(ser.serialize(t)), Vector())
 
-  def unapply(value: Any)(implicit ast: AstType): Option[Type] =
-    Some(construct(MutableCell(value), Vector()))
+  def raw(value: Any)(implicit ast: AstType): Type =
+    construct(MutableCell(value), Vector())
 
   def format[T <: DataType[T, AstType]](data: T)(implicit f: Formatter[_ <: AstType]): f.Out =
     f.format(data.$normalize)
