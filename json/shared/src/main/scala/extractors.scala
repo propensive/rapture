@@ -36,6 +36,9 @@ private[json] trait Extractors extends Extractors_1 {
     GeneralExtractors.genSeqExtractor[T, Coll, Json]
   }  
 
+  implicit def mapExtractor[K, V](implicit ext: Extractor[V, Json], ext2: StringParser[K]): Extractor[Map[K, V], Json] =
+    GeneralExtractors.mapExtractor[K, V, Json]
+
 }
 
 private[json] trait Extractors_1 extends Extractors_2 {

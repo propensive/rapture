@@ -78,14 +78,14 @@ object GeneralExtractors {
     }
   }
 
-  def mapExtractor[T, Data <: DataType[Data, _ <: DataAst ]]
-      (implicit ext: Extractor[T, Data]): Extractor[Map[String, T], Data] { type Throws = ext.Throws } =
-    new Extractor[Map[String, T], Data] {
-      type Throws = ext.Throws
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Map[String, T], Throws] =
+  def mapExtractor[K, T, Data <: DataType[Data, _ <: DataAst ]]
+      (implicit ext: Extractor[T, Data], ext2: StringParser[K]): Extractor[Map[K, T], Data] { type Throws = ext.Throws with ext2.Throws } =
+    new Extractor[Map[K, T], Data] {
+      type Throws = ext.Throws with ext2.Throws
+      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Map[K, T], Throws] =
         mode.wrap {
           value.$ast.getObject(value.$root.value) map {
-            case (k, v) => k -> mode.unwrap(ext.safeExtract(value.$wrap(v), value.$ast, Some(Right(k)), mode))
+            case (k, v) => mode.unwrap(ext2.parse(k, mode)) -> mode.unwrap(ext.safeExtract(value.$wrap(v), value.$ast, Some(Right(k)), mode))
           }
         }
       }
