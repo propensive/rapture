@@ -46,7 +46,7 @@ object htmlSyntax {
   val Base = Tag[Nothing, Metadata, Base]()
   val Link = Tag[Nothing, Metadata, Link]()
   val Meta = Tag[Metadata, Metadata, Meta]()
-  val Style = Tag[Text, Metadata with Flow, Global](block = true)
+  val Style = Tag[Text, Metadata with Flow, AttributeType](block = true)
   val Script = Tag[Text, Metadata with Phrasing, Script](forceClosingTag = true, block = true)
   val Noscript = Tag[Text, Metadata with Phrasing, AttributeType]()
   val Body = Tag[Flow, Top, Body]()
@@ -134,7 +134,7 @@ object htmlSyntax {
   val Legend = Tag[Phrasing, ElementType, AttributeType]()
   val Div = Tag[Flow, Flow, AttributeType](forceClosingTag = true)
 
-  object data extends Dynamic {
+  object Data extends Dynamic {
     def selectDynamic(att: String) = Attribute[Global, String](att)(identity)
     def updateDynamic[E <: ElementType](att: String)(v: String) = selectDynamic(att).set[E](v)
   }
@@ -294,186 +294,171 @@ object htmlSyntax {
   implicit def maxlength = Attribute[Input with Textarea, Int]("maxlength")(_.toString)
   def maxlength_=[E <: ElementType](v: Int) = maxlength.set(v)
   
-  /* 
+  implicit def hreflang = Attribute[Link, Symbol]("hreflang")(_.name)
+  def hreflang_=[E <: ElementType](v: Symbol) = hreflang.set(v)
 
-  private type HreflangAttribute = Link with A with Area
-  implicit def hreflang = attribute()
-  def hreflang_=(value: String): Att[HreflangAttribute] = Attribute(value)
+  implicit def sizes = Attribute[Link, String]("sizes")(identity)
+  def sizes_=[E <: ElementType](v: String) = sizes.set(v)
 
-  implicit def sizes = attribute()
-  def sizes_=(value: String): Att[Link] = Attribute(value)
-  
-  implicit def scoped = attribute()
-  def scoped_=(value: String): Att[Script] = Attribute(value)
-  
-  implicit def async = attribute()
-  def async_=(value: String): Att[Script] = Attribute(value)
+  implicit def scoped = Attribute[Style, Boolean]("scoped")(v => if(v) "scoped" else null)
+  def scoped_=[E <: ElementType](v: Boolean) = scoped.set(v)
 
-  implicit def defer = attribute()
-  def defer_=(value: String): Att[Script] = Attribute(value)
+  implicit def async = Attribute[Script, Boolean]("async")(v => if(v) "async" else null)
+  def async_=[E <: ElementType](v: Boolean) = async.set(v)
 
-  implicit def onbeforeunload = attribute()
-  def onbeforeunload_=(value: String): Att[Body] = Attribute(value.toString)
-  
-  implicit def onerror = attribute()
-  def onerror_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onhashchange = attribute()
-  def onhashchange_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onmessage = attribute()
-  def onmessage_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onoffline = attribute()
-  def onoffline_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onpopstate = attribute()
-  def onpopstate_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onresize = attribute()
-  def onresize_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onstorage = attribute()
-  def onstorage_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def onunload = attribute()
-  def onunload_=(value: String): Att[Body] = Attribute(value)
-  
-  implicit def reversed = attribute()
-  def reversed_=(value: String): Att[Ol] = Attribute(value)
-  
-  implicit def start = attribute()
-  def start_=(value: Int): Att[Ol] = Attribute(value.toString)
-  
-  implicit def ping = attribute()
-  def ping_=(value: String): Att[A with Area] = Attribute(value)
-  
-  implicit def cite = attribute()
-  def cite_=(value: String): Att[Blockquote with Q with Edit] = Attribute(value)
-  
-  implicit def datetime = attribute()
-  def datetime_=(value: String): Att[Time with Edit] = Attribute(value)
-  
-  implicit def dir = attribute()
-  def dir_=(value: String): Att[Global] = Attribute(value)
-  
-  implicit def alt = attribute()
-  def alt_=(value: String): Att[Img with Area with Input] = Attribute(value)
-  
-  implicit def usemap = attribute()
-  def usemap_=(value: Symbol): Att[Img with Object] = Attribute(value.name)
-  
-  implicit def ismap = attribute()
-  def ismap_=(value: String): Att[Img] = Attribute(value)
-  
-  private type WidthAttribute = Img with Iframe with Embed with Object with Video with Canvas with Input
-  implicit def width = attribute()
-  def width_=(value: Int): Att[WidthAttribute] = Attribute(value.toString)
-  
-  implicit def height = attribute()
-  def height_=(value: Int): Att[WidthAttribute] = Attribute(value.toString)
-  
-  implicit def sandbox = attribute()
-  def sandbox_=(value: String): Att[Iframe] = Attribute(value)
-  
-  implicit def seamless = attribute()
-  def seamless_=(value: String): Att[Iframe] = Attribute(value)
-  
-  implicit def data = attribute()
-  def data_=(value: String): Att[Object] = Attribute(value)
-  
-  implicit def poster = attribute()
-  def poster_=(value: String): Att[Video] = Attribute(value)
-  
-  implicit def autobuffer = attribute()
-  def autobuffer_=(value: String): Att[Video with Audio] = Attribute(value)
-  
-  implicit def autoplay = attribute()
-  def autoplay_=(value: String): Att[Video with Audio] = Attribute(value)
-  
-  implicit def loop = attribute()
-  def loop_=(value: String): Att[Video with Audio] = Attribute(value)
-  
-  implicit def controls = attribute()
-  def controls_=(value: String): Att[Video with Audio] = Attribute(value)
-  
-  implicit def coords = attribute()
-  def coords_=(value: String): Att[Area] = Attribute(value)
-  
-  implicit def shape = attribute()
-  def shape_=(value: String): Att[Area] = Attribute(value)
-  
-  implicit def headers = attribute()
-  def headers_=(value: Int): Att[Td with Th] = Attribute(value.toString)
-  
-  implicit def scope = attribute()
-  def scope_=(value: String): Att[Th] = Attribute(value.toString)
-  
-  private type FormAttribute = Object with Fieldset with Label with Input with Button with Select with Textarea
-      with Output
-  implicit def form = attribute()
-  def form_=(value: String): Att[FormAttribute] = Attribute(value.toString)
-  
-  implicit def acceptCharset = attribute()
-  def acceptCharset_=(value: Encoding): Att[Form] = Attribute(value.name)
-  
-  implicit def autocomplete = attribute()
-  def autocomplete_=(value: Boolean): Att[Form with Input] = Attribute(if(value) "on" else "off")
-  
-  implicit def novalidate = attribute()
-  def novalidate_=(value: Boolean): Att[Form with Input with Button] = Attribute(if(value) "novalidate" else null)
-  
-  private type DisabledAttribute = Fieldset with Input with Button with Select with Optgroup with Option with
-      Textarea with Command
-  implicit def disabled = attribute()
-  def disabled_=(value: Boolean): Att[DisabledAttribute] = Attribute(if(value) "disabled" else null)
-  
-  implicit def label = attribute()
-  def label_=(value: String): Att[Option with Command with Menu] = Attribute(value)
+  implicit def defer = Attribute[Script, Boolean]("defer")(v => if(v) "defer" else null)
+  def defer_=[E <: ElementType](v: Boolean) = defer.set(v)
 
-  implicit def forName = attribute()
-  def forName_=(value: String): Att[Option with Command with Menu] = Attribute(value)
-  
-  implicit def accept = attribute()
-  def accept_=(value: String): Att[Input with Menu] = Attribute(value)
+  implicit def onbeforeunload = Attribute[Body, String]("onbeforeunload")(identity)
+  def onbeforeunload_=[E <: ElementType](v: String) = onbeforeunload.set(v)
 
-  type AutofocusAttribute = Input with Button with Select with Textarea
-  implicit def autofocus = attribute()
-  def autofocus_=(value: Boolean): Att[AutofocusAttribute] = Attribute(if(value) "autofocus" else null)
-  
-  implicit def list = attribute()
-  def list_=(value: String): Att[Input] = Attribute(value)
-  
-  implicit def multiple = attribute()
-  def multiple_=(value: Boolean): Att[Input with Select] = Attribute(if(value) "multiple" else null)
-  
-  implicit def pattern = attribute()
-  def pattern_=(value: String): Att[Input] = Attribute(value)
-  
-  implicit def placeholder = attribute()
-  def placeholder_=(value: String): Att[Input] = Attribute(value)
-  
-  implicit def readonly = attribute()
-  def readonly_=(value: Boolean): Att[Input with Textarea] = Attribute(if(value) "readonly" else null)
-  
-  implicit def required = attribute()
-  def required_=(value: Boolean): Att[Input with Textarea] = Attribute(if(value) "required" else null)
-  
-  implicit def size = attribute()
-  def size_=(value: Int): Att[Input with Select] = Attribute(value.toString)
-  
-  implicit def step = attribute()
-  def step_=(value: String): Att[Input] = Attribute(value)
-  
-  implicit def icon = attribute()
-  def icon_=(value: String): Att[Command] = Attribute(value)
-  
-  implicit def radiogroup = attribute()
-  def radiogroup_=(value: String): Att[Command] = Attribute(value)
-  
-  implicit def default = attribute()
-  def default_=(value: String): Att[Command] = Attribute(value)
-  */
+  implicit def onerror = Attribute[Body, String]("onerror")(identity)
+  def onerror_=[E <: ElementType](v: String) = onerror.set(v)
+
+  implicit def onhashchange = Attribute[Body, String]("onhashchange")(identity)
+  def onhashchange_=[E <: ElementType](v: String) = onhashchange.set(v)
+
+  implicit def onmessage = Attribute[Body, String]("onmessage")(identity)
+  def onmessage_=[E <: ElementType](v: String) = onmessage.set(v)
+
+  implicit def onoffline = Attribute[Body, String]("onoffline")(identity)
+  def onoffline_=[E <: ElementType](v: String) = onoffline.set(v)
+
+  implicit def onpopstate = Attribute[Body, String]("onpopstate")(identity)
+  def onpopstate_=[E <: ElementType](v: String) = onpopstate.set(v)
+
+  implicit def onresize = Attribute[Body, String]("onresize")(identity)
+  def onresize_=[E <: ElementType](v: String) = onresize.set(v)
+
+  implicit def onstorage = Attribute[Body, String]("onstorage")(identity)
+  def onstorage_=[E <: ElementType](v: String) = onstorage.set(v)
+
+  implicit def onunload = Attribute[Body, String]("onunload")(identity)
+  def onunload_=[E <: ElementType](v: String) = onunload.set(v)
+
+  implicit def reversed = Attribute[Ol, Boolean]("reversed")(v => if(v) "reversed" else null)
+  def reversed_=[E <: ElementType](v: Boolean) = reversed.set(v)
+
+  implicit def start = Attribute[Ol, Int]("start")(_.toString)
+  def start_=[E <: ElementType](v: Int) = start.set(v)
+
+  implicit def ping = Attribute[Link with Area, rapture.uri.Link]("ping")(_.toString)
+  def ping_=[E <: ElementType](v: rapture.uri.Link) = ping.set(v)
+
+  implicit def cite = Attribute[Blockquote with Q with Edit, rapture.uri.Link]("cite")(_.toString)
+  def cite_=[E <: ElementType](v: rapture.uri.Link) = cite.set(v)
+
+  implicit def datetime = Attribute[Time with Edit, String]("datetime")(identity)
+  def datetime_=[E <: ElementType](v: String) = datetime.set(v)
+
+  implicit def dir = Attribute[Global, Symbol]("dir")(_.name)
+  def dir_=[E <: ElementType](v: Symbol) = dir.set(v)
+
+  implicit def usemap = Attribute[Img with Object, String]("usemap")(identity)
+  def usemap_=[E <: ElementType](v: String) = usemap.set(v)
+
+  implicit def ismap = Attribute[Img, Boolean]("ismap")(v => if(v) "ismap" else null)
+  def ismap_=[E <: ElementType](v: Boolean) = ismap.set(v)
+
+  implicit def width = Attribute[Img with Iframe with Embed with Object with Video with Canvas with Input, Int]("width")(_.toString)
+  def width_=[E <: ElementType](v: Int) = width.set(v)
+
+  implicit def height = Attribute[Img with Iframe with Embed with Object with Video with Canvas with Input, Int]("height")(_.toString)
+  def height_=[E <: ElementType](v: Int) = height.set(v)
+
+  implicit def sandbox = Attribute[Iframe, Boolean]("sandbox")(v => if(v) "sandbox" else null)
+  def sandbox_=[E <: ElementType](v: Boolean) = sandbox.set(v)
+
+  implicit def seamless = Attribute[Iframe, Boolean]("seamless")(v => if(v) "seamless" else null)
+  def seamless_=[E <: ElementType](v: Boolean) = seamless.set(v)
+
+  implicit def poster = Attribute[Video, rapture.uri.Link]("poster")(_.toString)
+  def poster_=[E <: ElementType](v: rapture.uri.Link) = poster.set(v)
+
+  implicit def data = Attribute[Object, String]("data")(identity)
+  def data_=[E <: ElementType](v: String) = data.set(v)
+
+  implicit def autobuffer = Attribute[Video with Audio, Boolean]("autobuffer")(v => if(v) "autobuffer" else null)
+  def autobuffer_=[E <: ElementType](v: Boolean) = autobuffer.set(v)
+
+  implicit def autoplay = Attribute[Video with Audio, Boolean]("autoplay")(v => if(v) "autoplay" else null)
+  def autoplay_=[E <: ElementType](v: Boolean) = autoplay.set(v)
+
+  implicit def loop = Attribute[Video with Audio, Boolean]("loop")(v => if(v) "loop" else null)
+  def loop_=[E <: ElementType](v: Boolean) = loop.set(v)
+
+  implicit def controls = Attribute[Video with Audio, Boolean]("controls")(v => if(v) "controls" else null)
+  def controls_=[E <: ElementType](v: Boolean) = controls.set(v)
+
+  implicit def coords = Attribute[Area, String]("coords")(identity)
+  def coords_=[E <: ElementType](v: String) = coords.set(v)
+
+  implicit def shape = Attribute[Area, String]("shape")(identity)
+  def shape_=[E <: ElementType](v: String) = shape.set(v)
+
+  implicit def headers = Attribute[Td with Th, Symbol]("headers")(_.name)
+  def headers_=[E <: ElementType](v: Symbol) = headers.set(v)
+
+  implicit def scope = Attribute[Th, Symbol]("scope")(_.name)
+  def scope_=[E <: ElementType](v: Symbol) = scope.set(v)
+
+  implicit def acceptCharset = Attribute[Form, String]("accept-charset")(identity)
+  def acceptCharset_=[E <: ElementType](v: String) = acceptCharset.set(v)
+
+  implicit def autocomplete = Attribute[Form with Input, Boolean]("autocomplete")(v => if(v) "on" else "off")
+  def autocomplete_=[E <: ElementType](v: Boolean) = autocomplete.set(v)
+
+  implicit def novalidate = Attribute[Form with Input with Button, Boolean]("novalidate")(v => if(v) "novalidate" else null)
+  def novalidate_=[E <: ElementType](v: Boolean) = novalidate.set(v)
+
+  implicit def label = Attribute[Option with Command with Menu, String]("label")(identity)
+  def label_=[E <: ElementType](v: String) = label.set(v)
+
+  implicit def forName = Attribute[Option with Command with Menu, Symbol]("forName")(_.name)
+  def forName_=[E <: ElementType](v: Symbol) = forName.set(v)
+
+  implicit def `for` = Attribute[Label, Symbol]("for")(_.name)
+  def for_=[E <: ElementType](v: Symbol) = `for`.set(v)
+
+  implicit def accept = Attribute[Input with Menu, String]("accept")(identity)
+  def accept_=[E <: ElementType](v: String) = accept.set(v)
+
+  implicit def autofocus = Attribute[Input with Button with Select with Textarea, Boolean]("autofocus")(v => if(v) "autofocus" else null)
+  def autofocus_=[E <: ElementType](v: Boolean) = autofocus.set(v)
+
+  implicit def list = Attribute[Input, Symbol]("list")(_.name)
+  def list_=[E <: ElementType](v: Symbol) = list.set(v)
+
+  implicit def multiple = Attribute[Input with Select, Boolean]("multiple")(v => if(v) "multiple" else null)
+  def multiple_=[E <: ElementType](v: Boolean) = multiple.set(v)
+
+  implicit def pattern = Attribute[Input, String]("pattern")(identity)
+  def pattern_=[E <: ElementType](v: String) = pattern.set(v)
+
+  implicit def placeholder = Attribute[Input, String]("placeholder")(identity)
+  def placeholder_=[E <: ElementType](v: String) = placeholder.set(v)
+
+  implicit def readonly = Attribute[Input with Textarea, Boolean]("readonly")(v => if(v) "readonly" else null)
+  def readonly_=[E <: ElementType](v: Boolean) = readonly.set(v)
+
+  implicit def required = Attribute[Input with Textarea, Boolean]("required")(v => if(v) "required" else null)
+  def required_=[E <: ElementType](v: Boolean) = required.set(v)
+
+  implicit def size = Attribute[Input with Select, Int]("size")(_.toString)
+  def size_=[E <: ElementType](v: Int) = size.set(v)
+
+  implicit def step = Attribute[Input, Int]("step")(_.toString)
+  def step_=[E <: ElementType](v: Int) = step.set(v)
+
+  implicit def icon = Attribute[Command, rapture.uri.Link]("icon")(_.toString)
+  def icon_=[E <: ElementType](v: rapture.uri.Link) = icon.set(v)
+
+  implicit def radiogroup = Attribute[Command, Symbol]("radiogroup")(_.name)
+  def radiogroup_=[E <: ElementType](v: Symbol) = radiogroup.set(v)
+
+  implicit def default = Attribute[Command, String]("default")(identity)
+  def default_=[E <: ElementType](v: String) = default.set(v)
+
   case class TypeOption(typeName: String) extends AnyVal {
     override implicit def toString = typeName
   }
