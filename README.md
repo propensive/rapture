@@ -1,7 +1,6 @@
 # Rapture
 
 [![Build Status](https://travis-ci.org/propensive/rapture.png?branch=dev)](https://travis-ci.org/propensive/rapture)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.propensive/rapture-core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.propensive/rapture-core_2.11)
 [![License](http://img.shields.io/:license-Apache%202-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/propensive/rapture)
 

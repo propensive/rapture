@@ -2,7 +2,9 @@
 # Rapture 2, Milestone 4: "Toltec"
 ## 3 February, 2016
 
-Here is a summary of the main changes since Rapture 2.0.0-M3.
+This is the first time we're producing Release Notes for Rapture, but we will
+aim to do it for all future milestones. So, here is a summary of the main
+changes since Rapture 2.0.0-M3, organised by module.
 
 ## IO
 
@@ -13,7 +15,8 @@ of their origin (file, URL, classpath, etc), providing an iterator over
 `ZipEntry` resources for each entry in the ZIP file. Here's an example:
 
 ```
-val url = uri"http://example.com/test.zip".unzip().map { entry =>
+val url = uri"http://example.com/test.zip"
+val totalSie = url.unzip().map { entry =>
   entry.size[Byte]
 }.sum
 ```
@@ -51,12 +54,17 @@ It is now possible to include any iterable collection of children within an
 HTML element, alongside ordinary child elements. For example,
 
 ```
+val items = Vector("two", "three", "four")
 Ul(
   Li("First item"),
   items.map { item => Li(item) },
   Li("Last item")
 )
 ```
+
+Previously, the `: _*` varargs decorator had to be used carefully to include
+collections of HTML nodes inside, and this suffered from various type-inference
+problems. It should no longer ever be necessary to use `: _*`.
 
 ## JSON
 
@@ -74,7 +82,20 @@ val m = j.as[Map[Int, String]]
 val j2: Json = Json(m)
 ```
 
-FIXME: ^^^ This doesn't work yet!
+### Easier creation of JSON instances from raw values
+
+This will be of most use to JSON backend developers, but it's now much easier
+to create a new `Json` value from its underlying representation.
+
+```
+import rapture.json._, jsonBackends.jawn._
+val i = Json.raw(jawn.ast.JNum("1234567890"))
+```
+
+Note that the parameter to `raw` is inherently untyped, and only values which
+the given backend knows how to work with should be provided here. It is
+entirely possible to create new, unusable `Json` values this way. Some work is
+planned to improve this situation, though.
 
 ### Bugfixes: serialization of string-like things
 
@@ -149,20 +170,31 @@ val msgs: I18n[String, En with De with Fr] = en"Hello"
 
 ### Fix for match errors on content types
 
-FIXME
+This fix avoids runtime exceptions when POST requests are sent with a MIME type
+other than `application/x-www-form-urlencoded`.
+
+Thanks to Sébastien Renault for this!
 
 ## General
 
 ### Better JAR file layout for Eclipse sources
 
 The format of published JAR files previously meant that Eclipse could not
-previously find Rapture sources without a lot of extra work. The directory
-structure of the project has now been rearranged to help Eclipse find the
-sources.
+previously find Rapture sources without a lot of extra work for the user.
+
+The directory structure of the projects has now been rearranged to help Eclipse
+find the sources.
 
 ### Removal of some reflection code
 
 Some unnecessary code using Scala reflection in Rapture Core has been removed,
 which eliminates some crashes on Android, and works better on Scala.JS.
+
+## Thank you
+
+As well as the contributors above, thanks must also go to Alistair Johnson,
+Christian Pérez-Llamas, François Armand and Sam Halliday for SBT help,
+design inspiration, bugreporting and bloody-minded enthusiasm, respectively.
+
 
 
