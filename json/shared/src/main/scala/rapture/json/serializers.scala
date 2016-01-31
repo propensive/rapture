@@ -70,10 +70,13 @@ private[json] trait Serializers {
       (implicit ast: JsonAst, ser: Serializer[Type, Json]): Serializer[Option[Type], Json] =
     BasicJsonSerializer(_ map ser.serialize getOrElse ast.nullValue)
 
-  implicit def mapSerializer[Type, Ast <: JsonAst]
-      (implicit ast: Ast, ser: Serializer[Type, Json]): Serializer[Map[String, Type], Json] =
-    new Serializer[Map[String, Type], Json] {
-      def serialize(m: Map[String, Type]) = ast.fromObject(m.mapValues(ser.serialize))
+  implicit def mapSerializer[K, Type, Ast <: JsonAst]
+      (implicit ast: Ast, ser: Serializer[Type, Json], ser2: StringSerializer[K]): Serializer[Map[K, Type], Json] =
+    new Serializer[Map[K, Type], Json] {
+      def serialize(m: Map[K, Type]) =
+        ast.fromObject(m.map { case (k, v) =>
+	  ser2.serialize(k) -> ser.serialize(v)
+	})
     }
 
   implicit def directJsonSerializer[T: DirectJsonSerializer](implicit ast: JsonAst):
