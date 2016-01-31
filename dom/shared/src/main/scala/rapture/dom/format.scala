@@ -28,7 +28,20 @@ package domFormatters {
         case Comment(c) =>
           comment(c)
         
-        case elem: Element[_, _, _] =>
+        case elems: ElementSeq[_, _, _] =>
+	  elems.elems.map { elem =>
+	  
+            val xs = elem.children.map(format).mkString
+          
+            val as = elem.tagName +: elem.attributes.to[List].filter(_._2 != null).map { case (k, v) =>
+              k.name+"=\""+k.serialize(v.asInstanceOf[k.Value])+"\""
+            }
+          
+            if(xs.isEmpty && !elem.forceClosingTag) s"<${as.mkString(" ")}/>"
+            else s"<${as.mkString(" ")}>$xs</${elem.tagName}>"
+	  }.mkString
+        
+	case elem: Element[_, _, _] =>
           val xs = elem.children.map(format).mkString
           
           val as = elem.tagName +: elem.attributes.to[List].filter(_._2 != null).map { case (k, v) =>
@@ -79,6 +92,9 @@ object DomFormatter {
         else if(hasBlock || elem.block)
           (indent -> s"<${as.mkString(" ")}>") +: xs :+ (indent -> s"</${elem.tagName}>")
         else Vector(indent -> s"<${as.mkString(" ")}>${xs.map(_._2).mkString}</${elem.tagName}>")
+      
+      case elem: ElementSeq[_, _, _] =>
+        elem.elems.to[Vector].flatMap(format(indent, _))
     }
   }
 }

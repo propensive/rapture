@@ -34,6 +34,10 @@ object Applicable {
     macro DomMacros.reportElementErrorMacro[Child, Att, Child2, Elem, Att2]
 
   implicit def listToApplicable[Child <: ElementType, Elem <: ElementType, Att <: AttributeType, Ap <: Element[Child, Elem, Att]](apps: List[Ap]): Element[Child, Elem, Att] = apps.head
+
+  implicit def wrapIterable[Child <: ElementType, This <: ElementType, Att <: AttributeType](xs:
+      Iterable[Element[Child, This, Att]]): ElementLike[Child, This, Att] = ElementSeq[Child, This, Att](xs)
+
 }
 
 trait Applicable[+ChildType, +ThisAttType, AppliedType[_ <: ElementType, _ <: ElementType,
@@ -74,7 +78,7 @@ case class DomNodes[ChildType <: ElementType, ThisType <: ElementType, AttType <
       DomNodes[Child, This, Att] = DomNodes(elements.flatMap { xs => (xs \\ tag).elements })
 }
 
-case class MissingAttributeException(name: String) extends Exception("The attribute $name was not found")
+case class MissingAttributeException(name: String) extends Exception(s"The attribute $name was not found")
 
 case class TextNode[ThisType <: ElementType, ThisAttType <: AttributeType, Position <: ElementType]
     (text: String) extends DomNode[Position, ThisType, ThisAttType] {
@@ -93,8 +97,15 @@ object Element {
       (value: DomNode[Child2, Elem, Att]): Any =
     macro DomMacros.reportElementError2Macro[Child, Att, Child2, Elem]
 }
+
+sealed abstract class ElementLike[ChildType <: ElementType, ThisType <: ElementType, AttType <: AttributeType]
+    extends DomNode[ChildType, ThisType, AttType] with Applicable[ThisType, Nothing, AppliedElement]
+    with Dynamic with Product with Serializable {
+
+}
+
 sealed abstract class Element[ChildType <: ElementType, ThisType <: ElementType, AttType <: AttributeType]
-    extends DomNode[ChildType, ThisType, AttType] with Applicable[ThisType, Nothing, AppliedElement] with Dynamic {
+    extends ElementLike[ChildType, ThisType, AttType] {
   
   def tagName: String
   def attributes: Map[AttributeKey[String, AttributeType], Any]
@@ -143,6 +154,9 @@ case class Tag[ChildType <: ElementType, ThisType <: ElementType, AttType <: Att
       first: Applicable[ChildType, AttType, AppliedType], applied: Applicable[ChildType, AttType, AppliedType]*):
       AppliedType[ChildType, ThisType, AttType] = first.application(this, (first +: applied): _*)
 }
+
+case class ElementSeq[ChildType <: ElementType, ThisType <: ElementType, AttType <: AttributeType](elems:
+    Iterable[Element[ChildType, ThisType, AttType]]) extends ElementLike[ChildType, ThisType, AttType]
 
 case class EmptyElement[ChildType <: ElementType, ThisType <: ElementType, AttType <: AttributeType](
   tagName: String,
