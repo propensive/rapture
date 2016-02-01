@@ -4,7 +4,11 @@ import rapture.i18n._
 import rapture.test._
 import rapture.core._
 
-class I18nTests() extends TestSuite {
+class TestRun extends Programme {
+  include(I18nTests)
+}
+
+object I18nTests extends TestSuite {
 
   import languages._
 

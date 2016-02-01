@@ -244,4 +244,21 @@ object run {
  
     c.Expr(q"""_root_.rapture.test.run.doTests(_root_.scala.List(..$methodNames), $mode)""")
   }  
+  
+  def includeMacro[TS <: TestSuite: c.WeakTypeTag](c: WhiteboxContext)(suite: c.Expr[TS]): c.Expr[Unit] = {
+    import c.universe._
+    import compatibility._
+
+    val cls = weakTypeOf[TS]
+    val allMethods = weakTypeOf[TS].members.to[List].filter(_.isMethod).map(_.asMethod)
+    val matchingMethods = allMethods filter { m => paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test]) }
+    val methodNames = matchingMethods map { m =>
+      val sel = Select(suite.tree, termName(c, m.name.toString))
+      val suiteName = cls.toString.replaceAll(".type$", "").split("\\.").last
+      q"""($suiteName+" / "+$sel.name, $sel)"""
+    }
+    val listApply = Select(reify(List).tree, termName(c, "apply"))
+ 
+    c.Expr[Unit](q"""includeAll(_root_.scala.List(..$methodNames))""")
+  }  
 }

@@ -52,14 +52,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
-  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, coreTestJVM, i18nTestJVM, cliTestJVM, jsonTestJVM, xmlTestJVM)
+  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, jsonTestJVM, xmlTestJVM, coreTestJVM)
+  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, jsonTestJVM, xmlTestJVM, coreTestJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
-  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, coreTestJS, cliTestJS, coreTestJS, i18nTestJS, jsonTestJS, xmlTestJS)
+  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, jsonTestJS, xmlTestJS, coreTestJS)
+  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, jsonTestJS, xmlTestJS, coreTestJS)
   .enablePlugins(ScalaJSPlugin)
 
 // rapture-base
@@ -78,6 +78,14 @@ lazy val core = crossProject.dependsOn(base)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
+
+// rapture-core-test
+lazy val `core-test` = crossProject.dependsOn(test, `core-scalaz`)
+  .settings(moduleName := "rapture-core-test")
+  .settings(raptureSettings:_*)
+
+lazy val coreTestJVM = `core-test`.jvm
+lazy val coreTestJS = `core-test`.js
 
 // rapture-uri
 lazy val uri = crossProject.dependsOn(core)
@@ -187,7 +195,7 @@ lazy val logJVM = log.jvm
 lazy val logJS = log.js
 
 // rapture-i18n
-lazy val i18n = crossProject.dependsOn(core)
+lazy val i18n = crossProject.dependsOn(core, test)
   .settings(moduleName := "rapture-i18n")
   .settings(raptureSettings:_*)
  
@@ -222,6 +230,7 @@ lazy val latexJS = latex.js
 lazy val test = crossProject.dependsOn(cli, fs, text)
   .settings(moduleName := "rapture-test")
   .settings(raptureSettings:_*)
+  .settings(libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6")
  
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
@@ -235,7 +244,7 @@ lazy val domJVM = dom.jvm
 lazy val domJS = dom.js
 
 // rapture-html
-lazy val html = crossProject.dependsOn(net, mime, dom)
+lazy val html = crossProject.dependsOn(net, mime, dom, test)
   .settings(moduleName := "rapture-html")
   .settings(raptureSettings:_*)
  
@@ -358,30 +367,6 @@ lazy val `core-scalaz` = crossProject.dependsOn(core)
  
 lazy val coreScalazJVM = `core-scalaz`.jvm
 lazy val coreScalazJS = `core-scalaz`.js
-
-// rapture-core-test
-lazy val `core-test` = crossProject.dependsOn(core, `core-scalaz`, test)
-  .settings(moduleName := "rapture-core-test")
-  .settings(raptureSettings:_*)
- 
-lazy val coreTestJVM = `core-test`.jvm
-lazy val coreTestJS = `core-test`.js
-
-// rapture-i18n-test
-lazy val `i18n-test` = crossProject.dependsOn(i18n, test)
-  .settings(moduleName := "rapture-i18n-test")
-  .settings(raptureSettings:_*)
- 
-lazy val i18nTestJVM = `i18n-test`.jvm
-lazy val i18nTestJS = `i18n-test`.js
-
-// rapture-cli-test
-lazy val `cli-test` = crossProject.dependsOn(cli, test)
-  .settings(moduleName := "rapture-cli-test")
-  .settings(raptureSettings:_*)
- 
-lazy val cliTestJVM = `cli-test`.jvm
-lazy val cliTestJS = `cli-test`.js
 
 // rapture-json-test
 lazy val `json-test` = crossProject.dependsOn(`json-jawn`, `json-lift`, `json-spray`, `json-argonaut`, `json-jackson`, `json-play`, `json-json4s`, `json-circe`, test)
