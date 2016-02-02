@@ -131,7 +131,7 @@ object htmlSyntax {
   val Command = Tag[Nothing, Metadata with Phrasing, Command]()
   val Bb = Tag[Phrasing, Phrasing with Interactive, Bb]()
   val Menu = Tag[ListItems, Phrasing with Interactive, Menu]()
-  val Legend = Tag[Phrasing, ElementType, AttributeType]()
+  val Legend = Tag[Phrasing, Flow, AttributeType]()
   val Div = Tag[Flow, Flow, AttributeType](forceClosingTag = true)
 
   object Data extends Dynamic {
