@@ -24,7 +24,7 @@ val totalSie = url.unzip().map { entry =>
 `ZipEntry`s are themselves resources, so all the usual Rapture streaming
 operations may be used on them.
 
-This feature was developed by Jorge FIXME.
+This feature was developed by Jorge Vicente Cantero.
 
 ## HTML
 
