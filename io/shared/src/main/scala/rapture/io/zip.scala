@@ -11,41 +11,46 @@
 * for the specific language governing permissions and limitations under the License.                               *
 \******************************************************************************************************************/
 package rapture.io
-import rapture.core._
-import rapture.uri._
-import rapture.mime._
 
-import java.util.zip._
+import rapture.core._
+import rapture.codec._
+
+import scala.reflect._
+
 import java.io._
 
-object Zip {
+class ZipEntries[Z, Z2](headers: Iterator[Z]) {
+  
+  private val values: Iterator[Z] = headers
+  private val fn: Z => Z2
+  private val proc
 
-  def zip(data: Map[SimplePath, Input[Byte]], comment: String = null, level: Int = 9): Input[Byte] with TypedInput = {
-    val baos: ByteArrayOutputStream = alloc()
-    val zos: ZipOutputStream = alloc(baos)
-    if(comment != null) zos.setComment(comment)
-    zos.setLevel(level)
+  def filter(pred: Z => Boolean): ZipEntries[Z] = new ZipEntries[T] {
+    
+  }
+  
+  def map[T](fn: Z => ZipEntry => T): ZipEntries[T] = new ZipEntries[T] {
 
-    for((k, in) <- data) {
-      zos.putNextEntry(alloc(k.toString.substring(1)))
-      in.pumpTo(alloc[ByteOutput](zos))
-      zos.closeEntry()
-    }
-    zos.finish()
-    new ByteArrayInput(baos.toByteArray) with TypedInput {
-      def mimeType = MimeTypes.`application/zip`
-    }
   }
 
-  /** GZips an input stream. Note that the current implementation blocks until the input has
-    * been read. Future implementations will return after the first read. */
-  def gzip(in: Input[Byte]): Input[Byte] with TypedInput = {
-    val baos: ByteArrayOutputStream = alloc()
-    val gzos: GZIPOutputStream = alloc(baos)
-    in.pumpTo(alloc[ByteOutput](gzos))
-    gzos.finish()
-    new ByteArrayInput(baos.toByteArray) with TypedInput {
-      def mimeType = MimeTypes.`application/x-gzip`
-    }
+  def process(): Map[ZipMetadata, T]
+}
+
+case class ZipMetadata() {
+  
+}
+
+case class ZipHeader(signature: Int, crc32: Int, compressedSize: Int, uncompressedSize: Int) {
+
+}
+
+object Unzippable {
+  class Capability[Res](res: Res) {
+    def zipEntries()(implicit mode: Mode[`Unzippable#zipEntries`], sr: Reader[Res, Data],
+        mf: ClassTag[Data]): mode.Wrap[ZipEntries, Exception] =
+      mode.wrap {
+        
+      }
   }
 }
+
