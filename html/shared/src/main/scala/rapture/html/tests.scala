@@ -157,6 +157,8 @@ object Tests {
 
   def `Label has for attribute` = Label(`for` = 'foo)
 
+  def `Fieldset can contain Legend` = Fieldset(Legend("foo"))
+
   //def `Should fail` = Html(src = "foo")
 
   def `Get Tds` = {
