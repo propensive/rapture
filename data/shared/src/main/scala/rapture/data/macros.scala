@@ -247,7 +247,7 @@ object Macros {
               Apply(
                 Select(
                   Ident(definitions.PredefModule),
-                  termName(c, "any2ArrowAssoc")
+                  termName(c, "ArrowAssoc")
                 ),
                 List(
                   Literal(Constant(p.name.toString))
