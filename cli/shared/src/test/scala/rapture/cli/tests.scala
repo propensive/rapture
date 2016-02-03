@@ -6,7 +6,11 @@ import rapture.test._
 
 import scala.util
 
-object Tests extends TestSuite {
+class TestRun extends Programme {
+  include(CliTests)
+}
+
+object CliTests extends TestSuite {
 
   import New._
 
