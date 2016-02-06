@@ -244,18 +244,11 @@ object Macros {
         } map { p =>
           Apply(
             Select(
-              Apply(
-                Select(
-                  Ident(definitions.PredefModule),
-                  termName(c, "ArrowAssoc")
-                ),
-                List(
-                  Literal(Constant(p.name.toString))
-                )
-              ),
-              termName(c, "$minus$greater")
+              Ident("scala"),
+              termName(c, "Tuple2")
             ),
             List(
+              Literal(Constant(p.name.toString)),
               Apply(
                 Select(
                   c.inferImplicitValue(appliedType(serializer, List(p.returnType,
