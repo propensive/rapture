@@ -35,7 +35,7 @@ abstract class Url[+UrlType <: Url[UrlType]](elements: Seq[String], afterPath: A
   
   /** Constructs a new URL by calculating the destination URL by following the given
     * `Path` from this URL */
-  def /(path: SimplePath) = pathRoot.makePath(0, path.elements, afterPath)
+  def /(path: SimplePath) = pathRoot.makePath(0, thisPath.elements ++ path.elements, afterPath)
   
   /** Calculates the destination of the given link from this URL
     *
@@ -45,6 +45,7 @@ abstract class Url[+UrlType <: Url[UrlType]](elements: Seq[String], afterPath: A
     else pathRoot.makePath(0, dest.elements ++ thisPath.elements.drop(dest.ascent), afterPath)
 
   override def hashCode = elements.hashCode ^ afterPath.hashCode ^ scheme.hashCode
+  
   override def equals(any: Any) = any match {
     case url: Url[_] =>
       url.scheme == scheme && url.elements == elements && url.afterPath == afterPath
