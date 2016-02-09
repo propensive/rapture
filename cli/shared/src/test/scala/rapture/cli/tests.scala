@@ -1,6 +1,6 @@
 package rapture.cli.test
 
-import rapture.core._
+/*import rapture.core._
 import rapture.cli._
 import rapture.test._
 
@@ -292,4 +292,4 @@ object CliTests extends TestSuite {
     Captured.last()
   } returns Vector(Vector("red"), Vector("green"), Vector("blue"))
 }
-
+*/
