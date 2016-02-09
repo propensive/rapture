@@ -46,21 +46,29 @@ lazy val rapture = project.in(file("."))
   .settings(raptureSettings)
   .settings(noPublishSettings)
   .settings(noSourceSettings)
-  .aggregate(raptureJVM, raptureJS)
-  .dependsOn(raptureJVM, raptureJS)
+  .aggregate(raptureJVM, raptureJS, raptureExtrasJVM, raptureExtrasJS)
+  .dependsOn(raptureJVM, raptureJS, raptureExtrasJVM, raptureExtrasJS)
 
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, jsonTestJVM, xmlTestJVM, coreTestJVM)
-  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, httpJettyJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, xmlStdlibJVM, jsonJVM, htmlJVM, domJVM, jsonJawnJVM, jsonPlayJVM, jsonSprayJVM, jsonJson4sJVM, jsonCirceJVM, jsonArgonautJVM, jsonJacksonJVM, /*jsonLiftJVM, */coreScalazJVM, jsonTestJVM, xmlTestJVM, coreTestJVM)
+  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM)
+  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, jsonTestJS, xmlTestJS, coreTestJS)
-  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, httpJettyJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, xmlStdlibJS, jsonJS, htmlJS, domJS, jsonJawnJS, /*jsonLiftJS, */jsonPlayJS, jsonSprayJS, jsonJson4sJS, jsonCirceJS, jsonArgonautJS, jsonJacksonJS, coreScalazJS, jsonTestJS, xmlTestJS, coreTestJS)
+  .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, jsonJS, htmlJS, domJS, coreScalazJS)
+  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, jsonJS, htmlJS, domJS, coreScalazJS)
   .enablePlugins(ScalaJSPlugin)
+
+lazy val raptureExtras = crossProject.dependsOn(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`)
+  .settings(moduleName := "rapture-extras")
+  .settings(raptureSettings:_*)
+  .settings(crossVersionSharedSources():_*)
+
+lazy val raptureExtrasJVM = raptureExtras.jvm
+lazy val raptureExtrasJS = raptureExtras.js
 
 // rapture-base
 lazy val base = crossProject
@@ -304,15 +312,6 @@ lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
 
 
-// rapture-json-lift
-lazy val `json-lift` = crossProject.dependsOn(json)
-  .settings(moduleName := "rapture-json-lift")
-  .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "net.liftweb" %% "lift-json" % "2.6.2")
- 
-lazy val jsonLiftJVM = `json-lift`.jvm
-lazy val jsonLiftJS = `json-lift`.js
-
 // rapture-json-play
 lazy val `json-play` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-play")
@@ -383,6 +382,15 @@ lazy val `xml-test` = crossProject.dependsOn(`xml-stdlib`, test)
  
 lazy val xmlTestJVM = `xml-test`.jvm
 lazy val xmlTestJS = `xml-test`.js
+
+// rapture-json-lift
+lazy val `json-lift` = crossProject.dependsOn(json)
+  .settings(moduleName := "rapture-json-lift")
+  .settings(raptureSettings:_*)
+  .settings(libraryDependencies += "net.liftweb" %% "lift-json" % "2.6.3")
+ 
+lazy val jsonLiftJVM = `json-lift`.jvm
+lazy val jsonLiftJS = `json-lift`.js
 
 lazy val publishSettings = Seq(
   homepage := Some(url("http://rapture.io/")),
