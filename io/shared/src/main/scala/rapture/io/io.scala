@@ -32,6 +32,9 @@ object javaResources {
   implicit val javaFileReader = new JavaInputStreamReader[java.io.File](
       new java.io.FileInputStream(_))
   
+  implicit val javaNioPathReader = new JavaInputStreamReader[java.nio.file.Path](
+      java.nio.file.Files.newInputStream(_))
+  
   implicit val javaFileWriter = new JavaOutputStreamWriter[java.io.File](
       new java.io.FileOutputStream(_))
   
