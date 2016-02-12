@@ -28,4 +28,6 @@ case class Doctype(parts: String*) {
   override def toString = s"<!DOCTYPE ${parts mkString " "}>"
 }
 
-case class HtmlDoc(html: htmlSyntax.HtmlRoot)(implicit val doctype: Doctype)
+case class HtmlDoc(html: htmlSyntax.HtmlRoot)(implicit val doctype: Doctype) {
+  def format = s"$doctype\n${html.format}"
+}
