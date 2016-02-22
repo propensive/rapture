@@ -62,7 +62,9 @@ lazy val raptureJS = project.in(file(".raptureJS"))
   .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, jsonJS, htmlJS, domJS, coreScalazJS)
   .enablePlugins(ScalaJSPlugin)
 
-lazy val raptureExtras = crossProject.dependsOn(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`)
+lazy val raptureExtras = crossProject
+  .aggregate(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`)
+  .dependsOn(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`)
   .settings(moduleName := "rapture-extras")
   .settings(raptureSettings:_*)
   .settings(crossVersionSharedSources():_*)
