@@ -44,12 +44,6 @@ object debugMode {
 
 case class DebugModeConfig(on: Boolean)
 
-object Pwd {
-  implicit val defaultPwd: Pwd = Pwd(File.home)
-}
-
-case class Pwd(file: FileUrl) extends AnyVal
-
 object ShParam {
   implicit def stringableToShParam[T: StringSerializer](t: T): ShParam =
     ShParam(Vector(?[StringSerializer[T]].serialize(t)))
