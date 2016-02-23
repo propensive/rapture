@@ -62,6 +62,9 @@ object XmlBuffer extends XmlDataCompanion[XmlBuffer, XmlBufferAst] {
   * pretty printer. */
 object Xml extends XmlDataCompanion[Xml, XmlAst] with Xml_1 {
   
+  type Extractor[T] = rapture.data.Extractor[T, Xml]
+  type Serializer[T] = rapture.data.Serializer[T, Xml]
+
   def construct(any: MutableCell, path: Vector[Either[Int, String]])(implicit ast:
       XmlAst): Xml = new Xml(any, path)
 

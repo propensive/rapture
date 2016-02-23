@@ -92,17 +92,20 @@ object JsonBuffer extends JsonDataCompanion[JsonBuffer, JsonBufferAst] {
   * pretty printer. */
 object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
   
+  type Extractor[T] = rapture.data.Extractor[T, Json]
+  type Serializer[T] = rapture.data.Serializer[T, Json]
+
   def construct(any: MutableCell, path: Vector[Either[Int, String]])(implicit ast:
       JsonAst): Json = new Json(any, path)
 
   def ast(json: Json): JsonAst = json.$ast
 
-  def extractor[T](implicit ext: Extractor[T, Json]): Extractor[T, Json] { type Throws = ext.Throws } = ext
-  def serializer[T](implicit ser: Serializer[T, Json]) = ser
+  def extractor[T](implicit ext: Extractor[T]): Extractor[T] { type Throws = ext.Throws } = ext
+  def serializer[T](implicit ser: Serializer[T]) = ser
 
   implicit def jsonCastExtractor[T: JsonCastExtractor](implicit ast: JsonAst):
-      Extractor[T, JsonDataType[_, _ <: JsonAst]] =
-    new Extractor[T, JsonDataType[_, _ <: JsonAst]] {
+      rapture.data.Extractor[T, JsonDataType[_, _ <: JsonAst]] =
+    new rapture.data.Extractor[T, JsonDataType[_, _ <: JsonAst]] {
       type Throws = DataGetException
       def extract(value: JsonDataType[_, _ <: JsonAst], ast2: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException] =
         mode.wrap(ast2 match {
