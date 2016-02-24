@@ -20,13 +20,14 @@ import java.io.{Reader => _, _}
 import encodings.system._
 import language.higherKinds
 
-trait `Process#as` extends MethodConstraint
+trait `Process#exec` extends MethodConstraint
 
 case class Process(params: String*) {
-  def as[T: ProcessInterpreter](implicit mode: Mode[`Process#as`], pwd: Pwd, env: Environment):
+  def exec[T: ProcessInterpreter](implicit mode: Mode[`Process#exec`], env: Environment):
       mode.Wrap[T, CliException] = mode.wrap {
     val javaProcess = Runtime.getRuntime().exec(params.to[Array],
-        env().map { case (k, v) => s"$k=$v" }.to[Array], pwd.file.javaFile)
+        env().map { case (k, v) => s"$k=$v" }.to[Array],
+	new File(env.workDir.getOrElse(System.getenv("HOME"))))
     val stream = new ByteInput(new BufferedInputStream(javaProcess.getInputStream))
     val stderr = new ByteInput(new BufferedInputStream(javaProcess.getErrorStream))
     ?[ProcessInterpreter[T]].interpret(stream, stderr, () => javaProcess.waitFor())
@@ -39,15 +40,23 @@ object Environment {
       import scala.collection.JavaConversions._
       System.getenv().toMap
     }
+
+    def workDir: Option[String] = Option(System.getProperty("user.dir"))
   }
 }
-trait Environment { def apply(): Map[String, String] }
+trait Environment {
+  def apply(): Map[String, String]
+  def workDir: Option[String]
+}
 
 package environments {
   object empty {
     def apply(): Environment = implicitEnvironment
     implicit val implicitEnvironment: Environment =
-      new Environment { def apply(): Map[String, String] = Map() }
+      new Environment {
+        def apply(): Map[String, String] = Map()
+	def workDir = None
+      }
   }
 
   object enclosing {
