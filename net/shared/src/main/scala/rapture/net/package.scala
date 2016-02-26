@@ -13,9 +13,9 @@
 package rapture.net
 import rapture.io._
 import rapture.uri._
-import rapture.mime._
 import rapture.core._
 import rapture.codec._
+import rapture.mime._
 
 import java.io.{Reader => _, Writer => _, _}
 
@@ -39,42 +39,9 @@ object `package` {
       Https.parse("https:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
   }
 
-  implicit val httpQueryParametersMap: HttpQueryParametersBase[(Symbol, String), Map[Symbol,
-      String]] = new HttpQueryParametersBase[(Symbol, String), Map[Symbol, String]]
-
-  implicit val HttpQueryParametersIter: HttpQueryParametersBase[(Symbol, String), Seq[(Symbol,
-      String)]] = new HttpQueryParametersBase[(Symbol, String), Seq[(Symbol, String)]]
-
-  implicit val pageIdentifier: QueryType[Path[_], Symbol] = new QueryType[Path[_], Symbol] {
-    def extras(existing: AfterPath, q: Symbol): AfterPath =
-      existing + ('#' -> (q.name -> 2.0))
-  }
-
   implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout): Sizable[HttpUrl, Byte] = new Sizable[HttpUrl, Byte] {
     type ExceptionType = HttpExceptions
     def size(url: HttpUrl): Long = url.httpHead().headers.get("Content-Length").get.head.toLong
-  }
-
-  implicit val httpUrlLinkable: Linkable[HttpUrl, HttpUrl] = new Linkable[HttpUrl, HttpUrl] {
-    type Result = Link
-    def link(src: HttpUrl, dest: HttpUrl) = {
-      if(src.ssl == dest.ssl && src.hostname == dest.hostname && src.port == dest.port) {
-        val lnk = generalLink(src.elements.to[List], dest.elements.to[List])
-        new RelativePath(lnk._1, lnk._2, dest.afterPath)
-      } else dest
-    }
-  }
-
-  implicit val formPostType: PostType[Map[Symbol, String]] = new PostType[Map[Symbol, String]] {
-    def contentType = Some(MimeTypes.`application/x-www-form-urlencoded`)
-    def sender(content: Map[Symbol, String]) = ByteArrayInput((content map { case (k, v) =>
-      java.net.URLEncoder.encode(k.name, "UTF-8")+"="+java.net.URLEncoder.encode(v, "UTF-8")
-    } mkString "&").getBytes("UTF-8"))
-  }
-
-  implicit val stringPostType: PostType[String] = new PostType[String] {
-    def contentType = Some(MimeTypes.`text/plain`)
-    def sender(content: String) = ByteArrayInput(content.getBytes("UTF-8"))
   }
 
   implicit val nonePostType: PostType[None.type] = new PostType[None.type] {
@@ -82,12 +49,8 @@ object `package` {
     def sender(content: None.type) = ByteArrayInput(Array[Byte](0))
   }
 
-  /*implicit val JsonPostType = new PostType[Json] {
-    def contentType = Some(MimeTypes.`application/x-www-form-urlencoded`)
-    def sender(content: Json) =
-      ByteArrayInput(content.toString.getBytes("UTF-8"))
-  }*/
-  
+  implicit def httpCapable[Res: HttpSupport](res: Res): HttpSupport.Capability[Res] = new HttpSupport.Capability[Res](res)
+
   /** Type class object for reading `Byte`s from `HttpUrl`s */
   implicit val httpStreamByteReader: JavaInputStreamReader[HttpUrl] =
       new JavaInputStreamReader[HttpUrl](_.javaConnection.getInputStream)

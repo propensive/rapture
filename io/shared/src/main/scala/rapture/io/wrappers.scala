@@ -29,7 +29,7 @@ object OutputStreamBuilder extends OutputBuilder[OutputStream, Byte] {
 
 object ClasspathStream {
   def classpathStreamByteReader(implicit cl: ClassLoader) = new JavaInputStreamReader[ClasspathUrl](url =>
-      cl.javaClassLoader.getResourceAsStream(url.pathString.substring(1)))
+      cl.javaClassLoader.getResourceAsStream(url.uri.schemeSpecificPart))
 }
 /** Wraps a `java.io.Reader` as an `Input[Char]` */
 class CharInput(in: java.io.Reader) extends Input[Char] {

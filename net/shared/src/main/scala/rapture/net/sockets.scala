@@ -49,9 +49,15 @@ object Tcp {
   }*/
 }
 
-class SocketUri(val hostname: String, val port: Int) extends Uri {
+
+object SocketUri {
+  implicit val socketUri = new UriCapable[SocketUri] {
+    def uri(su: SocketUri): Uri = Uri("socket", s"//${su.hostname}:${su.port}")
+  }
+}
+
+case class SocketUri(val hostname: String, val port: Int) {
   
-  def scheme = Socket
   lazy val javaSocket: java.net.Socket = new java.net.Socket(hostname, port)
   
   def schemeSpecificPart = "//"+hostname+":"+port
@@ -60,8 +66,7 @@ class SocketUri(val hostname: String, val port: Int) extends Uri {
 
 }
 
-object Socket extends Scheme[SocketUri] {
-  def schemeName = "socket"
+object Socket {
   def apply(hostname: String, port: Int): SocketUri = new SocketUri(hostname, port)
   def apply(hostname: String, svc: services.tcp.Port): SocketUri = new SocketUri(hostname, svc.portNo)
 

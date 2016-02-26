@@ -20,18 +20,18 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 case class Cookie[I, D](domain: String, name: String, value: String,
-    path: SimplePath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
+    path: RootRelativePath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
   lazy val pathString = path.toString
 }
 
 class Browser[I: TimeSystem.ByInstant]() {
-  val browserString = "Rapture Net Browser 0.9.0"
+  val browserString = "Rapture Browser 2.0.0"
   private val Rfc1036Pattern = "EEE, dd-MMM-yyyy HH:mm:ss zzz"
 
   val ts = ?[TimeSystem.ByInstant[I]]
 
-  val cookies: HashMap[(String, String, SimplePath), Cookie[I, _]] =
-    new HashMap[(String, String, SimplePath), Cookie[I, _]]
+  val cookies: HashMap[(String, String, RootRelativePath), Cookie[I, _]] =
+    new HashMap[(String, String, RootRelativePath), Cookie[I, _]]
 
   def parseCookie(s: String, domain: String): Cookie[I, _] = {
     val ps = s.split(";").map(_.trim.split("=")) map { a =>
@@ -40,7 +40,7 @@ class Browser[I: TimeSystem.ByInstant]() {
     val details = ps.tail.toMap
 
     Cookie(details.get("domain").getOrElse(domain), ps.head._1, ps.head._2,
-      SimplePath.parse(details.get("path").getOrElse("")),
+      RootRelativePath.parse(details.get("path").getOrElse("")).getOrElse(RootRelativePath(Vector())),
       details.get("expires") map { exp =>
         ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US).parse(exp).getTime)
       }, details.contains("secure"))
@@ -60,7 +60,7 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   def accept[I2, D](c: Cookie[I2, D]): Boolean = c.domain.split("\\.").length > 1
 
-  class BrowserUrl(url: HttpUrl) {
+  /*class BrowserUrl(url: HttpUrl) {
 
     def httpGet[D]()(implicit httpTimeout: HttpTimeout, httpCertificateConfig: HttpCertificateConfig,
         httpRedirectConfig: HttpRedirectConfig) = url.httpGet()
@@ -91,9 +91,9 @@ class Browser[I: TimeSystem.ByInstant]() {
             val dest = response.headers("Location").headOption.getOrElse(throw BadHttpResponse())
 
             u = if(dest.startsWith("http")) Http.parse(dest)
-                else if(dest.startsWith("/")) Http / u.hostname / SimplePath.parse(dest)
+                else if(dest.startsWith("/")) Http / u.hostname / RootRelativePath.parse(dest)
                 // FIXME: This doesn't handle ascent in relative paths
-                else u / SimplePath.parse(dest)
+                else u / RootRelativePath.parse(dest)
           }
         } while(response.status/100 == 3)
         
@@ -101,6 +101,6 @@ class Browser[I: TimeSystem.ByInstant]() {
     }
   }
 
-  def apply(url: HttpUrl): BrowserUrl = new BrowserUrl(url)
+  def apply(url: HttpUrl): BrowserUrl = new BrowserUrl(url)*/
 }
 

@@ -19,39 +19,7 @@ import rapture.uri._
 import java.io.{Reader => _, Writer => _, _}
 import java.util.regex.Pattern
 
-object TemporaryStorage {
-  implicit def defaultTemporary: TemporaryStorage = TemporaryStorage(File / "tmp")
-}
-
-case class TemporaryStorage(file: FileUrl) {
-  def tmpFile(prefix: String = "rapture", suffix: String = ".tmp")(implicit pf: Platform) = File(java.io.File.createTempFile(prefix, suffix, file.javaFile))
-}
-
 trait FsMethods extends MethodConstraint
-
-object Platform {
-  implicit val defaultPlatform = platforms.adaptive.implicitPlatform
-}
-
-@implicitNotFound(msg = "Platform has not been specified. Please import platform.windows, "+
-    "platform.posix or platform.adaptive.")
-trait Platform { def separator: String }
-
-object platforms {
-  object windows {
-    implicit val implicitPlatform = new Platform { def separator = "\\" }
-  }
-  
-  object posix {
-    implicit val implicitPlatform = new Platform { def separator = "/" }
-  }
-  
-  object adaptive {
-    implicit val implicitPlatform = new Platform {
-      def separator = System.getProperty("file.separator")
-    }
-  }
-}
 
 /** Provides support for accessing the file system through FileUrls. This is a wrapper for Java's
   * file handling facilities, and provides roughly the same functionality within the general URL
@@ -167,9 +135,9 @@ object `package` extends LowPriorityImplicits {
       new FileInputStream(f.javaFile))
 
   implicit class EnrichedFileUriContext(uc: UriContext.type) {
-    def file(constants: List[String])(variables: List[String])(implicit platform: Platform) = {
-      val fileUrl = constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").filter(_ != "").to[List]
-      new FileUrl(File, fileUrl)
+    def file(constants: List[String])(variables: List[String]) = {
+      val fileUrl = constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").filter(_ != "").to[Vector]
+      FileUrl(fileUrl)
     }
   }
 }
@@ -178,18 +146,29 @@ object FileUrl {
   implicit val fileCpUrl: ClasspathUrlable[FileUrl] = new ClasspathUrlable[FileUrl] {
     def toClasspathUrlItem(f: FileUrl) = ClasspathUrlItem(List(new java.net.URL(f.toString)))
   }
+
+  implicit def uriCapable: UriCapable[FileUrl] = new UriCapable[FileUrl] {
+    def uri(f: FileUrl): Uri =
+      Uri("file", f.elements.mkString("//", "/", ""))
+  }
+
+  implicit def fileSlashString: Dereferenceable[FileUrl, String, FileUrl] =
+    new Dereferenceable[FileUrl, String, FileUrl] {
+      def dereference(p1: FileUrl, p2: String) = FileUrl(p1.elements :+ p2)
+    }
+
+  implicit def fileSlashRelativePath[RP <: RelativePath]: Dereferenceable[FileUrl, RP, FileUrl] =
+    new Dereferenceable[FileUrl, RP, FileUrl] {
+      def dereference(p1: FileUrl, p2: RP) = FileUrl(p1.elements.dropRight(p2.ascent) ++ p2.elements)
+    }
 }
 
 /** Defines a URL for the file: scheme, and provides standard filesystem operations on the file
   * represented by the URL. */
-class FileUrl(val pathRoot: PathRoot[FileUrl], elements: Seq[String])
-    extends Url[FileUrl](elements, Map()) with PathUrl[FileUrl] {
+case class FileUrl(val elements: Seq[String]) {
 
   /** The java.io.File corresponding to this FileUrl. */
-  lazy val javaFile: java.io.File = new java.io.File(pathString)
-  
-  /** The scheme-specific part of the URL, which appears after the colon */
-  def schemeSpecificPart = "//"+pathString
+  lazy val javaFile: java.io.File = new java.io.File(this.uri.schemeSpecificPart.drop(2))
   
   /** Returns true if the file or directory represented by this FileUrl can be read from. */
   def readable: Boolean = javaFile.canRead()
@@ -228,10 +207,6 @@ class FileUrl(val pathRoot: PathRoot[FileUrl], elements: Seq[String])
       case x => x
     })
   
-  /** Creates a new instance of this type of URL. */
-  def makePath(ascent: Int, elements: Seq[String], afterPath: AfterPath): FileUrl =
-    File.makePath(ascent, elements, afterPath)
-  
   /** If the filesystem object represented by this FileUrl does not exist, it is created as a
     * directory, provided that either the immediate parent directory already exists, or the
     * makeParents path is set. */
@@ -239,65 +214,21 @@ class FileUrl(val pathRoot: PathRoot[FileUrl], elements: Seq[String])
       mode.Wrap[Boolean, Exception] = mode.wrap(if(makeParents) javaFile.mkdirs() else
       javaFile.mkdir())
   
-  /** Update the last-modified time of this file to the current time. */
-  def touch() = javaFile.setLastModified(System.currentTimeMillis)
-
-  /** Set the last modified time of this file or directory. */
-  def lastModified_=[I: TimeSystem.ByInstant](d: I) =
-    javaFile.setLastModified(?[TimeSystem.ByInstant[I]].fromInstant(d))
-  
   /** Extract the file extension from the name of this file. */
   def extension(implicit mode: Mode[FsMethods]): mode.Wrap[Option[String], Exception] =
     mode.wrap(if(filename contains ".") Some(filename.split("\\.").last) else None)
-  
-  /** Attempt to alter the permissions of this file so that it is writable. */
-  def writable_=(b: Boolean) =
-    if(!b) javaFile.setReadOnly() else writable || (throw new IOException("Can't set writable"))
-  
-  /** Creates a temporary file beneath this directory with the prefix and suffix specified. */
-  def tempFile(prefix: String = "tmp", suffix: String = "")(implicit mode: Mode[FsMethods],
-      platform: Platform): mode.Wrap[FileUrl, Exception] =
-    mode.wrap(File(java.io.File.createTempFile(prefix, suffix, javaFile)))
-  
 }
 
 /** The file scheme object used as a factory for FileUrls. */
-object File extends PathRoot[FileUrl] with Scheme[FileUrl] { thisPathRoot =>
+object File extends FileUrl(Vector()) {
 
-  def schemeName = "file"
-
-  /** Provides a FileUrl for the current working directory, as determined by the user.dir
-    * environment variable. */
-  def currentDir(implicit platform: Platform) =
-    makePath(0, System.getProperty("user.dir").split(Pattern.quote(platform.separator)).filter(_ != ""), Map())
- 
-  /** Get the user's home directory. */
-  def home(implicit platform: Platform) =
-    makePath(0, System.getenv("HOME").split(Pattern.quote(platform.separator)).filter(_ != ""), Map())
-
-  /** Method for creating a new instance of this type of URL.
-    *
-    * @param elements The elements of the path for the new FileUrl to create */
-  def makePath(ascent: Int, elements: Seq[String], afterPath: AfterPath): FileUrl =
-    new FileUrl(thisPathRoot, elements.toArray[String])
-  
-  /** Method for creating a new FileUrl from a java.io.File. */
-  def apply(file: java.io.File)(implicit platform: Platform) =
-    makePath(0, file.getAbsolutePath.split(Pattern.quote(platform.separator)).tail, Map())
-  
-  /** Reference to the scheme for this type of URL */
-  def scheme: Scheme[FileUrl] = File
- 
   private val UrlRegex = """^file://(/.*)$""".r
 
   /** Pares a path to a file */
-  def parse(s: String)(implicit platform: Platform) = s match {
-    case UrlRegex(path) => apply(new java.io.File(path))
+  def parse(s: String) = s match {
+    case UrlRegex(path) => FileUrl(path.split("\\/").to[Vector])
   }
 
-  /** Creates a new FileUrl of the specified resource in the filesystem root.
-    *
-    * @param resource the resource beneath the filesystem root to create. */
-  override def /(resource: String) = makePath(0, Array(resource), Map())
+  def home = File.parse(System.getenv("HOME"))
 }
 

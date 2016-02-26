@@ -22,6 +22,7 @@ import language.existentials
 
 import java.io._
 import java.net._
+import javax.net.ssl._
 
 case class TimeoutException() extends Exception("Timeout")
 case class InvalidCertificateException() extends Exception("Timeout")
@@ -116,10 +117,18 @@ trait PostType[-C] {
   def sender(content: C): Input[Byte]
 }
 
-/** Common methods for `HttpUrl`s */
-trait NetUrl extends Url[NetUrl] with Uri {
-  
-  import javax.net.ssl._
+object NetUrl {
+  val sslContext = SSLContext.getInstance("SSL")
+  val allHostsValid = new HostnameVerifier {
+    def verify(hostname: String, session: SSLSession) = true
+  }
+
+  trait Base64Padded extends CodecType
+  implicit val base64: ByteCodec[Base64Padded] = new Base64Codec[Base64Padded](endPadding = true)
+
+}
+
+trait NetUrl {
   
   private[rapture] def javaConnection: HttpURLConnection =
     new URL(toString).openConnection().asInstanceOf[HttpURLConnection]
@@ -136,117 +145,12 @@ trait NetUrl extends Url[NetUrl] with Uri {
     })
   }
   
-  private val sslContext = SSLContext.getInstance("SSL")
-  sslContext.init(null, trustAllCertificates, new java.security.SecureRandom())
-
-  private val allHostsValid = new HostnameVerifier {
-    def verify(hostname: String, session: SSLSession) = true
-  }
+  NetUrl.sslContext.init(null, trustAllCertificates, new java.security.SecureRandom())
 
   def hostname: String
   def port: Int
   def ssl: Boolean
   def canonicalPort: Int
-
-  trait Base64Padded extends CodecType
-  implicit val base64: ByteCodec[Base64Padded] = new Base64Codec[Base64Padded](endPadding = true)
-
-  def schemeSpecificPart = "//"+hostname+(if(port == canonicalPort) "" else ":"+port)+pathString
-
-  /** Sends an HTTP put to this URL.
-    *
-    * @param content the content to put to the URL
-    * @return the HTTP response from the remote host */
-  def httpPut[C: PostType, T](content: C, headers: Map[String, String] = Map())(
-    implicit mode: Mode[`NetUrl#httpPut`],
-    httpTimeout: HttpTimeout,
-    httpRedirectConfig: HttpRedirectConfig,
-    httpCertificateConfig: HttpCertificateConfig,
-    httpBasicAuthentication: HttpBasicAuthentication): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] = {
-      implicit val m = mode.generic
-      httpPost(content, headers, "PUT")
-    }
-
-  def httpHead[T](
-    headers: Map[String, String] = Map())
-  (implicit mode: Mode[`NetUrl#httpHead`], httpTimeout: HttpTimeout, httpRedirectConfig: HttpRedirectConfig, httpCertificateConfig: HttpCertificateConfig, httpBasicAuthentication: HttpBasicAuthentication): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] = {
-    implicit val m = mode.generic
-    httpPost(None, headers, "HEAD")
-  }
-
-  def httpGet[T](
-    headers: Map[String, String] = Map())
-  (implicit mode: Mode[`NetUrl#httpGet`], httpTimeout: HttpTimeout, httpRedirectConfig: HttpRedirectConfig, httpCertificateConfig: HttpCertificateConfig, httpBasicAuthentication: HttpBasicAuthentication): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] = {
-    implicit val m = mode.generic
-    httpPost(None, headers, "GET")
-  }
-
-  /** Sends an HTTP post to this URL.
-    *
-    * @param content the content to post to the URL
-    * @return the HTTP response from the remote host */
-  def httpPost[C: PostType, T](content: C, headers: Map[String, String] = Map(), method: String = "POST")
-      (implicit mode: Mode[`NetUrl#httpPost`], httpTimeout: HttpTimeout, httpRedirectConfig: HttpRedirectConfig,
-      httpCertificateConfig: HttpCertificateConfig, httpBasicAuthentication: HttpBasicAuthentication): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
-    mode wrap {
-      // FIXME: This will produce a race condition if creating multiple URL connections with
-      // different values for followRedirects in parallel
-      HttpURLConnection.setFollowRedirects(httpRedirectConfig.follow)
-      val conn: URLConnection = new URL(toString).openConnection()
-      conn.setConnectTimeout(httpTimeout.duration)
-      conn match {
-        case c: HttpsURLConnection =>
-          if(httpCertificateConfig.ignoreIfInvalid) {
-            c.setSSLSocketFactory(sslContext.getSocketFactory)
-            c.setHostnameVerifier(allHostsValid)
-          }
-          c.setRequestMethod(method)
-          if(content != None) c.setDoOutput(true)
-          c.setUseCaches(false)
-        case c: HttpURLConnection =>
-          c.setRequestMethod(method)
-          if(content != None) c.setDoOutput(true)
-          c.setUseCaches(false)
-      }
-
-      // FIXME: What an ugly way of writing this.
-      httpBasicAuthentication.credentials foreach { case (username, password) =>
-        conn.setRequestProperty("Authorization",
-          "Basic "+base64.encode(s"$username:$password".getBytes("UTF-8")).mkString)
-      }
-      
-      ?[PostType[C]].contentType map { ct => conn.setRequestProperty("Content-Type", ct.name) }
-      for((k, v) <- headers) conn.setRequestProperty(k, v)
-
-      if(content != None)
-        ensuring(OutputStreamBuilder.output(conn.getOutputStream)) { out =>
-          ?[PostType[C]].sender(content) > out
-        } (_.close())
-
-      import scala.collection.JavaConversions._
-
-      val statusCode = conn match {
-        case c: HttpsURLConnection => c.getResponseCode()
-        case c: HttpURLConnection => c.getResponseCode()
-      }
-      
-      val is = try conn.getInputStream() catch {
-        case e: IOException => conn match {
-          case c: HttpsURLConnection => c.getErrorStream()
-          case c: HttpURLConnection => c.getErrorStream()
-        }
-      }
-      
-      new HttpResponse(mapAsScalaMap(conn.getHeaderFields()).toMap.mapValues(_.to[List]),
-          statusCode, is)
-    }
-}
-
-class HttpQueryParametersBase[U, T <: Iterable[U]] extends QueryType[Path[_], T] {
-  def extras(existing: AfterPath, q: T): AfterPath =
-    existing + ('?' -> ((q.map({ case (k: Symbol, v: String) =>
-      k.name.urlEncode+"="+v.urlEncode
-    }).mkString("&")) -> 1.0))
 }
 
 object HttpUrl {
@@ -258,107 +162,75 @@ object HttpUrl {
   implicit val serializer: StringSerializer[HttpUrl] = new StringSerializer[HttpUrl] {
     def serialize(h: HttpUrl): String = h.toString
   }
+  
+  implicit def uriCapable: UriCapable[HttpUrl] = new UriCapable[HttpUrl] {
+    def uri(cp: HttpUrl) = Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}/${cp.elements.mkString("/")}")
+  }
+
 }
 
 /** Represets a URL with the http scheme */
-class HttpUrl(val pathRoot: NetPathRoot[HttpUrl], elements: Seq[String], afterPath: AfterPath,
-    val ssl: Boolean) extends Url[HttpUrl](elements, afterPath) with NetUrl with
-    PathUrl[HttpUrl] { thisHttpUrl =>
+case class HttpUrl(root: HttpDomain, elements: Vector[String]) extends NetUrl {
   
-  def makePath(ascent: Int, xs: Seq[String], afterPath: AfterPath) =
-    new HttpUrl(pathRoot, elements, afterPath, ssl)
-  
-  def hostname = pathRoot.hostname
-  def port = pathRoot.port
-  def canonicalPort = if(ssl) 443 else 80
+  def hostname = root.hostname
+  def port = root.port
+  def canonicalPort = if(root.ssl) 443 else 80
+  def ssl = root.ssl
+}
 
-  override def equals(that: Any) = that match {
-    case that: HttpUrl =>
-      pathRoot == that.pathRoot && ssl == that.ssl && afterPath == that.afterPath &&
-          elements == that.elements
-    case _ => false
+object HttpDomain {
+  implicit def cpSlashString: Dereferenceable[HttpDomain, String, HttpUrl] =
+    new Dereferenceable[HttpDomain, String, HttpUrl] {
+      def dereference(p1: HttpDomain, p2: String) = HttpUrl(p1, Vector(p2))
+    }
+
+  implicit def cpSlashRelativePath[RP <: RelativePath]: Dereferenceable[HttpDomain, RP, HttpUrl] =
+    new Dereferenceable[HttpDomain, RP, HttpUrl] {
+      def dereference(p1: HttpDomain, p2: RP) = HttpUrl(p1, p2.elements)
+    }
+
+  implicit def cpSlashRootRelativePath[RRP <: RootRelativePath]: Dereferenceable[HttpDomain, RRP, HttpUrl] =
+    new Dereferenceable[HttpDomain, RRP, HttpUrl] {
+      def dereference(p1: HttpDomain, p2: RRP) = HttpUrl(p1, p2.elements)
+    }
+
+  implicit def uriCapable: UriCapable[HttpDomain] = new UriCapable[HttpDomain] {
+    def uri(cp: HttpDomain) = Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}")
   }
 
-  override def hashCode =
-    pathRoot.hashCode ^ elements.to[List].hashCode ^ afterPath.hashCode ^ ssl.hashCode
 }
 
-trait NetPathRoot[+T <: Url[T] with NetUrl] extends PathRoot[T] {
-  def hostname: String
-  def port: Int
+case class HttpDomain(hostname: String, port: Int, ssl: Boolean)
 
-  override def equals(that: Any) = that match {
-    case that: NetPathRoot[_] => hostname == that.hostname && port == that.port
-    case _ => false
-  }
+object Http {
 
-  override def hashCode = hostname.hashCode ^ port
-}
-
-class HttpPathRoot(val hostname: String, val port: Int, val ssl: Boolean) extends
-    NetPathRoot[HttpUrl] with Uri { thisPathRoot =>
-  
-  def makePath(ascent: Int, elements: Seq[String], afterPath: AfterPath): HttpUrl =
-    new HttpUrl(thisPathRoot, elements, Map(), ssl)
-
-  def scheme = if(ssl) Https else Http
-  def canonicalPort = if(ssl) 443 else 80
-  def schemeSpecificPart = "//"+hostname+(if(port == canonicalPort) "" else ":"+port)+pathString
-
-  override def /(element: String) = makePath(0, Array(element), Map())
-  
-  def /[P <: Path[P]](path: P) = makePath(0, path.elements, Map())
-  
-  override def equals(that: Any): Boolean =
-    that.isInstanceOf[HttpPathRoot] && hostname == that.asInstanceOf[HttpPathRoot].hostname
-}
-
-/** Factory for creating new HTTP URLs */
-object Http extends Scheme[HttpUrl] {
-  def schemeName = "http"
-
-  /** Creates a new URL with the http scheme with the specified domain name and port
-    *
-    * @param hostname A `String` of the domain name for the URL
-    * @param port The port to connect to this URL on, defaulting to port 80 */
-  def /(hostname: String, port: Int = services.tcp.http.portNo) =
-    new HttpPathRoot(hostname, port, false)
+  def apply(hostname: String, port: Int = services.tcp.http.portNo) =
+    HttpDomain(hostname, port, false)
 
   private val UrlRegex =
     """(https?):\/\/([\.\-a-z0-9]+)(:[1-9][0-9]*)?(\/?([^\?]*)(\?([^\?]*))?)""".r
 
-  /** Parses a URL string into an HttpUrl */
   def parse(s: String): HttpUrl = s match {
     case UrlRegex(scheme, server, port, _, path, _, after) =>
-      val rp = new SimplePath(path.split("/"), Map())
-      val afterPath = after match {
-        case null | "" => Map[Symbol, String]()
-        case after => after.split("&").map { p => p.split("=", 2) match {
-          case Array(k, v) => Symbol(k) -> v
-        } }.toMap
-      }
-      val most = scheme match {
+      
+      val rp = RootRelativePath(path.split("/").to[Vector])
+      
+      scheme match {
         case "http" =>
-          Http./(server, if(port == null) 80 else port.substring(1).toInt) / rp
+          Http(server, if(port == null) 80 else port.substring(1).toInt) / rp
         case "https" =>
-          Https./(server, if(port == null) 443 else port.substring(1).toInt) / rp
+          Https(server, if(port == null) 443 else port.substring(1).toInt) / rp
         case _ => throw new Exception(s)
       }
-      if(afterPath.isEmpty) most else most.query(afterPath)
+      
     case _ => throw new Exception(s)
   }
 }
 
-/** Factory for creating new HTTPS URLs */
-object Https extends Scheme[HttpUrl] {
-  def schemeName = "https"
+object Https {
 
-  /** Creates a new URL with the https scheme with the specified domain name and port
-    *
-    * @param hostname A `String` of the domain name for the URL
-    * @param port The port to connect to this URL on, defaulting to port 443 */
-  def /(hostname: String, port: Int = services.tcp.https.portNo) =
-    new HttpPathRoot(hostname, port, true)
+  def apply(hostname: String, port: Int = services.tcp.https.portNo) =
+    HttpDomain(hostname, port, true)
   
   def parse(s: String): HttpUrl = Http.parse(s)
 }
