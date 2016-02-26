@@ -54,7 +54,7 @@ object RequestExtractors {
   object AsInt { def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case e: Exception => None } }
 
   /** Extract the path from the request */
-  object Path { def unapply(r: HttpRequest): Option[RootRelativePath] = Some(r.path) }
+  object Path { def unapply(r: HttpRequest): Option[RootedPath] = Some(r.path) }
 
   /** Defines a pattern matching construct to be used to chain together constraints on requests */
   object ~ { def unapply(r: HttpRequest) = Some((r, r)) }

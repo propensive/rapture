@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 case class Cookie[I, D](domain: String, name: String, value: String,
-    path: RootRelativePath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
+    path: RootedPath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
   lazy val pathString = path.toString
 }
 
@@ -30,8 +30,8 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   val ts = ?[TimeSystem.ByInstant[I]]
 
-  val cookies: HashMap[(String, String, RootRelativePath), Cookie[I, _]] =
-    new HashMap[(String, String, RootRelativePath), Cookie[I, _]]
+  val cookies: HashMap[(String, String, RootedPath), Cookie[I, _]] =
+    new HashMap[(String, String, RootedPath), Cookie[I, _]]
 
   def parseCookie(s: String, domain: String): Cookie[I, _] = {
     val ps = s.split(";").map(_.trim.split("=")) map { a =>
@@ -40,7 +40,7 @@ class Browser[I: TimeSystem.ByInstant]() {
     val details = ps.tail.toMap
 
     Cookie(details.get("domain").getOrElse(domain), ps.head._1, ps.head._2,
-      RootRelativePath.parse(details.get("path").getOrElse("")).getOrElse(RootRelativePath(Vector())),
+      RootedPath.parse(details.get("path").getOrElse("")).getOrElse(RootedPath(Vector())),
       details.get("expires") map { exp =>
         ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US).parse(exp).getTime)
       }, details.contains("secure"))
@@ -91,9 +91,9 @@ class Browser[I: TimeSystem.ByInstant]() {
             val dest = response.headers("Location").headOption.getOrElse(throw BadHttpResponse())
 
             u = if(dest.startsWith("http")) Http.parse(dest)
-                else if(dest.startsWith("/")) Http / u.hostname / RootRelativePath.parse(dest)
+                else if(dest.startsWith("/")) Http / u.hostname / RootedPath.parse(dest)
                 // FIXME: This doesn't handle ascent in relative paths
-                else u / RootRelativePath.parse(dest)
+                else u / RootedPath.parse(dest)
           }
         } while(response.status/100 == 3)
         

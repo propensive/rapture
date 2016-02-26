@@ -85,7 +85,7 @@ abstract class HttpRequest {
   val time: Long = System.currentTimeMillis
 
   /** The path of the script */
-  lazy val path: RootRelativePath = RootRelativePath.parse(servicePathString+remainderString).get
+  lazy val path: RootedPath = RootedPath.parse(servicePathString+remainderString).get
 
   protected var streamRead = false
 
@@ -133,6 +133,6 @@ abstract class HttpRequest {
   val responseCookies: ListBuffer[(String, String, String, String, Option[Long], Boolean)] =
     new ListBuffer[(String, String, String, String, Option[Long], Boolean)]
 
-  def setCookie(name: Symbol, value: String, domain: String = serverName, path: RootRelativePath = ^, expiry: Option[DateTime] = None, secure: Boolean = false) = 
+  def setCookie(name: Symbol, value: String, domain: String = serverName, path: RootedPath = ^, expiry: Option[DateTime] = None, secure: Boolean = false) = 
     responseCookies += ((name.name, value, domain, path.toString, expiry.map(_.toLong), secure))
 }

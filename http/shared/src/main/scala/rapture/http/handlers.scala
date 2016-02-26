@@ -116,8 +116,8 @@ object HttpHandler extends HttpHandler_1 {
     })
   }
 
-  implicit def fileHandler = new HttpHandler[FileUrl] {
-    def response(file: FileUrl) = FileResponse(200, Response.NoCache,
+  implicit def fileHandler = new HttpHandler[FsUrl] {
+    def response(file: FsUrl) = FileResponse(200, Response.NoCache,
         file.extension.toList.flatMap(MimeTypes.extension).headOption.getOrElse(
 	      MimeTypes.`text/plain`), file)
   }

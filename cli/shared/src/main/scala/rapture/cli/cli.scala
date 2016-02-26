@@ -147,7 +147,7 @@ abstract class CliApp(implicit debugMode: DebugModeConfig) {
 
   def main(args: Array[String]): Unit = run(File.parse(s"file://${System.getenv("PWD")}"), args)
 
-  def run(pwd: FileUrl, args: Array[String]): Unit = {
+  def run(pwd: FsUrl, args: Array[String]): Unit = {
     
     val exitStatus: Exit = try {
       Console.withOut(NoOutput) {
@@ -175,19 +175,19 @@ abstract class CliApp(implicit debugMode: DebugModeConfig) {
     doExit(exitStatus.code)
   }
 
-  def makeCmdLine(pwd: FileUrl, args: Vector[String]) =
+  def makeCmdLine(pwd: FsUrl, args: Vector[String]) =
     CmdLine(pwd, args map { s => Arg(s, None, false) }, None)
   
   def handle(cmdLine: CmdLine): Exec
 }
 
 trait Shell {
-  def makeCmdLine(pwd: FileUrl, cmdLine: Vector[String]): CmdLine =
+  def makeCmdLine(pwd: FsUrl, cmdLine: Vector[String]): CmdLine =
     CmdLine(pwd, cmdLine.map(Arg(_, None, false)), None)
 }
 
 trait Zsh extends Shell {
-  override def makeCmdLine(pwd: FileUrl, cmdLine: Vector[String]): CmdLine = cmdLine match {
+  override def makeCmdLine(pwd: FsUrl, cmdLine: Vector[String]): CmdLine = cmdLine match {
     case "---rapture-zsh" +: prefix +: cursor +: cols +: "--" +: rest =>
       val colWidth = cols.substring(10).toInt
       val cur = cursor.substring(9).toInt
@@ -211,7 +211,7 @@ trait Zsh extends Shell {
 }
 
 trait Bash extends Shell {
-  override def makeCmdLine(pwd: FileUrl, cmdLine: Vector[String]): CmdLine = cmdLine match {
+  override def makeCmdLine(pwd: FsUrl, cmdLine: Vector[String]): CmdLine = cmdLine match {
     case "---rapture-bash" +: prefix +: cursor +: cols +: "--" +: rest =>
       val colWidth = cols.substring(10).toInt
       val words = if(cursor.toInt - 1 >= rest.length) rest.tail :+ "" else rest.tail

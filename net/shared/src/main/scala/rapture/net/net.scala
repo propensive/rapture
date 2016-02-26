@@ -167,6 +167,14 @@ object HttpUrl {
     def uri(cp: HttpUrl) = Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}/${cp.elements.mkString("/")}")
   }
 
+  implicit def urlSlashRootedPath[RP <: RootedPath]: Dereferenceable[HttpUrl, RP, HttpUrl] =
+    new Dereferenceable[HttpUrl, RP, HttpUrl] {
+      def dereference(p1: HttpUrl, p2: RP) = HttpUrl(p1.root, p1.elements ++ p2.elements)
+    }
+
+  implicit def urlParentable: Parentable[HttpUrl, HttpUrl] = new Parentable[HttpUrl, HttpUrl] {
+    def parent(httpUrl: HttpUrl): HttpUrl = HttpUrl(httpUrl.root, httpUrl.elements.dropRight(1))
+  }
 }
 
 /** Represets a URL with the http scheme */
@@ -189,7 +197,7 @@ object HttpDomain {
       def dereference(p1: HttpDomain, p2: RP) = HttpUrl(p1, p2.elements)
     }
 
-  implicit def cpSlashRootRelativePath[RRP <: RootRelativePath]: Dereferenceable[HttpDomain, RRP, HttpUrl] =
+  implicit def cpSlashRootedPath[RRP <: RootedPath]: Dereferenceable[HttpDomain, RRP, HttpUrl] =
     new Dereferenceable[HttpDomain, RRP, HttpUrl] {
       def dereference(p1: HttpDomain, p2: RRP) = HttpUrl(p1, p2.elements)
     }
@@ -213,7 +221,7 @@ object Http {
   def parse(s: String): HttpUrl = s match {
     case UrlRegex(scheme, server, port, _, path, _, after) =>
       
-      val rp = RootRelativePath(path.split("/").to[Vector])
+      val rp = RootedPath(path.split("/").to[Vector])
       
       scheme match {
         case "http" =>

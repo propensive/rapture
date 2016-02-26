@@ -2,8 +2,10 @@ package rapture.uri
 
 import language.implicitConversions
 
+import scala.annotation.implicitNotFound
+
 case class RelativePath(ascent: Int, elements: Vector[String]) {
-  override def toString = "../"*ascent+elements.mkString("/")
+  override def toString = if(ascent == 0 && elements.isEmpty) "." else "../"*ascent+elements.mkString("/")
     
   override def equals(that: Any) = that match {
     case RelativePath(a, es) => a == ascent && es == elements
@@ -13,22 +15,22 @@ case class RelativePath(ascent: Int, elements: Vector[String]) {
   override def hashCode = ascent ^ elements.hashCode
 }
 
-object RootRelativePath {
-  def parse(s: String): Option[RootRelativePath] = {
-    if(s.head == '/') Some(RootRelativePath(s.tail.split("/").to[Vector]))
+object RootedPath {
+  def parse(s: String): Option[RootedPath] = {
+    if(s.head == '/') Some(RootedPath(s.tail.split("/").to[Vector]))
     else None
   }
 
-  implicit def linkable: Linkable[RootRelativePath] = new Linkable[RootRelativePath] {
-    def link(res: RootRelativePath): Link = Link(res.toString)
+  implicit def linkable: Linkable[RootedPath] = new Linkable[RootedPath] {
+    def link(res: RootedPath): Link = Link(res.toString)
   }
 }
 
-case class RootRelativePath(elements: Vector[String]) {
+case class RootedPath(elements: Vector[String]) {
   override def toString = elements.mkString("/", "/", "")
     
   override def equals(that: Any) = that match {
-    case RootRelativePath(es) => es == elements
+    case RootedPath(es) => es == elements
     case _ => false
   }
 
@@ -37,19 +39,19 @@ case class RootRelativePath(elements: Vector[String]) {
 
 object Dereferenceable {
   implicit def stringSlashString: Dereferenceable[String, String, RelativePath] = new Dereferenceable[String, String, RelativePath] {
-    def dereference(p1: String, p2: String): RelativePath = RelativePath(0, Vector(p2, p1))
+    def dereference(p1: String, p2: String): RelativePath = RelativePath(0, Vector(p1, p2))
   }
     
   implicit def relativePathSlashString[RP <: RelativePath]: Dereferenceable[RP, String, RelativePath] = new Dereferenceable[RP, String, RelativePath] {
-    def dereference(p1: RP, p2: String): RelativePath = RelativePath(0, p1.elements :+ p2)
+    def dereference(p1: RP, p2: String): RelativePath = RelativePath(p1.ascent, p1.elements :+ p2)
   }
     
-  implicit def rootSlashString[RRP <: RootRelativePath]: Dereferenceable[RRP, String, RootRelativePath] = new Dereferenceable[RRP, String, RootRelativePath] {
-    def dereference(p1: RRP, p2: String): RootRelativePath = RootRelativePath(p1.elements :+ p2)
+  implicit def rootSlashString[RRP <: RootedPath]: Dereferenceable[RRP, String, RootedPath] = new Dereferenceable[RRP, String, RootedPath] {
+    def dereference(p1: RRP, p2: String): RootedPath = RootedPath(p1.elements :+ p2)
   }
     
-  implicit def rootSlashRelative[RRP <: RootRelativePath, RP <: RelativePath]: Dereferenceable[RRP, RP, RootRelativePath] = new Dereferenceable[RRP, RP, RootRelativePath] {
-    def dereference(p1: RRP, p2: RP): RootRelativePath = RootRelativePath(p2.elements ++ p1.elements.drop(p2.ascent))
+  implicit def rootSlashRelative[RRP <: RootedPath, RP <: RelativePath]: Dereferenceable[RRP, RP, RootedPath] = new Dereferenceable[RRP, RP, RootedPath] {
+    def dereference(p1: RRP, p2: RP): RootedPath = RootedPath(p2.elements ++ p1.elements.drop(p2.ascent))
   }
   
   class Capability[Path](val path: Path) {
@@ -58,6 +60,27 @@ object Dereferenceable {
   }
 }
 
+@implicitNotFound("it is not possible to dereference a value of type ${P1} by a value of type ${P2}.")
 trait Dereferenceable[-P1, -P2, +Return] {
   def dereference(p1: P1, p2: P2): Return
+}
+
+object Parentable {
+  implicit def relativePathParent[RP <: RelativePath]: Parentable[RP, RelativePath] = new Parentable[RP, RelativePath] {
+    def parent(p: RP): RelativePath = RelativePath(if(p.elements.length == 0) p.ascent + 1 else p.ascent, p.elements.dropRight(1))
+  }
+    
+  implicit def rootRelativePathParent[RRP <: RootedPath]: Parentable[RRP, RootedPath] = new Parentable[RRP, RootedPath] {
+    def parent(p1: RRP): RootedPath = RootedPath(p1.elements.dropRight(1))
+  }
+    
+  class Capability[Path](val path: Path) {
+    def parent[Return](implicit parentable: Parentable[Path, Return]): Return =
+      parentable.parent(path)
+  }
+}
+
+@implicitNotFound("type ${P} does not have a parent")
+trait Parentable[-P, +Return] {
+  def parent(p1: P): Return
 }

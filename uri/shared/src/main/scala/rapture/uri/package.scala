@@ -35,11 +35,13 @@ object `package` {
 
   val !! : String = ".."
 
-  object ^ extends RootRelativePath(Vector())
+  object ^ extends RootedPath(Vector())
 
   implicit def dereferenceable[Res](res: Res): Dereferenceable.Capability[Res] = alloc(res)
   
   implicit def uriCapable[Res: UriCapable](res: Res): UriCapable.Capability[Res] = alloc(res)
+  
+  implicit def parentable[Res](res: Res): Parentable.Capability[Res] = alloc(res)
 
   implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
     new NavigableExtras(url)
