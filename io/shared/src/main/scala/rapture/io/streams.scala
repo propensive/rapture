@@ -604,7 +604,7 @@ trait Reader[-Resource, @specialized(Byte, Char) Data] {
   def input(res: Resource): Input[Data]
   
   /** Pumps data from the specified resource to the given destination resource */
-  def pump[DestResource <: Url[DestResource]](res: Resource, dest: DestResource)(implicit sw:
+  def pump[DestResource](res: Resource, dest: DestResource)(implicit sw:
       Writer[DestResource, Data], mf: ClassTag[Data]): Int =
     input(res) pumpTo sw.output(dest)
 }

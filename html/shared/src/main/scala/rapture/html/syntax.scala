@@ -16,6 +16,7 @@ import rapture.dom._
 import rapture.core._
 import rapture.codec._
 import rapture.net._
+import rapture.uri._
 
 import language.dynamics
 
@@ -163,8 +164,8 @@ object htmlSyntax {
   implicit def alt = Attribute[Img with Area with Input, String]("alt")(identity)
   def alt_=[E <: ElementType](v: String) = alt.set[E](v)
   
-  implicit def href = Attribute[Base with Link with A with Area, rapture.uri.Link]("href")(_.toString)
-  def href_=[E <: ElementType](v: rapture.uri.Link) = href.set[E](v)
+  implicit def href = Attribute[Base with Link with A with Area, rapture.uri.Link]("href")(_.link)
+  def href_=[E <: ElementType, L: Linkable](v: L) = href.set[E](implicitly[Linkable[L]].link(v))
   
   implicit def name = Attribute[Meta with Iframe with Object with Param with Map with Form with Fieldset
       with Input with Button with Select with Textarea with Output, Symbol]("name")(_.name)
@@ -268,7 +269,7 @@ object htmlSyntax {
 
   implicit def src = Attribute[Script with Img with Iframe with Embed with Video with Audio with Source with Input,
       rapture.uri.Link]("src")(_.toString)
-  def src_=[E <: ElementType](v: rapture.uri.Link) = src.set[E](v)
+  def src_=[E <: ElementType, L: Linkable](v: L) = src.set[E](implicitly[Linkable[L]].link(v))
 
   implicit def value = Attribute[Li with Progress with Meter with Param with Input with Button with Option, String](
       "value")(identity)
@@ -279,8 +280,8 @@ object htmlSyntax {
       Input with Button with Command with Bb with Menu, String]("typ", "type")(identity)
   def typ_=[E <: ElementType](v: String) = typ.set[E](v)
 
-  implicit def action = Attribute[Form with Input with Button, rapture.uri.Link]("action")(_.toString)
-  def action_=[E <: ElementType](v: rapture.uri.Link) = action.set(v)
+  implicit def action = Attribute[Form with Input with Button, rapture.uri.Link]("action")(_.link)
+  def action_=[E <: ElementType, L: Linkable](v: L) = action.set(implicitly[Linkable[L]].link(v))
   
   implicit def method = Attribute[Form with Input with Button, String]("method")(identity)
   def method_=[E <: ElementType](v: String) = method.set(v)
@@ -342,11 +343,11 @@ object htmlSyntax {
   implicit def start = Attribute[Ol, Int]("start")(_.toString)
   def start_=[E <: ElementType](v: Int) = start.set(v)
 
-  implicit def ping = Attribute[Link with Area, rapture.uri.Link]("ping")(_.toString)
-  def ping_=[E <: ElementType](v: rapture.uri.Link) = ping.set(v)
+  implicit def ping = Attribute[Link with Area, rapture.uri.Link]("ping")(_.link)
+  def ping_=[E <: ElementType, L: Linkable](v: L) = ping.set(implicitly[Linkable[L]].link(v))
 
-  implicit def cite = Attribute[Blockquote with Q with Edit, rapture.uri.Link]("cite")(_.toString)
-  def cite_=[E <: ElementType](v: rapture.uri.Link) = cite.set(v)
+  implicit def cite = Attribute[Blockquote with Q with Edit, rapture.uri.Link]("cite")(_.link)
+  def cite_=[E <: ElementType, L: Linkable](v: L) = cite.set(implicitly[Linkable[L]].link(v))
 
   implicit def datetime = Attribute[Time with Edit, String]("datetime")(identity)
   def datetime_=[E <: ElementType](v: String) = datetime.set(v)
@@ -372,8 +373,8 @@ object htmlSyntax {
   implicit def seamless = Attribute[Iframe, Boolean]("seamless")(v => if(v) "seamless" else null)
   def seamless_=[E <: ElementType](v: Boolean) = seamless.set(v)
 
-  implicit def poster = Attribute[Video, rapture.uri.Link]("poster")(_.toString)
-  def poster_=[E <: ElementType](v: rapture.uri.Link) = poster.set(v)
+  implicit def poster = Attribute[Video, rapture.uri.Link]("poster")(_.link)
+  def poster_=[E <: ElementType, L: Linkable](v: L) = poster.set(implicitly[Linkable[L]].link(v))
 
   implicit def data = Attribute[Object, String]("data")(identity)
   def data_=[E <: ElementType](v: String) = data.set(v)
@@ -450,8 +451,8 @@ object htmlSyntax {
   implicit def step = Attribute[Input, Int]("step")(_.toString)
   def step_=[E <: ElementType](v: Int) = step.set(v)
 
-  implicit def icon = Attribute[Command, rapture.uri.Link]("icon")(_.toString)
-  def icon_=[E <: ElementType](v: rapture.uri.Link) = icon.set(v)
+  implicit def icon = Attribute[Command, rapture.uri.Link]("icon")(_.link)
+  def icon_=[E <: ElementType, L: Linkable](v: L) = icon.set(implicitly[Linkable[L]].link(v))
 
   implicit def radiogroup = Attribute[Command, Symbol]("radiogroup")(_.name)
   def radiogroup_=[E <: ElementType](v: Symbol) = radiogroup.set(v)

@@ -22,6 +22,4 @@ class StringMethods(s: String) {
     URLEncoder.encode(s, encoding.name)
   @inline def urlDecode(implicit encoding: Encoding = encodings.`UTF-8`()) =
     URLDecoder.decode(s, encoding.name)
-
-  def /(s2: String) = new RelativePath(0, Array(s, s2), Map())
 }

@@ -18,29 +18,30 @@ import language.higherKinds
 
 import language.experimental.macros
 
+object UriContext
+
 object `package` {
 
-  type AnyPath = Path[_]
-
-  /** Support for URI string literals */
   implicit class EnrichedStringContext(sc: StringContext) {
     def uri(content: String*): Any = macro UriMacros.uriMacro
   }
 
   implicit class EnrichedUriContext(uc: UriContext.type) {
     def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[List])
+      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[Vector])
   }
 
-  /** Convenient empty string for terminating a path (which should end in a /). */
-  val `$`: String = ""
+  val $ : String = ""
 
-  /** The canonical root for a simple path */
-  val `^`: SimplePath = new SimplePath(Nil, Map())
+  val !! : String = ".."
 
-  type AfterPath = Map[Char, (String, Double)]
+  object ^ extends RootedPath(Vector())
+
+  implicit def dereferenceable[Res](res: Res): Dereferenceable.Capability[Res] = alloc(res)
   
-  implicit val simplePathsLinkable: Linkable[SimplePath, SimplePath] = SimplePathsLinkable
+  implicit def uriCapable[Res: UriCapable](res: Res): UriCapable.Capability[Res] = alloc(res)
+  
+  implicit def parentable[Res](res: Res): Parentable.Capability[Res] = alloc(res)
 
   implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
     new NavigableExtras(url)

@@ -210,7 +210,7 @@ case class Arg(param: String, completer: Option[Completer], current: Boolean) {
   }
 }
 
-case class CmdLine(pwd: FileUrl, params: Vector[Arg], completer: Option[Completer]) extends
+case class CmdLine(pwd: FsUrl, params: Vector[Arg], completer: Option[Completer]) extends
     collection.SeqLike[Arg, CmdLine] {
 
   def seq = params
@@ -258,7 +258,7 @@ case class Completer(prefix: String, shellCompleter: Suggestions => Nothing) {
 
 trait Completions[ShellTypes <: Shell] { this: CliApp =>
   
-  override def makeCmdLine(pwd: FileUrl, args: Vector[String]): CmdLine =
+  override def makeCmdLine(pwd: FsUrl, args: Vector[String]): CmdLine =
     shellCompleter().makeCmdLine(pwd, args)
 
   def shellCompleter(): ShellTypes
