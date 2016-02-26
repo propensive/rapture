@@ -54,7 +54,7 @@ case class ByteStreamResponse(code: Int, headers: Seq[(String, String)],
 case class ErrorResponse(code: Int, headers: Seq[(String, String)],
     message: String, detail: String) extends Response
 case class FileResponse(code: Int, headers: Seq[(String, String)],
-    contentType: MimeTypes.MimeType, file: FileUrl) extends Response
+    contentType: MimeTypes.MimeType, file: FsUrl) extends Response
 case class RedirectResponse(headers: Seq[(String, String)], location: String) extends Response {
   final def code = 302
 }

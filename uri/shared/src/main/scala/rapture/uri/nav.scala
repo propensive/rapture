@@ -23,7 +23,7 @@ trait Navigable[UrlType] {
   
   def children(url: UrlType)(implicit mode: Mode[`Navigable#children`]): mode.Wrap[Seq[UrlType], Exception]
   
-  /** Returns false if the filesystem object represented by this FileUrl is a file, and true if
+  /** Returns false if the filesystem object represented by this FsUrl is a file, and true if
     * it is a directory. */
   def isDirectory(url: UrlType)(implicit mode: Mode[`Navigable#isDirectory`]): mode.Wrap[Boolean, Exception]
   

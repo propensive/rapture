@@ -25,10 +25,10 @@ import java.net.URLClassLoader
 import scala.language.experimental.macros
 
 object Util {
-  private val entries: collection.mutable.HashMap[FileUrl, Seq[String]] =
+  private val entries: collection.mutable.HashMap[FsUrl, Seq[String]] =
     new collection.mutable.HashMap()
 
-  def entriesFromZip(f: FileUrl): Seq[String] = {
+  def entriesFromZip(f: FsUrl): Seq[String] = {
     import java.util.zip._
     import scala.collection.JavaConversions._
     val zf = new ZipFile(f.javaFile)
@@ -36,7 +36,7 @@ object Util {
         endsWith ".class").filter(!_.getName.contains("$")).map(_.getName.dropRight(6)))
   }
 
-  def getAllZipfiles(): List[FileUrl] = {
+  def getAllZipfiles(): List[FsUrl] = {
     val urls: Array[java.net.URL] = java.lang.Thread.currentThread.getContextClassLoader.asInstanceOf[URLClassLoader].getURLs
     urls.to[List].map { u => File.parse("file://"+u.getFile) }.filter(_.writable)
   }
@@ -54,7 +54,7 @@ object Util {
     case Params(ps) =>
       val directory = line.pwd.children.filter(_.filename endsWith ".jar")
       
-      val cp: List[FileUrl] = ps.get(ClasspathParam, Suggestions.from(directory)(_.filename, f =>
+      val cp: List[FsUrl] = ps.get(ClasspathParam, Suggestions.from(directory)(_.filename, f =>
           (f.size/1024)+"KB")).map { f => List(line.pwd / f) }.getOrElse(Util.getAllZipfiles())
 
       val classes: Seq[String] = cp.flatMap(Util.entriesFromZip).map(_.replaceAll("\\/", "."))

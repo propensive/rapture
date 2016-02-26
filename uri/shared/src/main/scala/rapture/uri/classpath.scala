@@ -12,26 +12,25 @@
 \******************************************************************************************************************/
 
 package rapture.uri
+
 import rapture.core._
 
-class ClasspathUrl(elements: Seq[String]) extends Url[ClasspathUrl](elements, Map()) {
-  def makePath(ascent: Int, elements: Seq[String], afterPath: AfterPath) =
-    new ClasspathUrl(elements)
+object ClasspathUrl {
+  implicit def cpSlashString: Dereferenceable[ClasspathUrl, String, ClasspathUrl] =
+    new Dereferenceable[ClasspathUrl, String, ClasspathUrl] {
+      def dereference(p1: ClasspathUrl, p2: String) = ClasspathUrl(p1.elements :+ p2)
+    }
   
-  def schemeSpecificPart = elements.mkString("", "/", "")
-  val pathRoot = Classpath
+  implicit def cpSlashRelativePath[RP <: RelativePath]: Dereferenceable[ClasspathUrl, RP, ClasspathUrl] =
+    new Dereferenceable[ClasspathUrl, RP, ClasspathUrl] {
+      def dereference(p1: ClasspathUrl, p2: RP) = ClasspathUrl(p1.elements.dropRight(p2.ascent) ++ p2.elements)
+    }
+
+  implicit def uriCapable: UriCapable[ClasspathUrl] = new UriCapable[ClasspathUrl] {
+    def uri(cp: ClasspathUrl) = Uri("classpath", cp.elements.mkString("/"))
+  }
 }
 
-object Classpath extends PathRoot[ClasspathUrl] with Scheme[ClasspathUrl] {
-  def schemeName = "classpath"
-  def makePath(ascent: Int, elements: Seq[String], afterPath: AfterPath) =
-    new ClasspathUrl(elements)
-  
-  def scheme = Classpath
-
-  private val Matcher = """classpath:(.*)$""".r
-
-  def parse(s: String): ClasspathUrl = s match {
-    case Matcher(path) => makePath(0, path.split("/"), Map())
-  }
+case class ClasspathUrl(elements: Vector[String]) {
+  override def toString: String = s"classpath:${elements.mkString("/")}"
 }

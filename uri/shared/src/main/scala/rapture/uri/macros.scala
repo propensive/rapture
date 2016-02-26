@@ -30,56 +30,6 @@ trait Paramable[T] {
 
 object UriMacros {
  
-  // FIXME: Check the purpose of this
-  def paramsMacro[T: c.WeakTypeTag](c: BlackboxContext): c.Expr[QueryType[AnyPath, T]] = {
-    import c.universe._
-    import compatibility._
-
-    require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
-
-    val paramable = typeOf[Paramable[_]].typeSymbol.asType.toTypeConstructor
-
-    val params = declarations(c)(weakTypeOf[T]) collect {
-      case m: MethodSymbol if m.isCaseAccessor => m.asMethod
-    } map { p =>
-      val implicitParamable = c.Expr[Paramable[_]](c.inferImplicitValue(appliedType(paramable, List(p.returnType)), false, false)).tree
-      val paramValue = Apply(
-        Select(
-          implicitParamable,
-          termName(c, "paramize")
-        ),
-        List(
-          Select(
-            Ident(termName(c, "t")),
-            p.name
-          )
-        )
-      )
-
-      val paramName = Literal(Constant(p.name.toString+"="))
-      
-      Apply(
-        Select(paramName, termName(c, "$plus")),
-        List(paramValue)
-      )
-    }
-
-    val listOfParams = c.Expr[List[String]](Apply(
-      Select(
-        Ident(termName(c, "List")),
-        termName(c, "apply")
-      ),
-      params.to[List]
-    ))
-
-    reify {
-      new QueryType[AnyPath, T] {
-        def extras(existing: Map[Char, (String, Double)], t: T): Map[Char, (String, Double)] =
-          existing + ('?' -> (listOfParams.splice.mkString("&") -> 1.0))
-      }
-    }
-  }
- 
   def uriMacro(c: WhiteboxContext)(content: c.Expr[String]*): c.Expr[Any] = {
     import c.universe._
     import compatibility._

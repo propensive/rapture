@@ -202,7 +202,7 @@ object Forms extends Widgets with Parsers {
   }
 
   object WebForm {
-    implicit class FormExtras[F <: Forms.WebForm](f: F) {
+    implicit class FormExtras[F <: Forms.WebForm[_]](f: F) {
       def show[T: HttpHandler](p1: F => T) = new {
         def andThen[S: HttpHandler](p2: F => S): Response =
           if(f.complete) {
@@ -213,12 +213,14 @@ object Forms extends Widgets with Parsers {
     }
   }
 
-  abstract class WebForm(name: Symbol, params: Map[String, String] = Map(),
+  abstract class WebForm[L](name: Symbol, params: Map[String, String] = Map(),
       uploads: Map[String, Array[Byte]] = Map(),
-      val postMethod: HttpMethods.FormMethod = HttpMethods.Post, val formAction: rapture.uri.Link = ^) extends
+      val postMethod: HttpMethods.FormMethod = HttpMethods.Post, val formAction: L = ^)(implicit actionLinkableParam: Linkable[L]) extends
       BasicForm(name, params, uploads) with RenderableForm with FieldLabels with Preprocessing with
       FormValidation with FormHelp {
     
+    implicit protected def actionLinkable: Linkable[L] = actionLinkableParam
+
     def encoding: MimeTypes.MimeType =
       if(fields.exists(_.needsMultipart)) MimeTypes.`multipart/form-data`
       else MimeTypes.`application/x-www-form-urlencoded`
@@ -300,9 +302,9 @@ object Forms extends Widgets with Parsers {
     }
   }
 
-  class BootstrapForm(name: Symbol, params: Map[String, String],
+  class BootstrapForm[L: Linkable](name: Symbol, params: Map[String, String],
       uploads: Map[String, Array[Byte]] = Map(), postMethod: HttpMethods.FormMethod = HttpMethods.Post,
-      formAction: rapture.uri.Link = ^) extends WebForm(name, params, uploads, postMethod, formAction) with FormValidation {
+      formAction: L = ^) extends WebForm[L](name, params, uploads, postMethod, formAction) with FormValidation {
     import htmlSyntax._
 
     type FormPart = DomNode[_ <: ElementType, Html5.Flow, _ <: AttributeType]
@@ -339,7 +341,7 @@ object Forms extends Widgets with Parsers {
     def submitButtonText = "Save"
   }
 
-  trait TabularLayout { this: (WebForm with TabularLayout) =>
+  trait TabularLayout[L] { this: (WebForm[L] with TabularLayout[L]) =>
 
     import htmlSyntax._
 
