@@ -22,7 +22,7 @@ import language.higherKinds
 
 trait `Process#exec` extends MethodConstraint
 
-case class Process(params: String*) {
+case class Process(params: Vector[String]) {
   def exec[T: ProcessInterpreter](implicit mode: Mode[`Process#exec`], env: Environment):
       mode.Wrap[T, CliException] = mode.wrap {
     val javaProcess = Runtime.getRuntime().exec(params.to[Array],

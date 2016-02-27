@@ -12,47 +12,81 @@
 \******************************************************************************************************************/
 package rapture.cli
 
+import rapture.base._
+import rapture.core._
+
+import language.experimental.macros
+
 private[cli] object CliMacros {
 
 
-  // Copied from URI macro as a starting point
-  /*def shImplementation(c: Context)(content: c.Expr[String]*): c.Expr[Process] = {
+  def shImplementation(c: BlackboxContext)(content: c.Expr[ShParam]*): c.Expr[Process] = {
     import c.universe._
 
-    c.prefix.tree match {
+    val params = c.prefix.tree match {
       case Apply(_, List(Apply(_, rawParts))) =>
-        val xs = content.map(_.tree).to[Array]
-        val ys = rawParts.to[Array]
+        
+        val parts = rawParts.to[Vector].zip(content.map(_.tree).to[Vector]).flatMap {
+	  case (x, y) => Vector(x, y)
+	} :+ rawParts.last
 
-        rawParts.head match {
-          case Literal(Constant(part: String)) =>
-            val Array(scheme, _) = part.split(":", 2)
-            c.Expr(
-              Apply(
-                Select(
-                  Ident(
-                    newTermName(scheme.capitalize)
-                  ),
-                  newTermName("parse")
-                ),
-                List(
-                  Apply(
-                    Select(
-                      Apply(
-                        Select(
-                          Ident(newTermName("List")),
-                          newTermName("apply")
-                        ),
-                        (0 until (xs.length + ys.length) map { i => if(i%2 == 0) ys(i/2) else xs(i/2) }).to[List]
-                      ),
-                      newTermName("mkString")
-                    ),
-                    List(Literal(Constant("")))
-                  )
-                )
-              )
-            )
-        }
+	var params: Vector[c.Tree] = Vector()
+	var param: Vector[Either[String, c.Tree]] = Vector()
+	var singleQuoted: Boolean = false
+	var doubleQuoted: Boolean = false
+	var escaped: Boolean = false
+
+        def add(chr: Char) = {
+	  param = if(param.isEmpty) Vector(Left(chr.toString)) else param.last match {
+	    case Right(_) =>
+              param :+ Left(chr.toString)
+	    case Left(str) =>
+	      param.init :+ Left(str+chr)
+	  }
+	  escaped = false
+	}
+
+        def nextParam() = if(!param.isEmpty) {
+	  
+	  val next = param.map {
+	    case Left(str) =>
+	      Literal(Constant(str))
+	    case Right(tr) =>
+	      tr
+	  }
+
+          params = params ++ next
+	  param = Vector()
+	}
+
+	parts.foreach {
+          case Literal(Constant(str: String)) =>
+            str.foreach {
+	      case chr if escaped =>
+	        add(chr)
+	      case ' ' =>
+	        if(singleQuoted || doubleQuoted) add(' ') else nextParam()
+              case '\\' =>
+	        escaped = true
+	      case '\'' if !doubleQuoted => 
+                singleQuoted = !singleQuoted
+	      case '"' if !singleQuoted => 
+                doubleQuoted = !doubleQuoted
+	      case chr =>
+	        add(chr)
+            }
+	  case tr: c.Tree =>
+	    param = param :+ Right(if(singleQuoted || doubleQuoted) q"""new _root_.rapture.core.SeqExtras($tr.elems).intersperse(" ").mkString""" else q"$tr.elems")
+	}
+
+        nextParam()
+
+	if(singleQuoted || doubleQuoted) c.abort(c.enclosingPosition, "unclosed quoted parameter")
+	if(params.isEmpty) c.abort(c.enclosingPosition, "no command specified")
+
+	q"$params.map(_.mkString)"
     }
-  }*/
+
+    c.Expr(q"""{ println($params); new _root_.rapture.cli.Process(null) }""")
+  }
 }
