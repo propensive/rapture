@@ -50,12 +50,12 @@ private[cli] object CliMacros {
 	  
 	  val next = param.map {
 	    case Left(str) =>
-	      Literal(Constant(str))
+	      q"_root_.scala.Vector(${Literal(Constant(str))})"
 	    case Right(tr) =>
 	      tr
 	  }
 
-          params = params ++ next
+          params = params :+ q"$next.flatten"
 	  param = Vector()
 	}
 
@@ -76,7 +76,7 @@ private[cli] object CliMacros {
 	        add(chr)
             }
 	  case tr: c.Tree =>
-	    param = param :+ Right(if(singleQuoted || doubleQuoted) q"""new _root_.rapture.core.SeqExtras($tr.elems).intersperse(" ").mkString""" else q"$tr.elems")
+	    param = param :+ Right(if(singleQuoted || doubleQuoted) q"""new _root_.rapture.core.SeqExtras($tr.elems).intersperse(" ")""" else q"""$tr.elems""")
 	}
 
         nextParam()
@@ -84,7 +84,7 @@ private[cli] object CliMacros {
 	if(singleQuoted || doubleQuoted) c.abort(c.enclosingPosition, "unclosed quoted parameter")
 	if(params.isEmpty) c.abort(c.enclosingPosition, "no command specified")
 
-	q"$params.map(_.mkString)"
+        q"""$params.map(_.mkString)"""
     }
 
     c.Expr(q"""{ println($params); new _root_.rapture.cli.Process(null) }""")
