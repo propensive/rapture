@@ -149,7 +149,7 @@ object FsUrl {
 
   implicit def uriCapable: UriCapable[FsUrl] = new UriCapable[FsUrl] {
     def uri(f: FsUrl): Uri =
-      Uri("file", f.elements.mkString("//", "/", ""))
+      Uri("file", f.elements.mkString("///", "/", ""))
   }
 
   implicit def fileSlashString: Dereferenceable[FsUrl, String, FsUrl] =

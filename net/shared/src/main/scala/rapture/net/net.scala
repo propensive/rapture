@@ -21,7 +21,6 @@ import rapture.codec._
 import language.existentials
 
 import java.io._
-import java.net._
 import javax.net.ssl._
 
 case class TimeoutException() extends Exception("Timeout")
@@ -129,9 +128,6 @@ object NetUrl {
 }
 
 trait NetUrl {
-  
-  private[rapture] def javaConnection: HttpURLConnection =
-    new URL(toString).openConnection().asInstanceOf[HttpURLConnection]
   
   private val trustAllCertificates = {
     Array[TrustManager](new X509TrustManager {
