@@ -50,20 +50,18 @@ object ShParam {
 
   implicit def genSeqSerializer[T: StringSerializer, Coll[E] <: TraversableOnce[E]](ts: Coll[T]): ShParam =
     ShParam(ts.map(?[StringSerializer[T]].serialize(_)).to[Vector])
+
+  implicit def processToShParam(process: Process) =
+    ShParam(process.params)
 }
 
-case class ShParam(elems: Vector[String])
+case class ShParam(elems: Vector[String]) {
+  def asString = elems.mkString(" ")
+}
 
 object `package` {
   implicit class ProcessStringContext(sc: StringContext) {
-    def sh(content: ShParam*): Process = {
-      var out: Vector[String] = sc.parts.head.split(" ").to[Vector]
-      for((v, f) <- content zip sc.parts.tail) {
-        out ++= v.elems
-        out ++= f.split(" ").to[Vector]
-      }
-      Process(out: _*)
-    }
+    def sh(content: ShParam*): Process = macro CliMacros.shImplementation
   }
   
   implicit val logger = Logger(uri"file:///tmp/rapture-cli/access.log")

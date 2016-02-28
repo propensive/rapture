@@ -22,7 +22,7 @@ import language.higherKinds
 
 trait `Process#exec` extends MethodConstraint
 
-case class Process(params: String*) {
+case class Process(params: Vector[String]) {
   def exec[T: ProcessInterpreter](implicit mode: Mode[`Process#exec`], env: Environment):
       mode.Wrap[T, CliException] = mode.wrap {
     val javaProcess = Runtime.getRuntime().exec(params.to[Array],
@@ -31,6 +31,18 @@ case class Process(params: String*) {
     val stream = new ByteInput(new BufferedInputStream(javaProcess.getInputStream))
     val stderr = new ByteInput(new BufferedInputStream(javaProcess.getErrorStream))
     ?[ProcessInterpreter[T]].interpret(stream, stderr, () => javaProcess.waitFor())
+  }
+
+  override def toString = {
+    val escaped = params.map(_.flatMap {
+      case '\'' => "\\'"
+      case '"' => "\\\""
+      case '\\' => "\\\\"
+      case ' ' => "\\ "
+      case chr => chr.toString
+    })
+    
+    s"""sh"${escaped.mkString(" ")}""""
   }
 }
 
