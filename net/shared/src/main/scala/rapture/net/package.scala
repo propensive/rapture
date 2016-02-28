@@ -53,8 +53,10 @@ object `package` {
 
   /** Type class object for reading `Byte`s from `HttpUrl`s */
   implicit val httpStreamByteReader: JavaInputStreamReader[HttpUrl] =
-      new JavaInputStreamReader[HttpUrl](_.javaConnection.getInputStream)
-
+    new JavaInputStreamReader[HttpUrl]({ u =>
+      new java.net.URL(u.uri.toString).openConnection.asInstanceOf[java.net.HttpURLConnection].getInputStream
+    })
+  
   implicit val httpResponseCharReader: Reader[HttpResponse, Char] =
       new Reader[HttpResponse, Char] {
     def input(response: HttpResponse): Input[Char] = {
