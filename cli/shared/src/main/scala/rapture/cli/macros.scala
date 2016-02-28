@@ -32,6 +32,7 @@ private[cli] object CliMacros {
 
 	var params: Vector[c.Tree] = Vector()
 	var param: Vector[Either[String, c.Tree]] = Vector()
+	var inline: Boolean = false
 	var singleQuoted: Boolean = false
 	var doubleQuoted: Boolean = false
 	var escaped: Boolean = false
@@ -48,15 +49,27 @@ private[cli] object CliMacros {
 
         def nextParam() = if(!param.isEmpty) {
 	  
-	  val next = param.map {
-	    case Left(str) =>
-	      q"_root_.scala.Vector(${Literal(Constant(str))})"
-	    case Right(tr) =>
-	      tr
+	  val next: c.Tree = if(inline) {
+	    val strings = param.map {
+	      case Left(str) =>
+	        Literal(Constant(str))
+	      case Right(tr) =>
+	        q"""$tr.elems.mkString(" ")"""
+	    }
+	    q"_root_.scala.Vector(_root_.scala.Vector(_root_.scala.Vector(..$strings).mkString))"
+	  } else {
+            val values = param.map {
+	      case Left(str) =>
+	        q"_root_.scala.Vector(${Literal(Constant(str))})"
+	      case Right(tr) =>
+	        q"$tr.elems"
+	    }
+	    q"_root_.scala.Vector(..$values)"
 	  }
-
-          params = params :+ q"$next.flatten"
+	  
+	  params = params :+ next
 	  param = Vector()
+	  inline = false
 	}
 
 	parts.foreach {
@@ -76,7 +89,8 @@ private[cli] object CliMacros {
 	        add(chr)
             }
 	  case tr: c.Tree =>
-	    param = param :+ Right(if(singleQuoted || doubleQuoted) q"""new _root_.rapture.core.SeqExtras($tr.elems).intersperse(" ")""" else q"""$tr.elems""")
+	    inline = inline || singleQuoted || doubleQuoted
+	    param = param :+ Right(tr)
 	}
 
         nextParam()
@@ -84,9 +98,9 @@ private[cli] object CliMacros {
 	if(singleQuoted || doubleQuoted) c.abort(c.enclosingPosition, "unclosed quoted parameter")
 	if(params.isEmpty) c.abort(c.enclosingPosition, "no command specified")
 
-        q"""$params.map(_.mkString)"""
+        q"_root_.scala.Vector(..$params).flatten.flatten"
     }
 
-    c.Expr(q"""{ println($params); new _root_.rapture.cli.Process(null) }""")
+    c.Expr(q"""new _root_.rapture.cli.Process($params)""")
   }
 }

@@ -32,6 +32,18 @@ case class Process(params: Vector[String]) {
     val stderr = new ByteInput(new BufferedInputStream(javaProcess.getErrorStream))
     ?[ProcessInterpreter[T]].interpret(stream, stderr, () => javaProcess.waitFor())
   }
+
+  override def toString = {
+    val escaped = params.map(_.flatMap {
+      case '\'' => "\\'"
+      case '"' => "\\\""
+      case '\\' => "\\\\"
+      case ' ' => "\\ "
+      case chr => chr.toString
+    })
+    
+    s"""sh"${escaped.mkString(" ")}""""
+  }
 }
 
 object Environment {
