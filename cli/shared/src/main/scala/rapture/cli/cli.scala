@@ -50,6 +50,9 @@ object ShParam {
 
   implicit def genSeqSerializer[T: StringSerializer, Coll[E] <: TraversableOnce[E]](ts: Coll[T]): ShParam =
     ShParam(ts.map(?[StringSerializer[T]].serialize(_)).to[Vector])
+
+  implicit def processToShParam(process: Process) =
+    ShParam(process.params)
 }
 
 case class ShParam(elems: Vector[String]) {
