@@ -154,7 +154,10 @@ object FsUrl {
 
   implicit def fileSlashString: Dereferenceable[FsUrl, String, FsUrl] =
     new Dereferenceable[FsUrl, String, FsUrl] {
-      def dereference(p1: FsUrl, p2: String) = FsUrl(p1.elements :+ p2)
+      def dereference(p1: FsUrl, p2: String) = {
+        val start = if(p1.elements.lastOption == Some("")) p1.elements.init else p1.elements
+	FsUrl(start :+ p2)
+      }
     }
 
   implicit def fileSlashRelativePath[RP <: RelativePath]: Dereferenceable[FsUrl, RP, FsUrl] =
@@ -164,7 +167,10 @@ object FsUrl {
   
   implicit def fileSlashRootedPath[RP <: RootedPath]: Dereferenceable[FsUrl, RP, FsUrl] =
     new Dereferenceable[FsUrl, RP, FsUrl] {
-      def dereference(p1: FsUrl, p2: RP) = FsUrl(p1.elements ++ p2.elements)
+      def dereference(p1: FsUrl, p2: RP) = {
+        val start = if(p1.elements.lastOption == Some("")) p1.elements.init else p1.elements
+        FsUrl(start ++ p2.elements)
+      }
     }
 
   implicit def fileParentable: Parentable[FsUrl, FsUrl] = new Parentable[FsUrl, FsUrl] {
