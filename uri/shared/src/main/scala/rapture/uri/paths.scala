@@ -26,6 +26,12 @@ object RootedPath {
   }
 }
 
+object / {
+  def unapply(p: RootedPath): Option[(RootedPath, String)] =
+    if(p.elements.isEmpty) None
+    else Some((RootedPath(p.elements.init), p.elements.last))
+}
+
 case class RootedPath(elements: Vector[String]) {
   override def toString = elements.mkString("/", "/", "")
     
