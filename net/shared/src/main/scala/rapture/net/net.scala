@@ -169,7 +169,24 @@ object HttpUrl {
 
   implicit def urlSlashRootedPath[RP <: RootedPath]: Dereferenceable[HttpUrl, RP, HttpUrl] =
     new Dereferenceable[HttpUrl, RP, HttpUrl] {
-      def dereference(p1: HttpUrl, p2: RP) = HttpUrl(p1.root, p1.elements ++ p2.elements)
+      def dereference(p1: HttpUrl, p2: RP) = {
+        val start = if(p1.elements.lastOption == Some("")) p1.elements.init else p1.elements
+	HttpUrl(p1.root, start ++ p2.elements)
+      }
+    }
+
+  implicit def urlSlashRelativePath[RP <: RelativePath]: Dereferenceable[HttpUrl, RP, HttpUrl] =
+    new Dereferenceable[HttpUrl, RP, HttpUrl] {
+      def dereference(p1: HttpUrl, p2: RP) =
+	HttpUrl(p1.root, p1.elements.dropRight(p2.ascent) ++ p2.elements)
+    }
+
+  implicit def urlSlashString: Dereferenceable[HttpUrl, String, HttpUrl] =
+    new Dereferenceable[HttpUrl, String, HttpUrl] {
+      def dereference(p1: HttpUrl, p2: String) = {
+        val start = if(p1.elements.lastOption == Some("")) p1.elements.init else p1.elements
+        HttpUrl(p1.root, start :+ p2)
+      }
     }
 
   implicit def urlParentable: Parentable[HttpUrl, HttpUrl] = new Parentable[HttpUrl, HttpUrl] {
