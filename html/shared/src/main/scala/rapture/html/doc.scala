@@ -12,8 +12,6 @@
 \******************************************************************************************************************/
 package rapture.html
 
-import rapture.dom._
-
 package doctypes {
   object html5 {
     implicit val implicitDoctype: Doctype = Doctype("html")

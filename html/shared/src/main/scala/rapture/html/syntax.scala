@@ -487,4 +487,3 @@ object htmlSyntax {
   val reset = TypeOption("reset")
 
 }
-
