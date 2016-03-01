@@ -146,7 +146,7 @@ case class Tag[ChildType <: ElementType, ThisType <: ElementType, AttType <: Att
     (forceClosingTag: Boolean = false, override val block: Boolean = true)(implicit assigned: AssignedName) extends
     Element[ChildType, ThisType, AttType] {
 
-  type Content = AppliedElement[_ <: ElementType, ChildType, _ <: AttType]
+  type Content = AppliedElement[_ <: ElementType, _ <: ChildType, _ <: AttType]
 
   def tagName = assigned.name.toLowerCase
   def attributes = Map()
