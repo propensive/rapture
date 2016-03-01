@@ -23,7 +23,7 @@ object formatters extends formatters_1 {
     def apply[Ast <: JsonAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } =
       jsonFormatterImplicit[Ast]
 
-    implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast):
+    implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast, df: DecimalFormat):
         Formatter[Ast] { type Out = String } =
       new Formatter[Ast] {
         type Out = String
@@ -35,7 +35,7 @@ object formatters extends formatters_1 {
 private[json] class formatters_1 {
   /** Formats the JSON object for multi-line readability. */
   protected def general[Ast <: JsonAst](json: Any, ln: Int, ast: Ast, pad: String = " ",
-      brk: String = "\n"): String = {
+      brk: String = "\n")(implicit df: DecimalFormat): String = {
     val indent = pad*ln
     json match {
       case j =>
@@ -47,7 +47,7 @@ private[json] class formatters_1 {
           if(ast.getBoolean(j)) "true" else "false"
         } else if(ast.isNumber(j)) {
           val bd = ast.getBigDecimal(j)
-          if(bd.isWhole) String(bd.toBigInt) else String(bd)
+          if(bd.isWhole) String(bd.toBigInt) else String(df.format(bd))
         } else if(ast.isArray(j)) {
           val arr = ast.getArray(j)
           if(arr.isEmpty) "[]" else List("[", arr map { v =>
@@ -69,7 +69,7 @@ private[json] class formatters_1 {
     def apply[Ast <: JsonAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } =
       jsonFormatterImplicit[Ast]
 
-    implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast):
+    implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast, df: DecimalFormat):
         Formatter[Ast] { type Out = String } =
       new Formatter[Ast] {
         type Out = String

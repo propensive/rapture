@@ -37,7 +37,7 @@ package decimalFormats {
     def apply() = implicitDecimalFormat
     implicit val implicitDecimalFormat: DecimalFormat = DecimalPlaces(5)
   }
-  object to6df {
+  object to6dp {
     def apply() = implicitDecimalFormat
     implicit val implicitDecimalFormat: DecimalFormat = DecimalPlaces(6)
   }
@@ -64,6 +64,10 @@ package decimalFormats {
   object to6sf {
     def apply() = implicitDecimalFormat
     implicit val implicitDecimalFormat: DecimalFormat = SignificantFigures(6)
+  }
+  object exact {
+    def apply() = implicitDecimalFormat
+    implicit val implicitDecimalFormat: DecimalFormat = ExactDecimal
   }
 }
 
@@ -138,6 +142,10 @@ case class DecimalPlaces(n: Int) extends DecimalFormat {
 
 case class SignificantFigures(n: Int) extends DecimalFormat {
   def format(bigDecimal: BigDecimal) = bigDecimal.round(new java.math.MathContext(n)).toString
+}
+
+case object ExactDecimal extends DecimalFormat {
+  def format(bigDecimal: BigDecimal) = bigDecimal.toString
 }
 
 object IntegerFormat { implicit val defaultRounding: IntegerFormat = ExactInteger }
