@@ -35,7 +35,7 @@ object HttpSupport {
       httpCertificateConfig: HttpCertificateConfig,
       httpBasicAuthentication: HttpBasicAuthentication
     ): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
-      mode.wrap(httpSupport.doHttp(content, headers, "PUT"))
+      mode.wrap(httpSupport.doHttp(res, content, headers, "PUT"))
     
     def httpHead(
       headers: Map[String, String] = Map()
@@ -47,7 +47,7 @@ object HttpSupport {
       httpCertificateConfig: HttpCertificateConfig,
       httpBasicAuthentication: HttpBasicAuthentication
     ): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
-      mode.wrap(httpSupport.doHttp(None, headers, "HEAD"))
+      mode.wrap(httpSupport.doHttp(res, None, headers, "HEAD"))
       
     def httpGet(
       headers: Map[String, String] = Map()
@@ -59,7 +59,7 @@ object HttpSupport {
       httpCertificateConfig: HttpCertificateConfig,
       httpBasicAuthentication: HttpBasicAuthentication
     ): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
-      mode.wrap(httpSupport.doHttp(None, headers, "GET"))
+      mode.wrap(httpSupport.doHttp(res, None, headers, "GET"))
   
     def httpPost[C: PostType](
       content: C,
@@ -72,19 +72,19 @@ object HttpSupport {
       httpCertificateConfig: HttpCertificateConfig,
       httpBasicAuthentication: HttpBasicAuthentication
     ): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
-      mode.wrap(httpSupport.doHttp(content, headers, "POST"))
+      mode.wrap(httpSupport.doHttp(res, content, headers, "POST"))
   }
   
   implicit def basicHttpSupport: HttpSupport[HttpUrl] = new HttpSupport[HttpUrl] {
   
-    def doHttp[C: PostType, T](content: C, headers: Map[String, String] = Map(), method: String = "POST")
+    def doHttp[C: PostType, T](res: HttpUrl, content: C, headers: Map[String, String] = Map(), method: String = "POST")
         (implicit mode: Mode[`NetUrl#httpPost`], httpTimeout: HttpTimeout, httpRedirectConfig: HttpRedirectConfig,
         httpCertificateConfig: HttpCertificateConfig, httpBasicAuthentication: HttpBasicAuthentication): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
       mode wrap {
         // FIXME: This will produce a race condition if creating multiple URL connections with
         // different values for followRedirects in parallel
         HttpURLConnection.setFollowRedirects(httpRedirectConfig.follow)
-        val conn: URLConnection = new URL(toString).openConnection()
+        val conn: URLConnection = new URL(HttpUrl.uriCapable.uri(res).toString).openConnection()
         conn.setConnectTimeout(httpTimeout.duration)
         conn match {
           case c: HttpsURLConnection =>
@@ -138,6 +138,7 @@ object HttpSupport {
 trait HttpSupport[Res] {
 
   def doHttp[C: PostType, T](
+    res: Res,
     content: C,
     headers: Map[String, String] = Map(),
     method: String
