@@ -197,6 +197,46 @@ case class HttpUrl(root: HttpDomain, elements: Vector[String]) extends NetUrl {
   def port = root.port
   def canonicalPort = if(root.ssl) 443 else 80
   def ssl = root.ssl
+
+  def query[Q: Query](q: Q): HttpQuery = HttpQuery(this, ?[Query[Q]].queryString(q))
+
+}
+
+trait Query[-T] {
+  def queryString(t: T): String
+}
+
+object Query {
+  implicit def mapQuery[K: StringSerializer, V: StringSerializer]: Query[Map[K, V]] = new Query[Map[K, V]] {
+    def queryString(m: Map[K, V]): String = m.map {
+      case (k, v) =>
+        val key = ?[StringSerializer[K]].serialize(k)
+	val value = ?[StringSerializer[V]].serialize(v)
+	s"$key=$value"
+    }.mkString("&")
+  }
+}
+
+
+
+object HttpQuery {
+  implicit val serializer: StringSerializer[HttpQuery] = new StringSerializer[HttpQuery] {
+    def serialize(h: HttpQuery): String = h.toString
+  }
+  
+  implicit def uriCapable: UriCapable[HttpQuery] = new UriCapable[HttpQuery] {
+    def uri(hq: HttpQuery) = {
+      val httpUrlUri = HttpUrl.uriCapable.uri(hq.httpUrl)
+      Uri(httpUrlUri.scheme, s"${httpUrlUri.schemeSpecificPart}?$hq")
+    }
+  }
+}
+
+case class HttpQuery(httpUrl: HttpUrl, queryString: String) {
+  override def toString = {
+    val httpUrlUri = HttpUrl.uriCapable.uri(httpUrl)
+    s"$httpUrlUri?$queryString"
+  }
 }
 
 object HttpDomain {
