@@ -160,7 +160,10 @@ object HttpUrl {
   }
   
   implicit def uriCapable: UriCapable[HttpUrl] = new UriCapable[HttpUrl] {
-    def uri(cp: HttpUrl) = Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}/${cp.elements.mkString("/")}")
+    def uri(cp: HttpUrl) = {
+      val portString = if(cp.ssl && cp.port == 443 || !cp.ssl && cp.port == 80) "" else s":${cp.port}"
+      Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}${portString}/${cp.elements.mkString("/")}")
+    }
   }
 
   implicit def urlSlashRootedPath[RP <: RootedPath]: Dereferenceable[HttpUrl, RP, HttpUrl] =
@@ -256,7 +259,10 @@ object HttpDomain {
     }
 
   implicit def uriCapable: UriCapable[HttpDomain] = new UriCapable[HttpDomain] {
-    def uri(cp: HttpDomain) = Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}")
+    def uri(cp: HttpDomain) = {
+      val portString = if(cp.ssl && cp.port == 443 || !cp.ssl && cp.port == 80) "" else s":${cp.port}"
+      Uri(if(cp.ssl) "https" else "http", s"//${cp.hostname}$portString")
+    }
   }
 
 }
