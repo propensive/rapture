@@ -211,7 +211,7 @@ case class Answer[T, E <: Exception](override val answer: T) extends Resolved[T,
 
 case class Errata[T, E <: Exception](override val errors: Seq[(ClassTag[_], (String, Exception))]) extends
     Result[T, E](null.asInstanceOf[T], errors) {
-  override def toString = "Errata(\n"+ errors.map { case (t, (p, e)) => s"$t: ${e.getMessage} [$p]" } +"\n)"
+  override def toString = "Errata(\n  "+ errors.map { case (t, (p, e)) => s"$t: ${e.getMessage} [$p]" }.mkString(",\n  ") +"\n)"
 }
 
 object Errata {
