@@ -51,9 +51,13 @@ object `package` {
 
   implicit def httpCapable[Res: HttpSupport](res: Res): HttpSupport.Capability[Res] = new HttpSupport.Capability[Res](res)
 
-  /** Type class object for reading `Byte`s from `HttpUrl`s */
   implicit val httpStreamByteReader: JavaInputStreamReader[HttpUrl] =
     new JavaInputStreamReader[HttpUrl]({ u =>
+      new java.net.URL(u.uri.toString).openConnection.asInstanceOf[java.net.HttpURLConnection].getInputStream
+    })
+  
+  implicit val httpQueryStreamByteReader: JavaInputStreamReader[HttpQuery] =
+    new JavaInputStreamReader[HttpQuery]({ u =>
       new java.net.URL(u.uri.toString).openConnection.asInstanceOf[java.net.HttpURLConnection].getInputStream
     })
   
