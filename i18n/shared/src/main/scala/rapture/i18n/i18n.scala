@@ -40,29 +40,29 @@ case class LocaleException(locale: String) extends Exception(s"Locale '$locale' 
 
 class LocaleParser[L <: Language](val locales: Map[String, Locale[_ >: L <: Language]]) {
   def |[L2 <: Language](locale: Locale[L2]) = new LocaleParser[L with L2](locales + (locale.name -> locale))
-  
+
   def parse(s: String)(implicit mode: Mode[_]): mode.Wrap[Locale[L], LocaleException] = mode.wrap {
     locales.get(s.toLowerCase) match {
       case Some(loc) => loc.asInstanceOf[Locale[L]]
       case None => mode.exception(LocaleException(s))
     }
   }
-  
+
   override def toString = locales.keys.mkString("|")
 }
 
 object I18n {
- 
+
   implicit def upcast[ToLang <: Language, FromLang <: Language](from: I18n[String, FromLang]): I18n[String, ToLang] =
     macro Macros.missingTranslationsMacro[ToLang, FromLang]
-  
+
   implicit def convertToType[T, L <: Language, L2 >: L <: Language: DefaultLanguage](i18n: I18n[T, L]): T =
     i18n.map(implicitly[DefaultLanguage[L2]].tag)
 
   class `I18n.apply`[L <: Language]() {
     def apply[T](value: T)(implicit ct: ClassTag[L]) = new I18n[T, L](Map(ct -> value))
   }
-  
+
   def apply[L <: Language] = new `I18n.apply`[L]()
 }
 
@@ -72,12 +72,12 @@ private[i18n] object RequireLanguage { implicit def requireLanguage: RequireLang
 
 class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
   def apply[Lang >: Languages](implicit ct: ClassTag[Lang]): T = map(ct)
-  
+
   def &[L >: Languages <: Language, Lang2 <: L](s2: I18n[T, Lang2])(implicit ev: RequireLanguage[L]):
       I18n[T, Languages with Lang2] = new I18n[T, Languages with Lang2](map ++ s2.map)
 
   override def toString = {
-    val langs = map.keys.map(_.runtimeClass.getName.takeRight(2).toLowerCase).mkString("|")
+    val langs = map.keys.map(_.runtimeClass.getName.takeRight(2).toLowerCase).mkString("&")
     val content: Option[T] = map.get(implicitly[ClassTag[En]])
     lazy val first: Option[T] = map.headOption.flatMap { case (k, v) => map.get(k) }
     val value = content.orElse(first).map(_.toString).getOrElse("") match {
@@ -88,7 +88,7 @@ class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
   }
 
   override def hashCode = map.hashCode ^ 248327829
-  
+
   override def equals(that: Any) = that match {
     case that: I18n[_, _] => map == that.map
     case _ => false
@@ -100,7 +100,7 @@ object I18nStringParam {
     new I18nStringParam[L](new I18n[String, L](Map()) {
       override def apply[Lang >: L](implicit ct: ClassTag[Lang]) = s
     })
-  
+
   implicit def toI18nStringParam[L <: Language](s: I18n[String, L]): I18nStringParam[L] =
     I18nStringParam(s)
 }
@@ -110,4 +110,3 @@ case class I18nStringParam[+L <: Language](i18n: I18n[String, L @annotation.unch
 trait LanguageBundle[Langs <: Language] {
   type IString = I18n[String, Langs]
 }
-
