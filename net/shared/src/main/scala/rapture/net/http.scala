@@ -113,7 +113,7 @@ object HttpSupport {
         if(content != None)
           ensuring(OutputStreamBuilder.output(conn.getOutputStream)) { out =>
             ?[PostType[C]].sender(content) > out
-          } (_.close())
+          }
   
         import scala.collection.JavaConversions._
   
