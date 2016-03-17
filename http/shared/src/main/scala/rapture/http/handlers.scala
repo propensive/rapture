@@ -37,8 +37,23 @@ trait HttpHandler_1 {
 
 trait HttpHandler[-T] { def response(t: T): Response }
 
+object extensionBasedMimeTypes {
+  implicit def handler[T: Linkable](implicit reader: Reader[T, Byte]): HttpHandler[T] = new HttpHandler[T] {
+    def response(in: T) = {
+      val input = reader.input(in)
+      val parts = implicitly[Linkable[T]].link(in).link.split("\\.").to[List]
+      val extension = if(parts.length < 2) Nil else List(parts.last)
+      val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
+      ByteStreamResponse(200, Response.NoCache, mime, { os =>
+        input > os
+	os.close()
+      })
+    }
+  }
+}
+
 object HttpHandler extends HttpHandler_1 {
-  
+
   implicit def charInputHandler(implicit enc: Encoding, mimeType: MimeTypes.MimeType) = new HttpHandler[Input[Char]] {
     def response(in: Input[Char]) = StreamResponse(200, Response.NoCache,
         mimeType, { os =>
