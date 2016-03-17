@@ -30,8 +30,8 @@ import rapture.dom._
 import rapture.codec._
 
 trait HttpHandler_1 {
-  implicit val linkRedirectHandler = new HttpHandler[Link] {
-    def response(link: Link) = RedirectResponse(Nil, link.toString)
+  implicit val linkRedirectHandler = new HttpHandler[PathLink] {
+    def response(link: PathLink) = RedirectResponse(Nil, link.toString)
   }
 }
 
