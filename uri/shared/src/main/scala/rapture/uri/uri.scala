@@ -17,18 +17,18 @@ trait UriCapable[Res] {
 
 object Linkable {
   class Capability[Res: Linkable](res: Res) {
-    def link: Link = implicitly[Linkable[Res]].link(res)
+    def link: PathLink = implicitly[Linkable[Res]].link(res)
   }
 
   implicit def linkableUri[Res: UriCapable]: Linkable[Res] = new Linkable[Res] {
-    def link(res: Res): Link = Link(implicitly[UriCapable[Res]].uri(res).toString)
+    def link(res: Res): PathLink = PathLink(implicitly[UriCapable[Res]].uri(res).toString)
   }
 }
 
-case class Link(link: String) {
+case class PathLink(link: String) {
   override def toString: String = link
 }
 
 trait Linkable[Res] {
-  def link(res: Res): Link
+  def link(res: Res): PathLink
 }

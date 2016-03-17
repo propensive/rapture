@@ -16,7 +16,7 @@ import scala.language.higherKinds
 
 import rapture.core._
 import rapture.mime._
-import rapture.uri.{Link => _, _}
+import rapture.uri._
 import rapture.net._
 import rapture.dom._
 import rapture.html._
