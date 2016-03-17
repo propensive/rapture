@@ -22,7 +22,7 @@ object RootedPath {
   }
 
   implicit def linkable: Linkable[RootedPath] = new Linkable[RootedPath] {
-    def link(res: RootedPath): Link = Link(res.toString)
+    def link(res: RootedPath): PathLink = PathLink(res.toString)
   }
 }
 
