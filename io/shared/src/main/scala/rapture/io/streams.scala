@@ -13,7 +13,6 @@
 package rapture.io
 import rapture.core._
 import rapture.codec._
-import rapture.uri._
 import rapture.mime._
 
 import java.io._

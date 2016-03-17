@@ -12,8 +12,6 @@
 \******************************************************************************************************************/
 package rapture.xml.xmlBackends.stdlib
 
-import rapture.core._
-import rapture.data._
 import rapture.xml._
 
 object `package` extends Extractors with Serializers {

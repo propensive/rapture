@@ -12,8 +12,5 @@
 \******************************************************************************************************************/
 package rapture.xml.xmlBackends.stdlib
 
-import rapture.data._
-import rapture.xml._
-
 private[stdlib] trait Extractors {
 }
