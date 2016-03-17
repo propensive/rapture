@@ -157,12 +157,12 @@ abstract class ServletWrapper extends HttpServlet { wrapper =>
           val enc = encodings.`UTF-8`
           resp.setContentType(ct.name+"; charset="+enc.name)
           val w = new BufferedWriter(new OutputStreamWriter(resp.getOutputStream(), enc.name))
-          ensuring(new CharOutput(w))(send)(_.close())
+          ensuring(new CharOutput(w))(send)
         
         case sr@ByteStreamResponse(_, _, ct, send) =>
           resp.setContentType(ct.name)
           val w = resp.getOutputStream()
-          ensuring(new ByteOutput(w))(send)(_.close())
+          ensuring(new ByteOutput(w))(send)
         
         case ErrorResponse(code, _, message, _) =>
           resp.sendError(code, message)

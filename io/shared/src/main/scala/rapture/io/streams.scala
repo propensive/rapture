@@ -21,16 +21,19 @@ import scala.reflect._
 
 import language.higherKinds
 
+trait Closable[-R] { def close(resource: R): Unit }
+
 object Utils {
 
   /** Safely closes a stream after processing */
-  def ensuring[Res, Strm](create: Strm)(blk: Strm => Res)(close: Strm => Unit) = {
+  def ensuring[Res, Strm: Closable](create: Strm)(blk: Strm => Res) = {
     val stream = create
     val result = try { blk(stream) } catch {
-      case e: Throwable => try { close(stream) } catch { case e2: Exception => () }
+      case e: Throwable => try { implicitly[Closable[Strm]].close(stream) } catch { case e2: Exception => () }
       throw e
     }
-    close(stream)
+
+    implicitly[Closable[Strm]].close(stream)
 
     result
   }
@@ -60,6 +63,12 @@ object InputBuilder {
   implicit val buildInputStream: InputBuilder[InputStream, Byte] = InputStreamBuilder
   implicit val buildReader: InputBuilder[java.io.Reader, Char] = ReaderBuilder
   implicit val buildLineReader: InputBuilder[java.io.Reader, String] = LineReaderBuilder
+}
+
+object Input {
+  implicit def inputClosable[T]: Closable[Input[T]] = new Closable[Input[T]] {
+    def close(in: Input[T]): Unit = in.close()
+  }
 }
 
 /** Type trait for building a new `Input` from particular kind of input stream
@@ -118,10 +127,10 @@ object Appendable {
     
     def handleAppend[Data, Res2](body: Output[Data] => Res2)(implicit sw:
         Appender[Res, Data]): Res2 = {
-      ensuring(appendOutput[Data])(body) { out =>
+      ensuring(appendOutput[Data])(body)/* { out =>
         out.flush()
         if(!sw.doNotClose) out.close()
-      }
+      }*/
     }
   }
 
@@ -179,7 +188,7 @@ object Readable {
       * @param body The code to be executed upon the this Input before it is closed */
     def handleInput[Data, Res2](body: Input[Data] => Res2)(implicit sr:
         Reader[Res, Data]): Res2 =
-      ensuring(input[Data])(body) { in => if(!sr.doNotClose) in.close() }
+      ensuring(input[Data])(body)/* { in => if(!sr.doNotClose) in.close() }*/
   }
 }
 
@@ -199,10 +208,10 @@ object Writable {
       * @return The result from executing the body */
     def handleOutput[Data, Res2](body: Output[Data] => Res2)(implicit sw:
         Writer[Res, Data]): Res2 =
-      ensuring(output[Data])(body) { out =>
+      ensuring(output[Data])(body)/* { out =>
         out.flush()
         if(!sw.doNotClose) out.close()
-      }
+      }*/
   }
 }
 
@@ -471,6 +480,12 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
       fn(next.get)
       next = read()
     }
+  }
+}
+
+object Output {
+  implicit def outputClosable[T]: Closable[Output[T]] = new Closable[Output[T]] {
+    def close(out: Output[T]): Unit = out.close()
   }
 }
 

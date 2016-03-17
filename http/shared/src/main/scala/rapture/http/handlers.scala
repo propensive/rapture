@@ -35,7 +35,12 @@ trait HttpHandler_1 {
   }
 }
 
-trait HttpHandler[-T] { def response(t: T): Response }
+trait HttpHandler[-T] { httpHandler =>
+  def response(t: T): Response
+  def contraMap[S](fn: S => T): HttpHandler[S] = new HttpHandler[S] {
+    def response(t: S) = httpHandler.response(fn(t))
+  }
+}
 
 object HttpHandler extends HttpHandler_1 {
   
