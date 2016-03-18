@@ -29,6 +29,6 @@ case class PathLink(link: String) {
   override def toString: String = link
 }
 
-trait Linkable[Res] {
+trait Linkable[-Res] {
   def link(res: Res): PathLink
 }
