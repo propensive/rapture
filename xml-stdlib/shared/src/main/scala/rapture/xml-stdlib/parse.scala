@@ -16,9 +16,6 @@ import rapture.core._
 import rapture.data._
 import rapture.xml._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 import scala.xml._
 
 private[stdlib] object StdlibStringParser extends Parser[String, XmlBufferAst] {

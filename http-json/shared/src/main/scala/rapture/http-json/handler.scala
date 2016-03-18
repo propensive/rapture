@@ -14,7 +14,6 @@ package rapture.http
 
 import rapture.json._
 import rapture.data._
-import rapture.http._
 import rapture.mime._
 import rapture.io._
 import rapture.codec._, encodings.`UTF-8`._
@@ -24,7 +23,6 @@ package object jsonInterop {
     new HttpHandler[Json] {
       def response(j: Json): Response = StreamResponse(200, Response.NoCache, MimeTypes.`application/json`,
           { os =>
-	import encodings.`UTF-8`._
 	Json.format(j).input[Char] > os
 	os.close()
       })
