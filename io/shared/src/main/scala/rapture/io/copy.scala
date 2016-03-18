@@ -13,15 +13,8 @@
 package rapture.io
 import rapture.core._
 
-trait Copyable_1 {
-  implicit def streamableCopyable[SrcType, DestType](implicit reader: Reader[SrcType, Byte],
-      writer: Writer[DestType, Byte]): Copyable[SrcType, DestType] =
-    new Copyable[SrcType, DestType] {
-      def copy(src: SrcType, dest: DestType): Copyable.Summary = {
-        val bytes = reader.input(src) > writer.output(dest)
-        Copyable.StreamSummary(bytes)
-      }
-    }
+trait Copyable[-SrcType, -DestType] {
+  def copy(from: SrcType, to: DestType): Copyable.Summary
 }
 
 object Copyable extends Copyable_1 {
@@ -39,6 +32,14 @@ object Copyable extends Copyable_1 {
   }
 }
 
-trait Copyable[-SrcType, -DestType] {
-  def copy(from: SrcType, to: DestType): Copyable.Summary
+trait Copyable_1 {
+  implicit def streamableCopyable[SrcType, DestType](implicit reader: Reader[SrcType, Byte],
+      writer: Writer[DestType, Byte]): Copyable[SrcType, DestType] =
+    new Copyable[SrcType, DestType] {
+      def copy(src: SrcType, dest: DestType): Copyable.Summary = {
+        val bytes = reader.input(src) > writer.output(dest)
+        Copyable.StreamSummary(bytes)
+      }
+    }
 }
+

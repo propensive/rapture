@@ -16,19 +16,8 @@ import rapture.core._
 
 import java.io._
 
-import language.reflectiveCalls
-
 object javaResources {
   
-  type StructuralReadable = { def getInputStream(): InputStream }
-  type StructuralWritable = { def getOutputStream(): OutputStream }
-  
-  implicit val structuralReader =
-    new JavaInputStreamReader[StructuralReadable](_.getInputStream())
-  
-  implicit val structuralWriter =
-    new JavaOutputStreamWriter[StructuralWritable](_.getOutputStream())
-
   implicit val javaFileReader = new JavaInputStreamReader[java.io.File](
       new java.io.FileInputStream(_))
   

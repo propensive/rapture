@@ -13,6 +13,10 @@
 package rapture.io
 import rapture.core._
 
+trait Movable[FromType, ToType] {
+  def move(from: FromType, to: ToType): Movable.Summary
+}
+
 object Movable {
   case class Summary(streamed: Option[Long]) {
     override def toString = streamed match {
@@ -26,8 +30,4 @@ object Movable {
         movable: Movable[FromType, ToType]): mode.Wrap[Summary, Exception] =
       mode.wrap(?[Movable[FromType, ToType]].move(from, to))
   }
-}
-
-trait Movable[FromType, ToType] {
-  def move(from: FromType, to: ToType): Movable.Summary
 }

@@ -13,7 +13,7 @@
 package rapture.io
 import rapture.core._
 
-trait Deleter[Res] {
+trait Deletable[Res] {
   def delete(res: Res): Unit
 }
 
@@ -25,8 +25,8 @@ object Deletable {
 
   class Capability[Res](res: Res) {
     def delete()(implicit mode: Mode[`Deletable#delete`],
-        deleter: Deleter[Res]): mode.Wrap[Summary, Exception] = mode wrap {
-      deleter.delete(res)
+        deletable: Deletable[Res]): mode.Wrap[Summary, Exception] = mode wrap {
+      deletable.delete(res)
       Summary(1)
     }
   }
