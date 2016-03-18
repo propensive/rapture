@@ -213,8 +213,8 @@ object Query {
   implicit def mapQuery[K: StringSerializer, V: StringSerializer]: Query[Map[K, V]] = new Query[Map[K, V]] {
     def queryString(m: Map[K, V]): String = m.map {
       case (k, v) =>
-        val key = java.net.URLEncoder.encode(?[StringSerializer[K]].serialize(k), "UTF-8")
-	val value = java.net.URLEncoder.encode(?[StringSerializer[V]].serialize(v), "UTF-8")
+        val key = ?[StringSerializer[K]].serialize(k)
+	val value = ?[StringSerializer[V]].serialize(v)
 	s"$key=$value"
     }.mkString("&")
   }
