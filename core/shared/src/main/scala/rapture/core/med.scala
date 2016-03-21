@@ -63,8 +63,10 @@ object MinimumEditDistance {
       if(cont) d(16*amax + word.length) else Int.MaxValue
     }
     
+    val len = word.length
+
     words.filter { w =>
-      difference(arr, w) <= limit
+      difference(arr, w.take(len)) <= limit
     }.to[List]
   }
 }
