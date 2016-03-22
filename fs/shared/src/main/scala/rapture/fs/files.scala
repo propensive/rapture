@@ -42,7 +42,7 @@ trait LowerPriorityImplicits {
     def size(file: FsUrl): Long = file.length(modes.throwExceptions())
   }
   
-  implicit val fileDeletable: Deleter[FsUrl] = new Deleter[FsUrl] {
+  implicit val fileDeletable: Deletable[FsUrl] = new Deletable[FsUrl] {
     /** Returns the size of the file in bytes. */
     def delete(file: FsUrl): Unit = file.javaFile.delete()
   }
