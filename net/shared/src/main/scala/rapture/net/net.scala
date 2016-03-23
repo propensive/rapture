@@ -111,6 +111,14 @@ class HttpResponse(val headers: Map[String, List[String]], val status: Int, is: 
     mode.wrap(ib.input(is))
 }
 
+object PostType {
+  implicit def formPostType: PostType[Map[Symbol, String]] = new PostType[Map[Symbol, String]] {
+    def contentType = Some(MimeTypes.`application/x-www-form-urlencoded`)
+    def sender(content: Map[Symbol, String]) = ByteArrayInput((content map { case (k, v) =>
+      java.net.URLEncoder.encode(k.name, "UTF-8")+"="+java.net.URLEncoder.encode(v, "UTF-8")
+    } mkString "&").getBytes("UTF-8"))
+  }
+}
 trait PostType[-C] {
   def contentType: Option[MimeTypes.MimeType]
   def sender(content: C): Input[Byte]

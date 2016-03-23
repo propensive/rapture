@@ -10,7 +10,7 @@ case class Uri(scheme: String, schemeSpecificPart: String) {
   override def toString: String = s"$scheme:$schemeSpecificPart"
 }
 
-trait UriCapable[Res] {
+trait UriCapable[-Res] {
   def uri(res: Res): Uri
 }
 
