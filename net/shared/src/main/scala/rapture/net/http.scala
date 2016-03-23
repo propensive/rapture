@@ -13,6 +13,7 @@
 package rapture.net
 
 import rapture.io._
+import rapture.uri._
 import rapture.core._
 
 import language.existentials
@@ -74,17 +75,26 @@ object HttpSupport {
     ): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
       mode.wrap(httpSupport.doHttp(res, content, headers, "POST"))
   }
+
+  implicit def basicHttpSupport[H: UriCapable]: HttpSupport[H] = new HttpSupport[H] {
   
-  implicit def basicHttpSupport: HttpSupport[HttpUrl] = new HttpSupport[HttpUrl] {
-  
-    def doHttp[C: PostType, T](res: HttpUrl, content: C, headers: Map[String, String] = Map(), method: String = "POST")
-        (implicit mode: Mode[`NetUrl#httpPost`], httpTimeout: HttpTimeout, httpRedirectConfig: HttpRedirectConfig,
-        httpCertificateConfig: HttpCertificateConfig, httpBasicAuthentication: HttpBasicAuthentication): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
+    def doHttp[C: PostType, T](
+      res: H,
+      content: C,
+      headers: Map[String, String],
+      method: String
+    )(
+      implicit mode: Mode[`NetUrl#httpPost`],
+      httpTimeout: HttpTimeout,
+      httpRedirectConfig: HttpRedirectConfig,
+      httpCertificateConfig: HttpCertificateConfig,
+      httpBasicAuthentication: HttpBasicAuthentication
+    ): mode.Wrap[HttpResponse, HttpExceptions with httpTimeout.Throws] =
       mode wrap {
         // FIXME: This will produce a race condition if creating multiple URL connections with
         // different values for followRedirects in parallel
         HttpURLConnection.setFollowRedirects(httpRedirectConfig.follow)
-        val conn: URLConnection = new URL(HttpUrl.uriCapable.uri(res).toString).openConnection()
+        val conn: URLConnection = new URL(implicitly[UriCapable[H]].uri(res).toString).openConnection()
         conn.setConnectTimeout(httpTimeout.duration)
         conn match {
           case c: HttpsURLConnection =>
@@ -140,7 +150,7 @@ trait HttpSupport[Res] {
   def doHttp[C: PostType, T](
     res: Res,
     content: C,
-    headers: Map[String, String] = Map(),
+    headers: Map[String, String],
     method: String
   )(
     implicit mode: Mode[`NetUrl#httpPost`],

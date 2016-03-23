@@ -39,8 +39,9 @@ object `package` {
       Https.parse("https:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
   }
 
-  implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout): Sizable[HttpUrl, Byte] = new Sizable[HttpUrl, Byte] {
+  implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout, toUri: UriCapable[HttpUrl]): Sizable[HttpUrl, Byte] = new Sizable[HttpUrl, Byte] {
     type ExceptionType = HttpExceptions
+    HttpSupport.basicHttpSupport
     def size(url: HttpUrl): Long = url.httpHead().headers.get("Content-Length").get.head.toLong
   }
 
