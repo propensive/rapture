@@ -53,6 +53,8 @@ object ShParam {
 
   implicit def processToShParam(process: Process) =
     ShParam(process.params)
+
+  implicit def fsUrlToShParam(fsUrl: FsUrl) = ShParam(Vector(fsUrl.elements.mkString("/", "/", "")))
 }
 
 case class ShParam(elems: Vector[String]) {
