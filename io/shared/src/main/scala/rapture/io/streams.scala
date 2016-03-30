@@ -228,7 +228,7 @@ object Writer {
   }
   
   implicit val stdoutWriter: JavaOutputStreamWriter[Stdout.type] =
-    new JavaOutputStreamWriter[Stdout.type](x => System.out) {
+    new JavaOutputStreamWriter[Stdout.type](x => System.out, _ => ()) {
       override def doNotClose = true
     }
 
