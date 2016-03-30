@@ -75,7 +75,7 @@ class ByteInput(in: InputStream) extends Input[Byte] {
 /** Wraps a `java.io.OutputStream` into an `Output[Byte]`
   *
   * @param out The `java.io.OutputStream` to be wrapped */
-class ByteOutput(out: OutputStream) extends Output[Byte] {
+class ByteOutput(out: OutputStream, closer: OutputStream => Unit = (_.close())) extends Output[Byte] {
   
   private val bout = alloc[BufferedOutputStream](out)
   
@@ -169,13 +169,13 @@ object WriterBuilder extends OutputBuilder[java.io.Writer, Char] {
   def output(s: java.io.Writer): Output[Char] = alloc[CharOutput](s)
 }
 
-class JavaOutputStreamWriter[T](val getOutputStream: T => OutputStream) extends
+class JavaOutputStreamWriter[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = (_.close())) extends
     Writer[T, Byte] {
-  def output(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)))
+  def output(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)), closer)
 }
 
-class JavaOutputAppender[T](val getOutputStream: T => OutputStream) extends Appender[T, Byte] {
-  def appendOutput(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)))
+class JavaOutputAppender[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = (_.close())) extends Appender[T, Byte] {
+  def appendOutput(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)), closer)
 }
 
 class JavaInputStreamReader[T](val getInputStream: T => InputStream) extends

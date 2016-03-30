@@ -126,10 +126,7 @@ object Appendable {
     
     def handleAppend[Data, Res2](body: Output[Data] => Res2)(implicit sw:
         Appender[Res, Data]): Res2 = {
-      ensuring(appendOutput[Data])(body)/* { out =>
-        out.flush()
-        if(!sw.doNotClose) out.close()
-      }*/
+      ensuring(appendOutput[Data])(body)
     }
   }
 
@@ -187,7 +184,7 @@ object Readable {
       * @param body The code to be executed upon the this Input before it is closed */
     def handleInput[Data, Res2](body: Input[Data] => Res2)(implicit sr:
         Reader[Res, Data]): Res2 =
-      ensuring(input[Data])(body)/* { in => if(!sr.doNotClose) in.close() }*/
+      ensuring(input[Data])(body)
   }
 }
 
@@ -207,33 +204,25 @@ object Writable {
       * @return The result from executing the body */
     def handleOutput[Data, Res2](body: Output[Data] => Res2)(implicit sw:
         Writer[Res, Data]): Res2 =
-      ensuring(output[Data])(body)/* { out =>
-        out.flush()
-        if(!sw.doNotClose) out.close()
-      }*/
+      ensuring(output[Data])(body)
   }
 }
 
 object Writer {
   implicit def byteToLineWriters[T](implicit jisw: JavaOutputStreamWriter[T],
       encoding: Encoding): Writer[T, String] = new Writer[T, String] {
-    override def doNotClose = jisw.doNotClose
     def output(t: T): Output[String] = alloc[LineOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
   }
 
   implicit def byteToCharWriters[T](implicit jisw: JavaOutputStreamWriter[T],
       encoding: Encoding): Writer[T, Char] = new Writer[T, Char] {
-    override def doNotClose = jisw.doNotClose
     def output(t: T): Output[Char] = alloc[CharOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
   }
   
   implicit val stdoutWriter: JavaOutputStreamWriter[Stdout.type] =
-    new JavaOutputStreamWriter[Stdout.type](x => System.out) {
-      override def doNotClose = true
-    }
+    new JavaOutputStreamWriter[Stdout.type](x => System.out, _ => ())
 
   implicit val stderrWriter: Writer[Stderr.type, Byte] = new Writer[Stderr.type, Byte] {
-    override def doNotClose = true
     def output(stderr: Stderr.type): Output[Byte] =
       ?[OutputBuilder[OutputStream, Byte]].output(System.out)
   }
@@ -247,7 +236,6 @@ object Writer {
     "are working with Char data, you will require an implicit character encoding, e.g. "+
     "import encodings.system._ or import encodings.`UTF-8`._.")
 trait Writer[-Resource, @specialized(Byte, Char) Data] {
-  def doNotClose = false
   def output(res: Resource): Output[Data]
 }
 
@@ -255,14 +243,12 @@ object Appender extends Appender_1 {
 
   implicit def byteToCharAppenders[T](implicit jisw: JavaOutputAppender[T],
       encoding: Encoding): Appender[T, Char] = new Appender[T, Char] {
-    override def doNotClose = jisw.doNotClose
     def appendOutput(t: T): Output[Char] =
       alloc[CharOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
   }
   
   implicit def byteToLineAppender[Res](implicit appender: Appender[Res, Byte], enc: Encoding) = {
     new Appender[Res, String] {
-      override def doNotClose = appender.doNotClose
       def appendOutput(res: Res): Output[String] = new Output[String] {
         private lazy val output = appender.appendOutput(res)
         def close() = output.close()
@@ -276,14 +262,10 @@ object Appender extends Appender_1 {
   }
 
   implicit val stdoutAppender: JavaOutputAppender[Stdout.type] =
-    new JavaOutputAppender[Stdout.type](x => System.out) {
-      override def doNotClose = true
-    }
+    new JavaOutputAppender[Stdout.type](x => System.out, _ => ())
 
   implicit val stderrAppender: JavaOutputAppender[Stderr.type] =
-    new JavaOutputAppender[Stderr.type](x => System.err) {
-      override def doNotClose = true
-    }
+    new JavaOutputAppender[Stderr.type](x => System.err, _ => ())
 
   implicit val stdoutCharAppender: Appender[Stdout.type, Char] =
     byteToCharAppenders(stdoutAppender, encodings.system())
@@ -296,7 +278,6 @@ object Appender extends Appender_1 {
 trait Appender_1 {
   implicit def charToLineAppender[Res](implicit appender: Appender[Res, Char]) = {
     new Appender[Res, String] {
-      override def doNotClose = appender.doNotClose
       def appendOutput(res: Res): Output[String] = new Output[String] {
         private lazy val output = appender.appendOutput(res)
         def close() = output.close()
@@ -311,9 +292,7 @@ trait Appender_1 {
 }
 
 trait Appender[-Resource, Data] {
-  def doNotClose = false
-  def appendOutput(res: Resource):
-      Output[Data]
+  def appendOutput(res: Resource): Output[Data]
 }
 
 /*  Extract the encoding from an HTTP stream */
@@ -609,8 +588,6 @@ object Reader extends Reader_1 {
     "encoding, e.g. import encodings.system._ or import encodings.`UTF-8`._.")
 trait Reader[-Resource, @specialized(Byte, Char) Data] {
   
-  def doNotClose = false
-
   /** Creates the `Input` for streaming data of the specified type from the given resource
     *
     * @param res The resource to get the input stream from
