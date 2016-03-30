@@ -203,7 +203,9 @@ object HttpUrl {
 
 /** Represets a URL with the http scheme */
 case class HttpUrl(root: HttpDomain, elements: Vector[String]) extends NetUrl {
-  
+ 
+  override def toString = HttpUrl.uriCapable.uri(this).toString
+
   def hostname = root.hostname
   def port = root.port
   def canonicalPort = if(root.ssl) 443 else 80
@@ -275,7 +277,9 @@ object HttpDomain {
 
 }
 
-case class HttpDomain(hostname: String, port: Int, ssl: Boolean)
+case class HttpDomain(hostname: String, port: Int, ssl: Boolean) {
+  override def toString = HttpDomain.uriCapable.uri(this).toString
+}
 
 object Http {
 
