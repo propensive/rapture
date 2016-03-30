@@ -64,10 +64,14 @@ object `package` {
     def sh(content: ShParam*): Process = macro CliMacros.shImplementation
   }
   
-  implicit val logger = Logger(uri"file:///tmp/rapture-cli/access.log")
-  import rapture.log.parts._
-  implicit def implicitSpec(implicit severity: Severity, date: Date, time: Time, thread: Thread): Spec =
-    log"""$date $time $severity ${sourceFile(width = 12, Right)}:${lineNo(4)} ${thread(14)}"""
+  object cliLogging {
+    import rapture.log.parts._
+    
+    implicit val logger = Logger(uri"file:///tmp/rapture-cli/access.log")
+    
+    implicit def implicitSpec(implicit severity: Severity, date: Date, time: Time, thread: Thread): Spec =
+      log"""$date $time $severity ${sourceFile(width = 12, Right)}:${lineNo(4)} ${thread(14)}"""
+  }
 }
 
 sealed class CliException(msg: String) extends Exception(msg)
@@ -85,6 +89,7 @@ abstract class BackgroundCliApp(implicit debugMode: DebugModeConfig) extends Cli
   def shutdown(): Unit = ()
 
   override def main(args: Array[String]) = {
+    import cliLogging._
     val appName = args(0)
     val fifo = File.parse(s"file:///tmp/rapture-cli/${appName}.sock")
     var continue = true
