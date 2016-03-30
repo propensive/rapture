@@ -174,8 +174,8 @@ class JavaOutputStreamWriter[T](val getOutputStream: T => OutputStream, val clos
   def output(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)), closer)
 }
 
-class JavaOutputAppender[T](val getOutputStream: T => OutputStream) extends Appender[T, Byte] {
-  def appendOutput(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)))
+class JavaOutputAppender[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = (_.close())) extends Appender[T, Byte] {
+  def appendOutput(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)), closer)
 }
 
 class JavaInputStreamReader[T](val getInputStream: T => InputStream) extends
