@@ -182,6 +182,8 @@ object FsUrl {
   * represented by the URL. */
 case class FsUrl(val elements: Seq[String]) {
 
+  override def toString = s"file:///${elements.mkString("/")}"
+
   /** The java.io.File corresponding to this FsUrl. */
   lazy val javaFile: java.io.File = new java.io.File(this.uri.schemeSpecificPart.drop(2))
   
@@ -237,13 +239,14 @@ case class FsUrl(val elements: Seq[String]) {
 /** The file scheme object used as a factory for FsUrls. */
 object File extends FsUrl(Vector()) {
 
-  private val UrlRegex = """^file://(/.*)$""".r
+  private val UrlRegex = """^file:///(.*)$""".r
 
   /** Pares a path to a file */
   def parse(s: String) = s match {
     case UrlRegex(path) => FsUrl(path.split("\\/").to[Vector])
+    case path => FsUrl(path.split("\\/").to[Vector].dropWhile(_ == ""))
   }
 
-  def home = File.parse(System.getenv("HOME"))
+  def homeDir = File.parse(System.getenv("HOME"))
 }
 
