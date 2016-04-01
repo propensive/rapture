@@ -17,6 +17,7 @@ import rapture.core._
 import rapture.codec._
 import rapture.net._
 import rapture.uri._
+import rapture.js._
 
 import language.dynamics
 
@@ -152,11 +153,11 @@ object htmlSyntax {
   implicit def classes = Attribute[Global, Seq[String]]("classes", "class")(_.mkString(" "))
   def classes_=[E <: ElementType](v: Seq[String]) = classes.set[E](v)
   
-  implicit def onload = Attribute[Body, String]("onload")(identity)
-  def onload_=[E <: ElementType](v: String) = onload.set[E](v)
+  implicit def onload = Attribute[Body, Js]("onload")(_.content)
+  def onload_=[E <: ElementType](v: Js) = onload.set[E](v)
   
-  implicit def onclick = Attribute[Global, String]("onclick")(identity)
-  def onclick_=[E <: ElementType](v: String) = onclick.set[E](v)
+  implicit def onclick = Attribute[Global, Js]("onclick")(_.content)
+  def onclick_=[E <: ElementType](v: Js) = onclick.set[E](v)
   
   implicit def title = Attribute[Global, String]("title")(identity)
   def title_=[E <: ElementType](v: String) = title.set[E](v)
@@ -310,32 +311,32 @@ object htmlSyntax {
   implicit def defer = Attribute[Script, Boolean]("defer")(v => if(v) "defer" else null)
   def defer_=[E <: ElementType](v: Boolean) = defer.set(v)
 
-  implicit def onbeforeunload = Attribute[Body, String]("onbeforeunload")(identity)
-  def onbeforeunload_=[E <: ElementType](v: String) = onbeforeunload.set(v)
+  implicit def onbeforeunload = Attribute[Body, Js]("onbeforeunload")(_.content)
+  def onbeforeunload_=[E <: ElementType](v: Js) = onbeforeunload.set(v)
 
-  implicit def onerror = Attribute[Body, String]("onerror")(identity)
-  def onerror_=[E <: ElementType](v: String) = onerror.set(v)
+  implicit def onerror = Attribute[Body, Js]("onerror")(_.content)
+  def onerror_=[E <: ElementType](v: Js) = onerror.set(v)
 
-  implicit def onhashchange = Attribute[Body, String]("onhashchange")(identity)
-  def onhashchange_=[E <: ElementType](v: String) = onhashchange.set(v)
+  implicit def onhashchange = Attribute[Body, Js]("onhashchange")(_.content)
+  def onhashchange_=[E <: ElementType](v: Js) = onhashchange.set(v)
 
-  implicit def onmessage = Attribute[Body, String]("onmessage")(identity)
-  def onmessage_=[E <: ElementType](v: String) = onmessage.set(v)
+  implicit def onmessage = Attribute[Body, Js]("onmessage")(_.content)
+  def onmessage_=[E <: ElementType](v: Js) = onmessage.set(v)
 
-  implicit def onoffline = Attribute[Body, String]("onoffline")(identity)
-  def onoffline_=[E <: ElementType](v: String) = onoffline.set(v)
+  implicit def onoffline = Attribute[Body, Js]("onoffline")(_.content)
+  def onoffline_=[E <: ElementType](v: Js) = onoffline.set(v)
 
-  implicit def onpopstate = Attribute[Body, String]("onpopstate")(identity)
-  def onpopstate_=[E <: ElementType](v: String) = onpopstate.set(v)
+  implicit def onpopstate = Attribute[Body, Js]("onpopstate")(_.content)
+  def onpopstate_=[E <: ElementType](v: Js) = onpopstate.set(v)
 
-  implicit def onresize = Attribute[Body, String]("onresize")(identity)
-  def onresize_=[E <: ElementType](v: String) = onresize.set(v)
+  implicit def onresize = Attribute[Body, Js]("onresize")(_.content)
+  def onresize_=[E <: ElementType](v: Js) = onresize.set(v)
 
-  implicit def onstorage = Attribute[Body, String]("onstorage")(identity)
-  def onstorage_=[E <: ElementType](v: String) = onstorage.set(v)
+  implicit def onstorage = Attribute[Body, Js]("onstorage")(_.content)
+  def onstorage_=[E <: ElementType](v: Js) = onstorage.set(v)
 
-  implicit def onunload = Attribute[Body, String]("onunload")(identity)
-  def onunload_=[E <: ElementType](v: String) = onunload.set(v)
+  implicit def onunload = Attribute[Body, Js]("onunload")(_.content)
+  def onunload_=[E <: ElementType](v: Js) = onunload.set(v)
 
   implicit def reversed = Attribute[Ol, Boolean]("reversed")(v => if(v) "reversed" else null)
   def reversed_=[E <: ElementType](v: Boolean) = reversed.set(v)

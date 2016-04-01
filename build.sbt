@@ -262,7 +262,7 @@ lazy val domJVM = dom.jvm
 lazy val domJS = dom.js
 
 // rapture-html
-lazy val html = crossProject.dependsOn(net, mime, dom, test)
+lazy val html = crossProject.dependsOn(net, mime, dom, test, js)
   .settings(moduleName := "rapture-html")
   .settings(raptureSettings:_*)
  
