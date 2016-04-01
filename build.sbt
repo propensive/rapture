@@ -289,6 +289,7 @@ lazy val xmlJS = xml.js
 lazy val js = crossProject.dependsOn(data)
   .settings(moduleName := "rapture-js")
   .settings(raptureSettings:_*)
+  .settings(libraryDependencies += "org.webjars.bower" % "google-caja" % "6005.0.0")
  
 lazy val jsJVM = js.jvm
 lazy val jsJS = js.js

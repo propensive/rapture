@@ -34,7 +34,7 @@ private[js] object JsMacros {
     import compatibility._
 
     c.prefix.tree match {
-      case Select(Apply(Apply(_, List(Apply(_, rawParts))), _), _) =>
+      case Select(Apply(_, List(Apply(_, rawParts))), _) =>
         val ys = rawParts.to[List]
 	val text = rawParts map { case lit@Literal(Constant(part:  String)) => part }
 
