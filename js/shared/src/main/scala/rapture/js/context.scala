@@ -24,9 +24,8 @@ private[js] object JsMacros {
     JsValidator.validate(s)
     None
   } catch {
-    case JsValidator.ValidationException(strNo, pos, expected, found) =>
-      val f = if(found == '\u0000') "end of input" else s"'$found'"
-      Some((strNo, pos, s"failed to parse Js literal: expected $expected, but found $f"))
+    case JsValidator.ValidationException(strNo, pos, msg) =>
+      Some((strNo, pos, s"failed to parse Js literal: $msg"))
   }
   
   def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Js]]*): c.Expr[Js] = {

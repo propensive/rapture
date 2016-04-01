@@ -12,13 +12,29 @@
 \******************************************************************************************************************/
 package rapture.js
 
+import rapture.core._
+
+import javax.script._
+
 private[js] object JsValidator {
 
-  case class ValidationException(strNo: Int, pos: Int, expected: String, found: Char)
+  case class ValidationException(strNo: Int, pos: Int, msg: String)
       extends Exception
   
-  case class DuplicateKeyException(strNo: Int, pos: Int, key: String) extends Exception
-  
   def validate(parts: List[String]): Unit = {
+    val script = parts.mkString("null");
+    val engine: Compilable = alloc[ScriptEngineManager]().getEngineByName("JavaScript") match {
+      case e: Compilable => e
+    }
+    
+    try engine.compile(script) catch {
+      case e: ScriptException =>
+        val pos = script.split("\n").take(e.getLineNumber - 1).map(_.length + 1).sum + e.getColumnNumber
+	val Regex = "<eval>:[0-9]+:[0-9]+ (.*)$".r
+	println("pos = "+pos)
+	val msg = e.getMessage.split("\n").head match { case Regex(m) => m }
+
+	throw ValidationException(0, pos, msg)
+    }
   }
 }
