@@ -14,6 +14,7 @@ package rapture.html
 
 import rapture.uri._
 import rapture.net._
+import rapture.js._
 
 object Tests {
 
@@ -55,23 +56,23 @@ object Tests {
 
   def `Script has defer attribute` = Script(defer = true)
 
-  def `Body has onbeforeunload attribute` = Body(onbeforeunload = "foo()")
+  def `Body has onbeforeunload attribute` = Body(onbeforeunload = js"foo()")
 
-  def `Body has onerror attribute` = Body(onerror = "foo()")
+  def `Body has onerror attribute` = Body(onerror = js"foo()")
 
-  def `Body has onhashchange attribute` = Body(onhashchange = "foo()")
+  def `Body has onhashchange attribute` = Body(onhashchange = js"foo()")
 
-  def `Body has onmessage attribute` = Body(onmessage = "foo()")
+  def `Body has onmessage attribute` = Body(onmessage = js"foo()")
 
-  def `Body has onoffline attribute` = Body(onoffline = "foo()")
+  def `Body has onoffline attribute` = Body(onoffline = js"foo()")
 
-  def `Body has onpopstate attribute` = Body(onpopstate = "foo()")
+  def `Body has onpopstate attribute` = Body(onpopstate = js"foo()")
 
-  def `Body has onresize attribute` = Body(onresize = "foo()")
+  def `Body has onresize attribute` = Body(onresize = js"foo()")
 
-  def `Body has onstorage attribute` = Body(onstorage = "foo()")
+  def `Body has onstorage attribute` = Body(onstorage = js"foo()")
 
-  def `Body has onunload attribute` = Body(onunload = "foo()")
+  def `Body has onunload attribute` = Body(onunload = js"foo()")
 
   def `Ol has reversed attribute` = Ol(reversed = true)
 

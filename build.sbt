@@ -52,14 +52,14 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM)
-  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM)
+  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM)
+  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
   .aggregate(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, jsonJS, htmlJS, domJS, coreScalazJS, httpJsonJS)
-  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, jsonJS, htmlJS, domJS, coreScalazJS, httpJsonJS)
+  .dependsOn(baseJS, coreJS, timeJS, uriJS, codecJS, cryptoJS, csvJS, ioJS, fsJS, netJS, httpJS, mimeJS, cliJS, logJS, i18nJS, googleTranslateJS, textJS, latexJS, testJS, dataJS, xmlJS, jsJS, jsonJS, htmlJS, domJS, coreScalazJS, httpJsonJS)
   .enablePlugins(ScalaJSPlugin)
 
 lazy val raptureExtras = crossProject
@@ -262,7 +262,7 @@ lazy val domJVM = dom.jvm
 lazy val domJS = dom.js
 
 // rapture-html
-lazy val html = crossProject.dependsOn(net, mime, dom, test)
+lazy val html = crossProject.dependsOn(net, mime, dom, test, js)
   .settings(moduleName := "rapture-html")
   .settings(raptureSettings:_*)
  
@@ -284,6 +284,14 @@ lazy val xml = crossProject.dependsOn(data)
  
 lazy val xmlJVM = xml.jvm
 lazy val xmlJS = xml.js
+
+// rapture-js
+lazy val js = crossProject.dependsOn(data)
+  .settings(moduleName := "rapture-js")
+  .settings(raptureSettings:_*)
+ 
+lazy val jsJVM = js.jvm
+lazy val jsJS = js.js
 
 // rapture-json
 lazy val json = crossProject.dependsOn(data)
