@@ -159,6 +159,8 @@ lazy val http = crossProject.dependsOn(net, uri, json, html, fs, log, time)
   .settings(moduleName := "rapture-http")
   .settings(raptureSettings:_*)
   .settings(libraryDependencies += "javax.servlet" % "servlet-api" % "2.5")
+  .settings(libraryDependencies += "org.w3c.css" % "sac" % "1.3")
+  .settings(libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18")
  
 lazy val httpJVM = http.jvm
 lazy val httpJS = http.js
