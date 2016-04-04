@@ -31,7 +31,7 @@ object GeneralExtractors {
       (implicit ext: Extractor[T, Data]): Extractor[Try[T], Data] { type Throws = Nothing } =
     new Extractor[Try[T], Data] {
       type Throws = Nothing
-      def extract(any: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Try[T], Throws] = mode.wrap {
+      def extract(any: Data, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Try[T], Throws] = mode.wrap {
         try ext.extract(any.$wrap(any.$normalize), any.$ast, modes.returnTry()) catch {
           case e: Exception => Failure(e)
         }
@@ -43,7 +43,7 @@ object GeneralExtractors {
 
     new Extractor[Option[T], Data] {
       type Throws = Nothing
-      def extract(any: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Option[T], Throws] = mode.wrap {
+      def extract(any: Data, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Option[T], Throws] = mode.wrap {
         try ext.extract(any.$wrap(any.$normalize), any.$ast, modes.returnOption()) catch {
           case e: Exception => None
         }
@@ -54,7 +54,7 @@ object GeneralExtractors {
   def noneExtractor[Data <: DataType[_, DataAst]]: Extractor[None.type, Data] { type Throws = DataGetException with NotEmptyException } =
     new Extractor[None.type, Data] {
       type Throws = DataGetException with NotEmptyException
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[None.type, Throws] = mode.wrap {
+      def extract(value: Data, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[None.type, Throws] = mode.wrap {
         val v = value.$wrap(value.$normalize)
         if(ast.isObject(v) && ast.getKeys(v).size == 0) None
         else mode.exception[None.type, NotEmptyException](NotEmptyException())
@@ -67,7 +67,7 @@ object GeneralExtractors {
     
     new Extractor[Coll[T], Data] {
       type Throws = ext.Throws
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Coll[T], Throws] = mode.wrap {
+      def extract(value: Data, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Coll[T], Throws] = mode.wrap {
         mode.catching[DataGetException, Coll[T]] {
           val v = value.$wrap(value.$normalize)
           v.$ast.getArray(v.$root.value).to[List].zipWithIndex.map { case (e, i) =>
@@ -82,7 +82,7 @@ object GeneralExtractors {
       (implicit ext: Extractor[T, Data], ext2: StringParser[K]): Extractor[Map[K, T], Data] { type Throws = ext.Throws with ext2.Throws } =
     new Extractor[Map[K, T], Data] {
       type Throws = ext.Throws with ext2.Throws
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Map[K, T], Throws] =
+      def extract(value: Data, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Map[K, T], Throws] =
         mode.wrap {
           value.$ast.getObject(value.$normalize) map {
             case (k, v) => mode.unwrap(ext2.parse(k, mode)) -> mode.unwrap(ext.safeExtract(value.$wrap(v), value.$ast, Some(Right(k)), mode))
@@ -106,7 +106,7 @@ object Extractor {
   implicit def anyExtractor[Data <: DataType[_, DataAst]]: Extractor[Any, Data] { type Throws = Nothing } =
     new Extractor[Any, Data] {
       type Throws = Nothing
-      def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Any, Throws] =
+      def extract(value: Data, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Any, Throws] =
         mode.wrap(value.$normalize)
     }
 }
@@ -115,7 +115,7 @@ object Extractor {
 abstract class Extractor[T, -D] extends Functor[({ type L[x] = Extractor[x, D] })#L, T] { ext =>
   type Throws <: Exception
   
-  def safeExtract(any: D, ast: DataAst, prefix: Option[Either[Int, String]], mode: Mode[_]):
+  def safeExtract(any: D, ast: DataAst, prefix: Option[Either[Int, String]], mode: Mode[_ <: MethodConstraint]):
       mode.Wrap[T, Throws] = mode.wrap {
     try mode.unwrap(extract(any, ast, mode)) catch {
       case e@TypeMismatchException(_, _) => mode.exception(e)
@@ -123,16 +123,16 @@ abstract class Extractor[T, -D] extends Functor[({ type L[x] = Extractor[x, D] }
     }
   }
   
-  def extract(any: D, ast: DataAst, mode: Mode[_]): mode.Wrap[T, Throws]
+  def extract(any: D, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, Throws]
 
   def rawMap[T2](fn: (T, Mode[_ <: MethodConstraint]) => T2): Extractor[T2, D] = new Extractor[T2, D] {
-    def extract(any: D, ast: DataAst, mode: Mode[_]): mode.Wrap[T2, Throws] =
+    def extract(any: D, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T2, Throws] =
       mode.wrap(fn(mode.unwrap(ext.extract(any, ast, mode)), mode.generic))
   }
 
   def filter(pred: T => Boolean): Extractor[T, D] { type Throws = ext.Throws with FilterException } = new Extractor[T, D] {
     type Throws = ext.Throws with FilterException
-    def extract(any: D, ast: DataAst, mode: Mode[_]): mode.Wrap[T, Throws] = mode.wrap {
+    def extract(any: D, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, Throws] = mode.wrap {
       val result = mode.unwrap(ext.extract(any, ast, mode))
       if(pred(result)) result else mode.exception[T, FilterException](FilterException())
     }
@@ -141,7 +141,7 @@ abstract class Extractor[T, -D] extends Functor[({ type L[x] = Extractor[x, D] }
   def orElse[TS >: T, T2 <: TS, D2 <: D](ext2: => Extractor[T2, D2]): Extractor[TS, D2] { type Throws = DataGetException } =
     new Extractor[TS, D2] {
       type Throws = DataGetException
-      def extract(any: D2, ast: DataAst, mode: Mode[_]): mode.Wrap[TS, Throws] = mode.wrap {
+      def extract(any: D2, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[TS, Throws] = mode.wrap {
         try mode.unwrap(ext.extract(any, ast, mode)) catch {
           case e: Exception => mode.unwrap(ext2.extract(any, ast, mode))
         }

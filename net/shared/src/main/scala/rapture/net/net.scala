@@ -160,7 +160,7 @@ trait NetUrl {
 object HttpUrl {
   implicit val parser: StringParser[HttpUrl] = new StringParser[HttpUrl] {
     type Throws = ParseException
-    def parse(s: String, mode: Mode[_]): mode.Wrap[HttpUrl, Throws] = mode.wrap(Http.parse(s))
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[HttpUrl, Throws] = mode.wrap(Http.parse(s))
   }
 
   implicit val serializer: StringSerializer[HttpUrl] = new StringSerializer[HttpUrl] {

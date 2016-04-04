@@ -46,21 +46,21 @@ private[json] trait Extractors_1 extends Extractors_2 {
   implicit def jsonExtractor(implicit ast: JsonAst): Extractor[Json, Json] { type Throws = DataGetException } =
     new Extractor[Json, Json] {
       type Throws = DataGetException
-      def extract(any: Json, dataAst: DataAst, mode: Mode[_]): mode.Wrap[Json, DataGetException] =
+      def extract(any: Json, dataAst: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Json, DataGetException] =
         mode.wrap(mode.catching[DataGetException, Json](any.$wrap(any.$normalize)))
     }
   
   implicit val stringExtractor: Extractor[String, Json] { type Throws = DataGetException } =
     new Extractor[String, Json] {
       type Throws = DataGetException
-      def extract(any: Json, ast: DataAst, mode: Mode[_]): mode.Wrap[String, DataGetException] =
+      def extract(any: Json, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[String, DataGetException] =
         mode.wrap(mode.catching[DataGetException, String](any.$ast.getString(any.$normalize)))
     }
 
   implicit val doubleExtractor: Extractor[Double, Json] { type Throws = DataGetException } =
     new Extractor[Double, Json] {
       type Throws = DataGetException
-      def extract(any: Json, ast: DataAst, mode: Mode[_]): mode.Wrap[Double, Throws] =
+      def extract(any: Json, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Double, Throws] =
         mode.wrap(mode.catching[DataGetException, Double](any.$ast.getDouble(any.$normalize)))
     }
 
@@ -70,14 +70,14 @@ private[json] trait Extractors_1 extends Extractors_2 {
   implicit val booleanExtractor: Extractor[Boolean, Json] { type Throws = DataGetException } =
     new Extractor[Boolean, Json] {
       type Throws = DataGetException
-      def extract(any: Json, ast: DataAst, mode: Mode[_]): mode.Wrap[Boolean, DataGetException] =
+      def extract(any: Json, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Boolean, DataGetException] =
         mode.wrap(any.$ast.getBoolean(any.$normalize))
     }
   
   implicit val bigDecimalExtractor: Extractor[BigDecimal, Json] { type Throws = DataGetException } =
     new Extractor[BigDecimal, Json] {
       type Throws = DataGetException
-      def extract(any: Json, ast: DataAst, mode: Mode[_]): mode.Wrap[BigDecimal, DataGetException] =
+      def extract(any: Json, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[BigDecimal, DataGetException] =
         mode.wrap(any.$ast.getBigDecimal(any.$normalize))
     }
   
@@ -90,14 +90,14 @@ private[json] trait Extractors_2 {
   implicit def jsonBufferExtractor[T](implicit jsonAst: JsonAst, ext: Extractor[T, Json]):
       Extractor[T, JsonBuffer] { type Throws = ext.Throws } = new Extractor[T, JsonBuffer] {
     type Throws = ext.Throws
-    def extract(any: JsonBuffer, ast: DataAst, mode: Mode[_]): mode.Wrap[T, ext.Throws] =
+    def extract(any: JsonBuffer, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, ext.Throws] =
       ext.extract(Json.construct(MutableCell(any.$root.value), Vector()), ast, mode)
   }
   
   implicit def jsonBufferToJsonExtractor(implicit ast: JsonBufferAst): Extractor[JsonBuffer, Json] =
     new Extractor[JsonBuffer, Json] {
       type Throws = DataGetException
-      def extract(any: Json, dataAst: DataAst, mode: Mode[_]): mode.Wrap[JsonBuffer, Throws] =
+      def extract(any: Json, dataAst: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[JsonBuffer, Throws] =
         mode.wrap(JsonBuffer.construct(MutableCell(JsonDataType.jsonSerializer.serialize(any)), Vector()))
     }
 
