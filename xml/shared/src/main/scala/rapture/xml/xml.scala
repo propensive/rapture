@@ -74,7 +74,7 @@ object Xml extends XmlDataCompanion[Xml, XmlAst] with Xml_1 {
       Extractor[T, XmlDataType[_, _ <: XmlAst]] =
     new Extractor[T, XmlDataType[_, _ <: XmlAst]] {
       type Throws = DataGetException
-      def extract(value: XmlDataType[_, _ <: XmlAst], ast2: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException] =
+      def extract(value: XmlDataType[_, _ <: XmlAst], ast2: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DataGetException] =
         mode.wrap(ast2 match {
           case ast2: XmlAst =>
             val norm = mode.catching[DataGetException, Any](value.$normalize)

@@ -38,7 +38,7 @@ private[xml] trait Extractors extends Extractors_1 {
   implicit def xmlExtractor(implicit ast: XmlAst): Extractor[Xml, Xml] { type Throws = DataGetException } =
     new Extractor[Xml, Xml] {
       type Throws = DataGetException
-      def extract(any: Xml, dataAst: DataAst, mode: Mode[_]): mode.Wrap[Xml, DataGetException] =
+      def extract(any: Xml, dataAst: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Xml, DataGetException] =
         mode.wrap(mode.catching[DataGetException, Xml](any.$wrap(any.$normalize)))
     }
  
@@ -51,7 +51,7 @@ private[xml] trait Extractors_1 {
     
     type Throws = DataGetException with ext.Throws
 
-    def extract(any: Xml, ast: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException with ext.Throws] = mode.wrap {
+    def extract(any: Xml, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DataGetException with ext.Throws] = mode.wrap {
       val value: String = mode.catching[DataGetException, String](any.$ast.getString(any.$normalize))
       mode.unwrap(ext.parse(value, mode))
     }
@@ -60,14 +60,14 @@ private[xml] trait Extractors_1 {
   implicit def xmlBufferExtractor[T](implicit xmlAst: XmlAst, ext: Extractor[T, Xml]):
       Extractor[T, XmlBuffer] { type Throws = ext.Throws } = new Extractor[T, XmlBuffer] {
     type Throws = ext.Throws
-    def extract(any: XmlBuffer, ast: DataAst, mode: Mode[_]): mode.Wrap[T, ext.Throws] =
+    def extract(any: XmlBuffer, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, ext.Throws] =
       ext.extract(Xml.construct(MutableCell(any.$root.value), Vector()), ast, mode)
   }
   
   implicit def xmlBufferToXmlExtractor(implicit ast: XmlBufferAst): Extractor[XmlBuffer, Xml] =
     new Extractor[XmlBuffer, Xml] {
       type Throws = DataGetException
-      def extract(any: Xml, dataAst: DataAst, mode: Mode[_]): mode.Wrap[XmlBuffer, Throws] =
+      def extract(any: Xml, dataAst: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[XmlBuffer, Throws] =
         mode.wrap(XmlBuffer.construct(MutableCell(XmlDataType.xmlSerializer.serialize(any)), Vector()))
     }
 

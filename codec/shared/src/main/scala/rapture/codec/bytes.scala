@@ -21,7 +21,7 @@ import language.higherKinds
 object `package` {
   implicit def bytesParser(implicit enc: Encoding): StringParser[Bytes] { type Throws = Nothing } = new StringParser[Bytes] {
     type Throws = Nothing // We would like to throw an EncodingException if we try to decode an invalid byte
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Bytes, Nothing] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Bytes, Nothing] = mode.wrap {
       Bytes(s.getBytes("UTF-8"))
     }
   }
@@ -121,7 +121,7 @@ case class Bytes(bytes: Array[Byte]) {
     * instance was storing sensitive data, such as a private key. */
   def zero() = (0 until bytes.length) foreach { bytes(_) = 0 }
 
-  def as[T: FromBytes](implicit mode: Mode[_]): mode.Wrap[T, DecodeException] = mode.wrap {
+  def as[T: FromBytes](implicit mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DecodeException] = mode.wrap {
     try ?[FromBytes[T]].build(bytes) catch {
       case e: Exception => mode.exception[T, DecodeException](DecodeException(None))
     }

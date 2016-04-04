@@ -104,7 +104,7 @@ object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
       Extractor[T, JsonDataType[_, _ <: JsonAst]] =
     new Extractor[T, JsonDataType[_, _ <: JsonAst]] {
       type Throws = DataGetException
-      def extract(value: JsonDataType[_, _ <: JsonAst], ast2: DataAst, mode: Mode[_]): mode.Wrap[T, DataGetException] =
+      def extract(value: JsonDataType[_, _ <: JsonAst], ast2: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DataGetException] =
         mode.wrap(ast2 match {
           case ast2: JsonAst =>
             val norm = mode.catching[DataGetException, Any](value.$normalize)

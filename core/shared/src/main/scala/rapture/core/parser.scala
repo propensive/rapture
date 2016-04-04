@@ -47,9 +47,16 @@ package booleanParsing {
 object BooleanParser { implicit val implicitBooleanParser: BooleanParser = booleanParsing.permissive() }
 trait BooleanParser { def parse(s: String, mode: Mode[_]): mode.Wrap[Boolean, InvalidBoolean] }
 
-trait StringParser[T] {
+abstract class StringParser[T] extends Functor[StringParser, T] { strp =>
   type Throws <: Exception
-  def parse(string: String, mode: Mode[_]): mode.Wrap[T, Throws]
+  def parse(string: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, Throws]
+
+  def rawMap[T2](fn: (T, Mode[_ <: MethodConstraint]) => T2): StringParser[T2] { type Throws = strp.Throws } =
+    new StringParser[T2] {
+      type Throws = strp.Throws
+      def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T2, Throws] =
+        mode.wrap(fn(mode.unwrap(strp.parse(s, mode)), mode))
+    }
 }
 
 case class InvalidBoolean(value: String) extends Exception(s"""The value "$value" is not a valid boolean.""")
@@ -58,7 +65,7 @@ case class InvalidNumber(value: String, numberType: String) extends Exception(s"
 trait StringParser_1 {
   implicit def optParser[T: StringParser]: StringParser[Option[T]] { type Throws = Nothing } = new StringParser[Option[T]] {
     type Throws = Nothing
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Option[T], Nothing] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Option[T], Nothing] = mode.wrap {
       try Some(mode.unwrap(?[StringParser[T]].parse(s, mode))) catch {
         case e: Exception => None
       }
@@ -67,7 +74,7 @@ trait StringParser_1 {
   
   implicit def tryParser[T: StringParser]: StringParser[Try[T]] { type Throws = Nothing } = new StringParser[Try[T]] {
     type Throws = Nothing
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Try[T], Nothing] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Try[T], Nothing] = mode.wrap {
       ?[StringParser[T]].parse(s, modes.returnTry())
     }
   }
@@ -76,12 +83,12 @@ trait StringParser_1 {
 object StringParser extends StringParser_1 {
   implicit def booleanParser(implicit bp: BooleanParser): StringParser[Boolean] { type Throws = InvalidBoolean } = new StringParser[Boolean] {
     type Throws = InvalidBoolean
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Boolean, InvalidBoolean] = bp.parse(s, mode.generic)
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Boolean, InvalidBoolean] = bp.parse(s, mode.generic)
   }
 
   implicit val byteParser: StringParser[Byte] { type Throws = InvalidNumber } = new StringParser[Byte] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Byte, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Byte, InvalidNumber] = mode.wrap {
       try java.lang.Byte.parseByte(s) catch {
         case e: NumberFormatException => mode.exception(InvalidNumber(s, "byte"))
       }
@@ -90,14 +97,14 @@ object StringParser extends StringParser_1 {
 
   implicit val charParser: StringParser[Char] { type Throws = InvalidNumber } = new StringParser[Char] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Char, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Char, InvalidNumber] = mode.wrap {
       if(s.length == 1) s.charAt(0) else mode.exception(InvalidNumber(s, "character"))
     }
   }
 
   implicit val shortParser: StringParser[Short] { type Throws = InvalidNumber } = new StringParser[Short] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Short, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Short, InvalidNumber] = mode.wrap {
       try java.lang.Short.parseShort(s) catch {
         case e: NumberFormatException => mode.exception(InvalidNumber(s, "short"))
       }
@@ -106,7 +113,7 @@ object StringParser extends StringParser_1 {
 
   implicit val intParser: StringParser[Int] { type Throws = InvalidNumber } = new StringParser[Int] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Int, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Int, InvalidNumber] = mode.wrap {
       try java.lang.Integer.parseInt(s) catch {
         case e: NumberFormatException => mode.exception(InvalidNumber(s, "integer"))
       }
@@ -115,7 +122,7 @@ object StringParser extends StringParser_1 {
 
   implicit val longParser: StringParser[Long] { type Throws = InvalidNumber } = new StringParser[Long] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Long, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Long, InvalidNumber] = mode.wrap {
       try java.lang.Long.parseLong(s) catch {
         case e: NumberFormatException => mode.exception(InvalidNumber(s, "long"))
       }
@@ -124,12 +131,12 @@ object StringParser extends StringParser_1 {
 
   implicit val stringParser: StringParser[String] { type Throws = Nothing } = new StringParser[String] {
     type Throws = Nothing
-    def parse(s: String, mode: Mode[_]): mode.Wrap[String, Nothing] = mode.wrap(s)
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[String, Nothing] = mode.wrap(s)
   }
 
   implicit val doubleParser: StringParser[Double] = new StringParser[Double] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Double, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Double, InvalidNumber] = mode.wrap {
       try java.lang.Double.parseDouble(s) catch {
         case e: NumberFormatException => mode.exception(ParseException(s, "double"))
       }
@@ -138,7 +145,7 @@ object StringParser extends StringParser_1 {
 
   implicit val floatParser: StringParser[Float] = new StringParser[Float] {
     type Throws = InvalidNumber
-    def parse(s: String, mode: Mode[_]): mode.Wrap[Float, InvalidNumber] = mode.wrap {
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Float, InvalidNumber] = mode.wrap {
       try java.lang.Float.parseFloat(s) catch {
         case e: NumberFormatException => mode.exception(InvalidNumber(s, "float"))
       }

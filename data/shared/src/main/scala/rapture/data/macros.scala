@@ -186,7 +186,7 @@ object Macros {
 
       c.Expr(q"""
         (new _root_.rapture.data.Extractor[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
-          def extract(data: ${weakTypeOf[Data]}, ast: _root_.rapture.data.DataAst, mode: _root_.rapture.core.Mode[_]): mode.Wrap[${weakTypeOf[T]}, Throws] = mode.wrap { ${construction} }
+          def extract(data: ${weakTypeOf[Data]}, ast: _root_.rapture.data.DataAst, mode: _root_.rapture.core.Mode[_  <: _root_.rapture.core.MethodConstraint]): mode.Wrap[${weakTypeOf[T]}, Throws] = mode.wrap { ${construction} }
         }).asInstanceOf[_root_.rapture.data.Extractor[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
           type Throws = ${normalize(c)(typeIntersection(c)(throwsTypes.to[List]))}
         }]
