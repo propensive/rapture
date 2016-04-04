@@ -84,7 +84,7 @@ object GeneralExtractors {
       type Throws = ext.Throws with ext2.Throws
       def extract(value: Data, ast: DataAst, mode: Mode[_]): mode.Wrap[Map[K, T], Throws] =
         mode.wrap {
-          value.$ast.getObject(value.$root.value) map {
+          value.$ast.getObject(value.$normalize) map {
             case (k, v) => mode.unwrap(ext2.parse(k, mode)) -> mode.unwrap(ext.safeExtract(value.$wrap(v), value.$ast, Some(Right(k)), mode))
           }
         }
