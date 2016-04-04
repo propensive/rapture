@@ -20,6 +20,7 @@ import rapture.uri._
 import rapture.net._
 import rapture.dom._
 import rapture.html._
+import rapture.css._
 
 import scala.collection.mutable.ListBuffer
 
@@ -284,7 +285,7 @@ object Forms extends Widgets with Parsers {
     
     implicit def radioListRenderer[T, Q] = new Renderer[T, Field[T], RadioList[Q]] {
       def render(f: Field[T], w: RadioList[Q]): RenderType =
-        Span(style = "display:inline-block")(
+        Span(style = css"display:inline-block")(
           w.options.flatMap { opt => List(
             Span(
               Input(typ = "radio", htmlSyntax.name = f.name, value = w.id(opt),

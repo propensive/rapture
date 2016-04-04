@@ -18,6 +18,7 @@ import rapture.codec._
 import rapture.net._
 import rapture.uri._
 import rapture.js._
+import rapture.css._
 
 import language.dynamics
 
@@ -264,8 +265,8 @@ object htmlSyntax {
   implicit def media = Attribute[Link with Style with A with Source with Area, MediaExpr]("media")(_.toString)
   def media_=[E <: ElementType](v: MediaExpr) = media.set[E](v)
 
-  implicit def style = Attribute[Global, String]("style")(identity)
-  def style_=[E <: ElementType](v: String) = style.set[E](v)
+  implicit def style = Attribute[Global, Css]("style")(_.content)
+  def style_=[E <: ElementType](v: Css) = style.set[E](v)
 
 
   implicit def src = Attribute[Script with Img with Iframe with Embed with Video with Audio with Source with Input,
