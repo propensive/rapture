@@ -82,9 +82,22 @@ object Dom {
 */
 object Dom2 {
 
-  implicit def conv(a: Attribute): Content[Attribute, Node.Attributed] = Content(List(a))
-  implicit def conv2(n: Node.General): Content[Node.General, Node.Full] = Content(List(n))
- 
+  implicit def convert[F, T](n: F)(implicit c: Converter[F, T]): Content[F, T] = Content(c.convert(n))
+
+  implicit def attributeConverter: Converter[Attribute, Node.Attributed] = new Converter[Attribute, Node.Attributed] {
+    def convert(from: Attribute) = List(from)
+  }
+  
+  implicit def nodeConverter[N <: Node.General]: Converter[N, Node.Full] = new Converter[N, Node.Full] {
+    def convert(from: N) = List(from)
+  }
+  
+  implicit def stringConverter: Converter[String, Node.Full] = new Converter[String, Node.Full] {
+    def convert(from: String) = List(from)
+  }
+  
+  trait Converter[From, To] { def convert(from: From): List[From] }
+
   case class Content[From, To](values: List[From])
 
   case class Attribute(key: String, value: String)
@@ -118,4 +131,5 @@ object Dom2Test {
 
   val tab1 = Table(Tbody(Tr))
   val tab2 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td)))
+  val tab3 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td("Hello world"))))
 }
