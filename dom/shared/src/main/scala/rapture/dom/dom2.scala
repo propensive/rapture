@@ -5,116 +5,129 @@ import language.higherKinds
 import language.existentials
 
 trait One
-trait Two extends One
-trait Three extends Two
-trait Four extends Three
-trait Five extends Four
+trait Two
+trait Three
+trait Four
+trait Five
 
-/*object DomTest {
-  import Dom._
-
-  object Table extends Node.Empty[One, Two]("table")
-  object Tbody extends Node.Empty[Two, Three]("tbody")
-  object Tr extends Node.Empty[Three, Four]("tr")
-  object Td extends Node.Empty[Four, Five]("td")
-  object Th extends Node.Empty[Four, Five]("th")
-
-  def att = Attribute("key", "value")
-  
-  //Table(Tbody(Tr))
-  //Tbody(Tr, Tr, Tr)
-  //Tbody(att)(Tr, Td)
-  
-}
-
-
-object Dom {
-
-  implicit def conv[R[_, _], F](tag: F)(implicit apVal: Apply[F, R]): Content[F, R] =
-    new Content[F, R] {
-      def values = List(tag)
-      def ap = apVal
-    }
-  
-  object Apply {
-
-    implicit def attributeApply: Apply[Attribute, Node.Attributed] =
-      new Apply[Attribute, Node.Attributed] {
-        
-	def apply[T, C](name: String, attributes: Seq[Attribute]): Node.Attributed[T, C] =
-	  Node.Attributed[T, C](name, attributes)
-      }
-    
-    implicit def contentApply[T, C]: Apply[Node[T, C], Node.Full] =
-      new Apply[Node[T, C], Node.Full] {
-        
-	def apply[T2, C2](name: String, nodes: Seq[Node[T, C]]): Node.Full[T2, C2] =
-	  Node.Full[T2, C2](name, Nil, nodes)
-      }
-  }
-
-  trait Apply[O, R[_, _]] {
-    def apply[T, C](name: String, xs: Seq[O]): R[T, C]
-  }
-
-  trait Content[O, R[_, _]] {
-    def values: Seq[O]
-    def ap: Apply[O, R]
-  }
-
-  case class Attribute(key: String, value: String)
-
-  trait Node[This, Children]
-
-  object Node {
-    case class Empty[This, Children](name: String) extends Node[This, Children] {
-      def apply[From, R[_, _]](content: Content[From, R]*): R[This, Children] = content.head.ap.apply(name, content.flatMap(_.values))
-    }
-    
-    case class Attributed[This, Children](name: String, attributes: Seq[Attribute]) extends Node[This, Children] {
-      def apply(content: (Content[Node[This, Children], R] forSome { type R[_, _] })*): Full[This, Children] = Full(name, attributes, content)
-    }
-
-    case class Full[This, Children](name: String, attributes: Seq[Attribute], content: Seq[Any]) extends Node[This, Children]
-  }
-}
-
-*/
 object Dom2 {
 
-  implicit def convert[F, T](n: F)(implicit c: Converter[F, T]): Content[F, T] = Content(c.convert(n))
+  trait Content[Return] {
+    type Elem
+    
+    def value: Elem
 
-  implicit def attributeConverter: Converter[Attribute, Node.Attributed] = new Converter[Attribute, Node.Attributed] {
-    def convert(from: Attribute) = List(from)
+    def returnValue(empty: Node.Empty, elements: Seq[Elem]): Return
+  }
+
+  case class AttributeContent(attribute: Attribute) extends Content[Node.Attributed] {
+   
+    type Elem = Attribute
+    
+    def value: Attribute = attribute
+    
+    def returnValue(empty: Node.Empty, attributes: Seq[Attribute]): Node.Attributed =
+      Node.Attributed(empty.name, attributes)
+  }
+  case class DomContent(node: Node.DomNode) extends Content[Node.Full] {
+    
+    type Elem = Node.DomNode
+
+    def value: Node.DomNode = node
+
+    def returnValue(empty: Node.Empty, nodes: Seq[Node.DomNode]): Node.Full =
+      Node.Full(empty.name, Nil, nodes)
   }
   
-  implicit def nodeConverter[N <: Node.General]: Converter[N, Node.Full] = new Converter[N, Node.Full] {
-    def convert(from: N) = List(from)
-  }
-  
-  implicit def stringConverter: Converter[String, Node.Full] = new Converter[String, Node.Full] {
-    def convert(from: String) = List(from)
-  }
-  
-  trait Converter[From, To] { def convert(from: From): List[From] }
+  implicit def convertNodes[From <: Node.DomNode](from: From)(implicit converter: Converter[From]): DomContent =
+    DomContent(from)
+    
+  implicit def convertAttributes(from: Attribute): AttributeContent =
+    AttributeContent(from)
+    
 
-  case class Content[From, To](values: List[From])
+  trait Converter[From] {
+    def convert(from: From): Seq[From]
+  }
 
-  case class Attribute(key: String, value: String)
+  implicit def attributeConverter: Converter[Attribute] =
+    new Converter[Attribute] {
+      def convert(from: Attribute) = Seq(from)
+
+    }
+  
+  implicit def generalConverter: Converter[Node.General] =
+    new Converter[Node.General] {
+      def convert(from: Node.General) = Seq(from)
+      
+    }
+  
+  implicit def emptyConverter: Converter[Node.Empty] =
+    new Converter[Node.Empty] {
+      def convert(from: Node.Empty) = Seq(from)
+      
+    }
+  
+  implicit def attributedConverter: Converter[Node.Attributed] =
+    new Converter[Node.Attributed] {
+      def convert(from: Node.Attributed) = Seq(from)
+      
+    }
+  
+  implicit def fullConverter: Converter[Node.Full] =
+    new Converter[Node.Full] {
+      def convert(from: Node.Full) = Seq(from)
+      
+    }
+  
+  implicit def domNodeConverter: Converter[Node.DomNode] =
+    new Converter[Node.DomNode] {
+      def convert(from: Node.DomNode) = Seq(from)
+      
+    }
+  
+  case class Attribute(key: String, value: String) {
+    override def toString = s"""$key="$value""""
+  }
 
   object Node {
     
-    sealed trait General
+    sealed trait DomNode extends Product with Serializable
+
+    sealed trait General extends DomNode {
+      def name: String
+      def attributes: Seq[Attribute]
+      def children: Seq[DomNode]
+      
+      override def toString = {
+        val atts = if(attributes.isEmpty) "" else attributes.mkString(" ", " ", "")
+	s"<$name$atts>${children.mkString}</$name>"
+      }
+    }
 
     case class Empty(name: String) extends General {
-      def apply[From, To](content: Content[From, To]*): To = ???
+      
+      def apply[Return](contents: Content[Return]*): Return = {
+	val head = contents.head
+	head.returnValue(this, contents.map(_.value.asInstanceOf[head.Elem]))
+      }
+      
+      def children = Seq[DomNode]()
+      def attributes = Seq()
+
+      override def toString = s"<$name/>"
     }
     
     case class Attributed(name: String, attributes: Seq[Attribute]) extends General {
-      def apply(content: Content[General, Full]*): Full = Full(name, attributes, content.to[List])
+      
+      def children = Seq[DomNode]()
+      def apply(content: DomContent*): Full = Full(name, attributes, content.map(_.node))
     }
 
-    case class Full(name: String, attributes: Seq[Attribute], content: Seq[Any]) extends General
+    case class Full(name: String, attributes: Seq[Attribute], children: Seq[DomNode]) extends General
+
+    case class StringNode(content: Seq[String]) extends DomNode
+
   }
 
 }
@@ -129,7 +142,9 @@ object Dom2Test {
 
   val att = Attribute("key", "value")
 
-  val tab1 = Table(Tbody(Tr))
-  val tab2 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td)))
-  val tab3 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td("Hello world"))))
+  //val tab1 = Table(Tbody(att), Tr(att))
+  //val tab2 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td)))
+  //val tab3 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td("Hello world"))))
+
+
 }
