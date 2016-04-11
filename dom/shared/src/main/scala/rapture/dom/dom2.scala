@@ -29,60 +29,60 @@ object Dom2 {
     def returnValue(empty: Node.Empty, attributes: Seq[Attribute]): Node.Attributed =
       Node.Attributed(empty.name, attributes)
   }
-  case class DomContent(node: Node.DomNode) extends Content[Node.Full] {
+  case class DomContent(nodes: Seq[Node.DomNode]) extends Content[Node.Full] {
     
-    type Elem = Node.DomNode
+    type Elem = Seq[Node.DomNode]
 
-    def value: Node.DomNode = node
+    def value: Seq[Node.DomNode] = nodes
 
-    def returnValue(empty: Node.Empty, nodes: Seq[Node.DomNode]): Node.Full =
-      Node.Full(empty.name, Nil, nodes)
+    def returnValue(empty: Node.Empty, nodes: Seq[Seq[Node.DomNode]]): Node.Full =
+      Node.Full(empty.name, Nil, nodes.flatten)
   }
   
-  implicit def convertNodes[From <: Node.DomNode](from: From)(implicit converter: Converter[From]): DomContent =
-    DomContent(from)
+  implicit def embedNodes[From](from: From)(implicit embeddable: Embeddable[From]): DomContent =
+    DomContent(embeddable.embed(from))
     
-  implicit def convertAttributes(from: Attribute): AttributeContent =
+  implicit def embedAttributes(from: Attribute): AttributeContent =
     AttributeContent(from)
     
 
-  trait Converter[From] {
-    def convert(from: From): Seq[From]
+  trait Embeddable[From] {
+    def embed(from: From): Seq[Node.DomNode]
   }
 
-  implicit def attributeConverter: Converter[Attribute] =
-    new Converter[Attribute] {
-      def convert(from: Attribute) = Seq(from)
-
-    }
-  
-  implicit def generalConverter: Converter[Node.General] =
-    new Converter[Node.General] {
-      def convert(from: Node.General) = Seq(from)
+  implicit def generalEmbeddable: Embeddable[Node.General] =
+    new Embeddable[Node.General] {
+      def embed(from: Node.General) = Seq(from)
       
     }
   
-  implicit def emptyConverter: Converter[Node.Empty] =
-    new Converter[Node.Empty] {
-      def convert(from: Node.Empty) = Seq(from)
+  implicit def emptyEmbeddable: Embeddable[Node.Empty] =
+    new Embeddable[Node.Empty] {
+      def embed(from: Node.Empty) = Seq(from)
       
     }
   
-  implicit def attributedConverter: Converter[Node.Attributed] =
-    new Converter[Node.Attributed] {
-      def convert(from: Node.Attributed) = Seq(from)
+  implicit def attributedEmbeddable: Embeddable[Node.Attributed] =
+    new Embeddable[Node.Attributed] {
+      def embed(from: Node.Attributed) = Seq(from)
       
     }
   
-  implicit def fullConverter: Converter[Node.Full] =
-    new Converter[Node.Full] {
-      def convert(from: Node.Full) = Seq(from)
+  implicit def fullEmbeddable: Embeddable[Node.Full] =
+    new Embeddable[Node.Full] {
+      def embed(from: Node.Full) = Seq(from)
       
     }
   
-  implicit def domNodeConverter: Converter[Node.DomNode] =
-    new Converter[Node.DomNode] {
-      def convert(from: Node.DomNode) = Seq(from)
+  implicit def domNodeEmbeddable: Embeddable[Node.DomNode] =
+    new Embeddable[Node.DomNode] {
+      def embed(from: Node.DomNode) = Seq(from)
+      
+    }
+  
+  implicit def stringEmbeddable[S <: String]: Embeddable[S] =
+    new Embeddable[S] {
+      def embed(from: S) = Seq(Node.Text(from))
       
     }
   
@@ -121,12 +121,12 @@ object Dom2 {
     case class Attributed(name: String, attributes: Seq[Attribute]) extends General {
       
       def children = Seq[DomNode]()
-      def apply(content: DomContent*): Full = Full(name, attributes, content.map(_.node))
+      def apply(content: DomContent*): Full = Full(name, attributes, content.flatMap(_.nodes))
     }
 
     case class Full(name: String, attributes: Seq[Attribute], children: Seq[DomNode]) extends General
 
-    case class StringNode(content: Seq[String]) extends DomNode
+    case class Text(content: String) extends DomNode
 
   }
 
