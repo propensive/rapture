@@ -1,5 +1,7 @@
 package rapture.dom2
 
+import rapture.core._
+
 import language.implicitConversions
 import language.higherKinds
 import language.existentials
@@ -46,46 +48,27 @@ object Dom2 {
     AttributeContent(from)
     
 
-  trait Embeddable[From] {
+  object Embeddable {
+
+    def of[T: Embeddable]: Embeddable[T] = implicitly[Embeddable[T]]
+  
+    implicit def domNodeEmbeddable: Embeddable[Node.DomNode] =
+      new Embeddable[Node.DomNode] {
+        def embed(from: Node.DomNode) = Seq(from)
+        
+      }
+  
+    implicit def stringEmbeddable[S: StringSerializer] =
+      new Embeddable[S] {
+        def embed(from: S) = Seq(Node.Text(implicitly[StringSerializer[S]].serialize(from)))
+        
+      }
+  }
+
+  trait Embeddable[-From] {
     def embed(from: From): Seq[Node.DomNode]
   }
 
-  implicit def generalEmbeddable: Embeddable[Node.Element] =
-    new Embeddable[Node.Element] {
-      def embed(from: Node.Element) = Seq(from)
-      
-    }
-  
-  implicit def emptyEmbeddable: Embeddable[Node.Empty] =
-    new Embeddable[Node.Empty] {
-      def embed(from: Node.Empty) = Seq(from)
-      
-    }
-  
-  implicit def attributedEmbeddable: Embeddable[Node.Attributed] =
-    new Embeddable[Node.Attributed] {
-      def embed(from: Node.Attributed) = Seq(from)
-      
-    }
-  
-  implicit def fullEmbeddable: Embeddable[Node.Full] =
-    new Embeddable[Node.Full] {
-      def embed(from: Node.Full) = Seq(from)
-      
-    }
-  
-  implicit def domNodeEmbeddable: Embeddable[Node.DomNode] =
-    new Embeddable[Node.DomNode] {
-      def embed(from: Node.DomNode) = Seq(from)
-      
-    }
-  
-  implicit def stringEmbeddable[S <: String]: Embeddable[S] =
-    new Embeddable[S] {
-      def embed(from: S) = Seq(Node.Text(from))
-      
-    }
-  
   case class Attribute(key: String, value: String) {
     override def toString = s"""$key="$value""""
   }
@@ -126,7 +109,9 @@ object Dom2 {
 
     case class Full(name: String, attributes: Seq[Attribute], children: Seq[DomNode]) extends Element
 
-    case class Text(content: String) extends DomNode
+    case class Text(content: String) extends DomNode {
+      override def toString = content
+    }
 
   }
 
@@ -142,9 +127,9 @@ object Dom2Test {
 
   val att = Attribute("key", "value")
 
-  //val tab1 = Table(Tbody(att), Tr(att))
-  //val tab2 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td)))
-  //val tab3 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td("Hello world"))))
+  val tab1 = Table(Tbody(att), Tr(att))
+  val tab2 = Table(1, Tbody(att)(Tr, Tr(att), Tr(Td)))
+  val tab3 = Table(att)(Tbody(att)(Tr, Tr(att), Tr(Td("Hello world"))))
 
 
 }
