@@ -13,16 +13,16 @@ trait Five
 object Dom2 {
 
   trait Content[Return] {
-    type Elem
+    type Type
     
-    def value: Elem
+    def value: Type
 
-    def returnValue(empty: Node.Empty, elements: Seq[Elem]): Return
+    def returnValue(empty: Node.Empty, elements: Seq[Type]): Return
   }
 
   case class AttributeContent(attribute: Attribute) extends Content[Node.Attributed] {
    
-    type Elem = Attribute
+    type Type = Attribute
     
     def value: Attribute = attribute
     
@@ -31,7 +31,7 @@ object Dom2 {
   }
   case class DomContent(nodes: Seq[Node.DomNode]) extends Content[Node.Full] {
     
-    type Elem = Seq[Node.DomNode]
+    type Type = Seq[Node.DomNode]
 
     def value: Seq[Node.DomNode] = nodes
 
@@ -50,9 +50,9 @@ object Dom2 {
     def embed(from: From): Seq[Node.DomNode]
   }
 
-  implicit def generalEmbeddable: Embeddable[Node.General] =
-    new Embeddable[Node.General] {
-      def embed(from: Node.General) = Seq(from)
+  implicit def generalEmbeddable: Embeddable[Node.Element] =
+    new Embeddable[Node.Element] {
+      def embed(from: Node.Element) = Seq(from)
       
     }
   
@@ -94,7 +94,7 @@ object Dom2 {
     
     sealed trait DomNode extends Product with Serializable
 
-    sealed trait General extends DomNode {
+    sealed trait Element extends DomNode {
       def name: String
       def attributes: Seq[Attribute]
       def children: Seq[DomNode]
@@ -105,11 +105,11 @@ object Dom2 {
       }
     }
 
-    case class Empty(name: String) extends General {
+    case class Empty(name: String) extends Element {
       
       def apply[Return](contents: Content[Return]*): Return = {
 	val head = contents.head
-	head.returnValue(this, contents.map(_.value.asInstanceOf[head.Elem]))
+	head.returnValue(this, contents.map(_.value.asInstanceOf[head.Type]))
       }
       
       def children = Seq[DomNode]()
@@ -118,13 +118,13 @@ object Dom2 {
       override def toString = s"<$name/>"
     }
     
-    case class Attributed(name: String, attributes: Seq[Attribute]) extends General {
+    case class Attributed(name: String, attributes: Seq[Attribute]) extends Element {
       
       def children = Seq[DomNode]()
       def apply(content: DomContent*): Full = Full(name, attributes, content.flatMap(_.nodes))
     }
 
-    case class Full(name: String, attributes: Seq[Attribute], children: Seq[DomNode]) extends General
+    case class Full(name: String, attributes: Seq[Attribute], children: Seq[DomNode]) extends Element
 
     case class Text(content: String) extends DomNode
 
