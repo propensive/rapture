@@ -5,6 +5,7 @@ import rapture.css._
 
 object HtmlTest {
   object Html5 {
+    trait NoAttributes extends AttributeType
     trait Html extends AttributeType
     trait Base extends AttributeType
     trait Link extends AttributeType
@@ -77,7 +78,7 @@ object HtmlTest {
   import Html5._
 
   val Html = Node.Empty[NodeType, Html, Top]()
-  val Head = Node.Empty[Top, Nothing, Metadata]()
+  val Head = Node.Empty[Top, NoAttributes, Metadata]()
   val Base = Node.Empty[Metadata, Base, NodeType]()
   val Link = Node.Empty[Metadata, Link, NodeType]()
   val Meta = Node.Empty[Metadata, Meta, Metadata]()
@@ -103,7 +104,7 @@ object HtmlTest {
   val Br = Node.Empty[NodeType, AttributeType, Phrasing]()
 
   def style = Attribute[Global, Css]("style")(_.content)
-  def style_=[That <: NodeType, ThatAtts <: AttributeType, This <: NodeType, Child <: NodeType, Atts2 <: Global](v: Css) =
+  def style_=[That <: NodeType, ThatAtts <: AttributeType, This <: NodeType, Child <: NodeType, Atts2 <: AttributeType](v: Css)(implicit ev: Global <:< ThatAtts) =
     style.set[That, ThatAtts, This, Child, Atts2](v)
 
   

@@ -155,8 +155,8 @@ abstract class AttributeKey[Atts <: AttributeType](val name: String, actualName:
     ThatAtts <: AttributeType,
     This <: NodeType,
     Child <: NodeType,
-    Atts2 <: Atts
-  ](value: Value): AttributeContent[That, ThatAtts, This, Child, Atts2] =
+    Atts2 <: AttributeType
+  ](value: Value)(): AttributeContent[That, ThatAtts, This, Child, Atts2] =
     AttributeContent[That, ThatAtts, This, Child, Atts2](new Attribute(this.asInstanceOf[AttributeKey[AttributeType]], value))
   
   override def hashCode = name.hashCode
@@ -205,10 +205,9 @@ object Node {
   case class Empty[This <: NodeType, Atts <: AttributeType, Child <: NodeType]()(implicit assignedName: AssignedName) extends Element[This, Atts, Child] {
     
     def name = assignedName.name.toLowerCase
-    def apply[Return](contents: Content[This, Atts, Child, _, _, Return]*): Return = {
-	val head = contents.head
-	head.returnValue(this, contents.map(_.value.asInstanceOf[head.Position]))
-    }
+    
+    def apply[Return](head: Content[This, Atts, Child, _, _, Return], contents: Content[This, Atts, Child, _, _, Return]*): Return =
+      head.returnValue(this, (head :: contents.to[List]).map(_.value.asInstanceOf[head.Position]))
     
     def children = Seq[DomNode[_, _, _]]()
     def attributes = Seq()
