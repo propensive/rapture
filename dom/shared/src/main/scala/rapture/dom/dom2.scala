@@ -102,10 +102,10 @@ object Embeddable extends Embeddable_1 {
     Atts <: AttributeType,
     Child <: NodeType,
     Type2 <: NodeType
-  ](implicit ev: Type <:< Type2): Embeddable[List[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] =
-    new Embeddable[List[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] {
-      def embed(from: List[Node.DomNode[Type, Atts, Child]]) =
-	  from.asInstanceOf[List[Node.DomNode[_, _, _]]]
+  ](implicit ev: Type <:< Type2): Embeddable[Seq[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] =
+    new Embeddable[Seq[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] {
+      def embed(from: Seq[Node.DomNode[Type, Atts, Child]]) =
+	  from.asInstanceOf[Seq[Node.DomNode[_, _, _]]]
     }
 
   implicit def domNodeEmbeddable[
@@ -223,9 +223,10 @@ object Node {
     def children = Seq[DomNode[_, _, _]]()
     
     def apply[Grandchild <: NodeType, ChildAtts <: AttributeType](
+      head: DomContent[This, Atts, Child, Grandchild, ChildAtts],
       content: DomContent[This, Atts, Child, Grandchild, ChildAtts]*
     ): Full[This, Atts, Child] =
-      Full(name, attributes, content.flatMap(_.nodes))
+      Full(name, attributes, (head :: content.to[List]).flatMap(_.nodes))
   }
 
   case class Full[This <: NodeType, Atts <: AttributeType, Child <: NodeType](
