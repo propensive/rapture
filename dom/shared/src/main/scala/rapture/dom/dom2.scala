@@ -42,7 +42,7 @@ trait Content[
   
   def value: Position
 
-  def returnValue(empty: Node.Empty[That, ThatAtts, This], elements: Seq[Position]): Return
+  def returnValue(empty: Node.Empty[That, ThatAtts, This], elements: Iterable[Position]): Return
 }
 
 object `package` {
@@ -68,7 +68,7 @@ case class AttributeContent[That <: NodeType, ThatAtts <: AttributeType, This <:
   
   def returnValue(
     empty: Node.Empty[That, ThatAtts, This],
-    attributes: Seq[Attribute[_ <: NodeType, ThatAtts, _]]
+    attributes: Iterable[Attribute[_ <: NodeType, ThatAtts, _]]
   ): Node.Attributed[That, ThatAtts, This] =
     Node.Attributed(empty.name, attributes)
 }
@@ -80,16 +80,16 @@ case class DomContent[
   Child <: NodeType,
   Atts <: AttributeType
 ](
-  nodes: Seq[Node.DomNode[_, _, _]]
+  nodes: Iterable[Node.DomNode[_, _, _]]
 ) extends Content[That, ThatAtts, This, Child, Atts, Node.Full[That, ThatAtts, This]] {
   
-  type Position = Seq[Node.DomNode[_, _, _]]
+  type Position = Iterable[Node.DomNode[_, _, _]]
 
-  def value: Seq[Node.DomNode[_, _, _]] = nodes
+  def value: Iterable[Node.DomNode[_, _, _]] = nodes
 
   def returnValue(
     empty: Node.Empty[That, ThatAtts, This],
-    nodes: Seq[Seq[Node.DomNode[_, _, _]]]
+    nodes: Iterable[Iterable[Node.DomNode[_, _, _]]]
   ): Node.Full[That, ThatAtts, This] =
     Node.Full(empty.name, Nil, nodes.flatten)
 }
@@ -97,15 +97,15 @@ case class DomContent[
 
 object Embeddable extends Embeddable_1 {
 
-  implicit def seqDomNodeEmbeddable[
+  implicit def iterableDomNodeEmbeddable[
     Type <: NodeType,
     Atts <: AttributeType,
     Child <: NodeType,
     Type2 <: NodeType
-  ](implicit ev: Type <:< Type2): Embeddable[Seq[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] =
-    new Embeddable[Seq[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] {
-      def embed(from: Seq[Node.DomNode[Type, Atts, Child]]) =
-	  from.asInstanceOf[Seq[Node.DomNode[_, _, _]]]
+  ](implicit ev: Type <:< Type2): Embeddable[Iterable[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] =
+    new Embeddable[Iterable[Node.DomNode[Type, Atts, Child]], Type2, Atts, Child] {
+      def embed(from: Iterable[Node.DomNode[Type, Atts, Child]]) =
+	  from.asInstanceOf[Iterable[Node.DomNode[_, _, _]]]
     }
 
   implicit def domNodeEmbeddable[
@@ -116,7 +116,7 @@ object Embeddable extends Embeddable_1 {
   ](implicit ev: Type <:< Type2): Embeddable[Node.DomNode[Type, Atts, Child], Type2, Atts, Child] =
     new Embeddable[Node.DomNode[Type, Atts, Child], Type2, Atts, Child] {
       def embed(from: Node.DomNode[Type, Atts, Child]) =
-	  Seq(from.asInstanceOf[Node.DomNode[Type2, Atts, Child]])
+	  Iterable(from.asInstanceOf[Node.DomNode[Type2, Atts, Child]])
     }
 
   implicit def stringEmbeddable[
@@ -127,7 +127,7 @@ object Embeddable extends Embeddable_1 {
   ]: Embeddable[From, Type, Atts, Child] =
     new Embeddable[From, Type, Atts, Child] {
       def embed(from: From) =
-	  Seq(Node.Text(implicitly[StringSerializer[From]].serialize(from)))
+	  Iterable(Node.Text(implicitly[StringSerializer[From]].serialize(from)))
     }
 }
 
@@ -142,7 +142,7 @@ trait Embeddable_1 {
 }
 
 trait Embeddable[-From, Type <: NodeType, Atts <: AttributeType, Child <: NodeType] {
-  def embed(from: From): Seq[Node.DomNode[_, _, _]]
+  def embed(from: From): Iterable[Node.DomNode[_, _, _]]
 }
 
 abstract class AttributeKey[Atts <: AttributeType](val name: String, actualName: String = null) {
@@ -193,8 +193,8 @@ object Node {
 
   sealed trait Element[This <: NodeType, Atts <: AttributeType, Child <: NodeType] extends DomNode[This, Atts, Child] {
     def name: String
-    def attributes: Seq[Attribute[_, Atts, _]]
-    def children: Seq[DomNode[_, _, _]]
+    def attributes: Iterable[Attribute[_, Atts, _]]
+    def children: Iterable[DomNode[_, _, _]]
     
     override def toString = {
       val atts = if(attributes.isEmpty) "" else attributes.mkString(" ", " ", "")
@@ -209,18 +209,18 @@ object Node {
     def apply[Return](head: Content[This, Atts, Child, _, _, Return], contents: Content[This, Atts, Child, _, _, Return]*): Return =
       head.returnValue(this, (head :: contents.to[List]).map(_.value.asInstanceOf[head.Position]))
     
-    def children = Seq[DomNode[_, _, _]]()
-    def attributes = Seq()
+    def children = Iterable[DomNode[_, _, _]]()
+    def attributes = Iterable()
 
     override def toString = s"<$name/>"
   }
   
   case class Attributed[This <: NodeType, Atts <: AttributeType, Child <: NodeType](
     name: String,
-    attributes: Seq[Attribute[_ <: NodeType, Atts, _]]
+    attributes: Iterable[Attribute[_ <: NodeType, Atts, _]]
   ) extends Element[This, Atts, Child] {
     
-    def children = Seq[DomNode[_, _, _]]()
+    def children = Iterable[DomNode[_, _, _]]()
     
     def apply[Grandchild <: NodeType, ChildAtts <: AttributeType](
       head: DomContent[This, Atts, Child, Grandchild, ChildAtts],
@@ -231,8 +231,8 @@ object Node {
 
   case class Full[This <: NodeType, Atts <: AttributeType, Child <: NodeType](
     name: String,
-    attributes: Seq[Attribute[_ <: NodeType, Atts, _]],
-    children: Seq[DomNode[_, _, _]]
+    attributes: Iterable[Attribute[_ <: NodeType, Atts, _]],
+    children: Iterable[DomNode[_, _, _]]
   ) extends Element[This, Atts, Child]
 
   case class Text[Type <: NodeType, Atts <: AttributeType, Child <: NodeType](content: String) extends DomNode[Type, Atts, Child] {
