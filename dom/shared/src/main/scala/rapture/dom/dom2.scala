@@ -24,6 +24,18 @@ object DomMacros {
     c.abort(c.enclosingPosition, s"attempted to embed a $found node in a position where only $expected nodes are permitted")
   }
 
+  def invalidAttribute[
+    Att <: AttributeType: c.WeakTypeTag,
+    Type <: AttributeType: c.WeakTypeTag
+  ](c: BlackboxContext): c.Expr[ValidAttribute[Att, Type]] = {
+    import c.universe.{Type => _, _}
+
+    val expected = weakTypeOf[Att].toString//.split("\\.").last
+    val found = weakTypeOf[Type].toString//.split("\\.").last
+
+    c.abort(c.enclosingPosition, s"attempted to embed a $found node in a position where only $expected nodes are permitted")
+  }
+
 }
 
 trait NodeType
@@ -45,7 +57,7 @@ trait Content[
   def returnValue(empty: Node.Empty[That, ThatAtts, This], elements: Iterable[Position]): Return
 }
 
-object `package` {
+object `package` extends package_1 {
   implicit def embedNodes[
     From,
     That <: NodeType,
@@ -55,9 +67,18 @@ object `package` {
     Child <: NodeType
   ](from: From)(implicit embeddable: Embeddable[From, This, Atts, Child]): DomContent[That, ThatAtts, This, Child, Atts] =
     DomContent(embeddable.embed(from))
-  
+
+  implicit def validAttribute[Att <: AttributeType, Type <: Att]: ValidAttribute[Att, Type] = null
 }
- 
+  
+trait package_1 {
+  implicit def invalidAttribute[Att <: AttributeType, Type <: AttributeType]: ValidAttribute[Att, Type] =
+    macro DomMacros.invalidAttribute[Att, Type]
+}
+
+trait ValidAttribute[Att, Type]
+
+
 case class AttributeContent[That <: NodeType, ThatAtts <: AttributeType, This <: NodeType, Child <: NodeType, Atts <: AttributeType](
   attribute: Attribute[_ <: NodeType, ThatAtts, _]
 ) extends Content[That, ThatAtts, This, Child, Atts, Node.Attributed[That, ThatAtts, This]] {
@@ -70,7 +91,7 @@ case class AttributeContent[That <: NodeType, ThatAtts <: AttributeType, This <:
     empty: Node.Empty[That, ThatAtts, This],
     attributes: Iterable[Attribute[_ <: NodeType, ThatAtts, _]]
   ): Node.Attributed[That, ThatAtts, This] =
-    Node.Attributed(empty.name, attributes)
+    Node.Attributed(empty.tagStyle, empty.name, attributes)
 }
 
 case class DomContent[
@@ -91,7 +112,7 @@ case class DomContent[
     empty: Node.Empty[That, ThatAtts, This],
     nodes: Iterable[Iterable[Node.DomNode[_, _, _]]]
   ): Node.Full[That, ThatAtts, This] =
-    Node.Full(empty.name, Nil, nodes.flatten)
+    Node.Full(empty.tagStyle, empty.name, Nil, nodes.flatten)
 }
 
 
@@ -127,7 +148,7 @@ object Embeddable extends Embeddable_1 {
   ]: Embeddable[From, Type, Atts, Child] =
     new Embeddable[From, Type, Atts, Child] {
       def embed(from: From) =
-	  Iterable(Node.Text(implicitly[StringSerializer[From]].serialize(from)))
+	  Iterable(Node.TextNode(implicitly[StringSerializer[From]].serialize(from)))
     }
 }
 
@@ -189,9 +210,16 @@ case class Attribute[Elem <: NodeType, Atts <: AttributeType, Value](
 
 object Node {
   
+  sealed trait TagStyle
+  object Optional extends TagStyle
+  object Required extends TagStyle
+  object ClosingTagOptional extends TagStyle
+  object EmptyTag extends TagStyle
+
   sealed trait DomNode[This <: NodeType, Atts <: AttributeType, Child <: NodeType] extends Product with Serializable
 
   sealed trait Element[This <: NodeType, Atts <: AttributeType, Child <: NodeType] extends DomNode[This, Atts, Child] {
+    def tagStyle: TagStyle
     def name: String
     def attributes: Iterable[Attribute[_, Atts, _]]
     def children: Iterable[DomNode[_, _, _]]
@@ -202,7 +230,15 @@ object Node {
     }
   }
 
-  case class Empty[This <: NodeType, Atts <: AttributeType, Child <: NodeType]()(implicit assignedName: AssignedName) extends Element[This, Atts, Child] {
+  case class Empty[
+    This <: NodeType,
+    Atts <: AttributeType,
+    Child <: NodeType
+  ](
+    tagStyle: TagStyle = Required
+  )(
+    implicit assignedName: AssignedName
+  ) extends Element[This, Atts, Child] {
     
     def name = assignedName.name.toLowerCase
     
@@ -216,6 +252,7 @@ object Node {
   }
   
   case class Attributed[This <: NodeType, Atts <: AttributeType, Child <: NodeType](
+    tagStyle: TagStyle,
     name: String,
     attributes: Iterable[Attribute[_ <: NodeType, Atts, _]]
   ) extends Element[This, Atts, Child] {
@@ -226,16 +263,17 @@ object Node {
       head: DomContent[This, Atts, Child, Grandchild, ChildAtts],
       content: DomContent[This, Atts, Child, Grandchild, ChildAtts]*
     ): Full[This, Atts, Child] =
-      Full(name, attributes, (head :: content.to[List]).flatMap(_.nodes))
+      Full(tagStyle, name, attributes, (head :: content.to[List]).flatMap(_.nodes))
   }
 
   case class Full[This <: NodeType, Atts <: AttributeType, Child <: NodeType](
+    tagStyle: TagStyle,
     name: String,
     attributes: Iterable[Attribute[_ <: NodeType, Atts, _]],
     children: Iterable[DomNode[_, _, _]]
   ) extends Element[This, Atts, Child]
 
-  case class Text[Type <: NodeType, Atts <: AttributeType, Child <: NodeType](content: String) extends DomNode[Type, Atts, Child] {
+  case class TextNode[Type <: NodeType, Atts <: AttributeType, Child <: NodeType](content: String) extends DomNode[Type, Atts, Child] {
     override def toString = content
   }
 
