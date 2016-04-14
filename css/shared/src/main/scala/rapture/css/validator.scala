@@ -35,6 +35,9 @@ private[css] object CssValidator {
     
     if(stylesheet) {
       parser.parseStyleSheet(source, null, null)
-    } else parser.parseStyleDeclaration(source)
+    } else {
+      val ss = parser.parseStyleDeclaration(source)
+      for(i <- 0 until ss.getLength) if(!Properties.all.contains(ss.item(i))) throw ValidationException(0, 0, s"invalid CSS attribute '${ss.item(i)}'")
+    }
   }
 }
