@@ -23,7 +23,7 @@ private[css] object CssValidator {
   case class ValidationException(strNo: Int, pos: Int, msg: String)
       extends Exception
   
-  def validate(parts: List[String]): Unit = {
+  def validate(parts: List[String], stylesheet: Boolean): Unit = {
     val errHandler = new ErrorHandler {
       def error(e: CSSParseException) = throw ValidationException(0, e.getColumnNumber - 1, e.getMessage)
       def fatalError(e: CSSParseException) = error(e)
@@ -32,6 +32,12 @@ private[css] object CssValidator {
     val source = new InputSource(new StringReader(parts.mkString("null")))
     val parser = new CSSOMParser(new SACParserCSS3())
     parser.setErrorHandler(errHandler)
-    parser.parseStyleDeclaration(source)
+    
+    if(stylesheet) {
+      parser.parseStyleSheet(source, null, null)
+    } else {
+      val ss = parser.parseStyleDeclaration(source)
+      for(i <- 0 until ss.getLength) if(!Properties.all.contains(ss.item(i))) throw ValidationException(0, 0, s"invalid CSS attribute '${ss.item(i)}'")
+    }
   }
 }
