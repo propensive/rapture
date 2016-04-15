@@ -62,8 +62,11 @@ private[circe] object CirceAst extends JsonBufferAst {
   }
   
   def getBigDecimal(bigDecimal: Any): BigDecimal = bigDecimal match {
-    case j: CirceJson if j.isNumber => j.asNumber.get.toBigDecimal
-    case _ => throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
+    case j: CirceJson if j.isNumber =>
+      j.asNumber.get.toBigDecimal.getOrElse(throw
+          TypeMismatchException(getType(bigDecimal), DataTypes.Number))
+    case _ =>
+      throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
   }
   
   def getString(string: Any): String = string match {
@@ -126,17 +129,17 @@ private[circe] object CirceAst extends JsonBufferAst {
   }
   
   
-  def fromArray(array: Seq[Any]): Any = CirceJson.array(array.to[List].map { case v: CirceJson => v }: _*)
-  def fromBoolean(boolean: Boolean): Any = CirceJson.bool(boolean)
-  def fromDouble(number: Double): Any = CirceJson.number(number).get
-  def fromBigDecimal(number: BigDecimal): Any = CirceJson.bigDecimal(number)
+  def fromArray(array: Seq[Any]): Any = CirceJson.arr(array.to[List].map { case v: CirceJson => v }: _*)
+  def fromBoolean(boolean: Boolean): Any = CirceJson.fromBoolean(boolean)
+  def fromDouble(number: Double): Any = CirceJson.fromDouble(number).get
+  def fromBigDecimal(number: BigDecimal): Any = CirceJson.fromBigDecimal(number)
   
   def fromObject(obj: Map[String,Any]): Any =
     CirceJson.obj(obj.mapValues{ case v: CirceJson => v }.to[List]: _*)
   
-  def fromString(string: String): Any = CirceJson.string(string)
+  def fromString(string: String): Any = CirceJson.fromString(string)
 
   // FIXME: Is there a better way of getting a JNull?
-  lazy val nullValue: Any = CirceJson.empty
+  lazy val nullValue: Any = CirceJson.Null
 
 }

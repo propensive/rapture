@@ -316,8 +316,8 @@ lazy val jsonJS = json.js
 lazy val `json-circe` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-circe")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.circe" %% "circe-core" % "0.2.1")
-  .settings(libraryDependencies += "io.circe" %% "circe-jawn" % "0.2.1")
+  .settings(libraryDependencies += "io.circe" %% "circe-core" % "0.4.1")
+  .settings(libraryDependencies += "io.circe" %% "circe-jawn" % "0.4.1")
  
 lazy val jsonCirceJVM = `json-circe`.jvm
 lazy val jsonCirceJS = `json-circe`.js
