@@ -16,6 +16,7 @@ import rapture.json._
 import rapture.data._
 import rapture.mime._
 import rapture.io._
+import rapture.net._
 import rapture.codec._, encodings.`UTF-8`._
 
 package object jsonInterop {
@@ -26,6 +27,12 @@ package object jsonInterop {
 	Json.format(j).input[Char] > os
 	os.close()
       })
+  }
+
+  implicit def jsonPostType(implicit formatter: Formatter[JsonAst] { type Out = String }): PostType[Json] = new PostType[Json] {
+    def contentType = Some(MimeTypes.`application/json`)
+    def sender(content: Json): Input[Byte] =
+      Json.format(content).input[Byte]
   }
 }
 

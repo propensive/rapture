@@ -112,11 +112,21 @@ class HttpResponse(val headers: Map[String, List[String]], val status: Int, is: 
 }
 
 object PostType {
+  implicit val nonePostType: PostType[None.type] = new PostType[None.type] {
+    def contentType = Some(MimeTypes.`application/x-www-form-urlencoded`)
+    def sender(content: None.type) = ByteArrayInput(Array[Byte](0))
+  }
+  
   implicit def formPostType: PostType[Map[Symbol, String]] = new PostType[Map[Symbol, String]] {
     def contentType = Some(MimeTypes.`application/x-www-form-urlencoded`)
     def sender(content: Map[Symbol, String]) = ByteArrayInput((content map { case (k, v) =>
       java.net.URLEncoder.encode(k.name, "UTF-8")+"="+java.net.URLEncoder.encode(v, "UTF-8")
     } mkString "&").getBytes("UTF-8"))
+  }
+  
+  implicit def stringPostType[S: StringSerializer](implicit enc: Encoding): PostType[S] = new PostType[S] {
+    def contentType = Some(MimeTypes.`text/plain`)
+    def sender(content: S) = implicitly[StringSerializer[S]].serialize(content).input[Byte]
   }
 }
 trait PostType[-C] {

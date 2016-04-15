@@ -45,11 +45,6 @@ object `package` {
     def size(url: HttpUrl): Long = url.httpHead().headers.get("Content-Length").get.head.toLong
   }
 
-  implicit val nonePostType: PostType[None.type] = new PostType[None.type] {
-    def contentType = Some(MimeTypes.`application/x-www-form-urlencoded`)
-    def sender(content: None.type) = ByteArrayInput(Array[Byte](0))
-  }
-
   implicit def httpCapable[Res: HttpSupport](res: Res): HttpSupport.Capability[Res] = new HttpSupport.Capability[Res](res)
 
   implicit val httpStreamByteReader: JavaInputStreamReader[HttpUrl] =
