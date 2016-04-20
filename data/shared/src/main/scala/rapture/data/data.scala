@@ -106,9 +106,7 @@ object DataType {
       dataType.$wrap(merge(left, right), Vector())
     }
 
-    def +(pv: DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]]): T = add(pv)
-    
-    def add(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
+    def copy(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
       dataType.$wrap(pvs.foldLeft(dataType.$normalize) { case (cur, pv) =>
         
 	val dPath = pv(DynamicPath(Nil))
@@ -124,26 +122,26 @@ object DataType {
 	    case Right(next) :: list =>
 	      val d = if(ast.isObject(dest)) {
 		try ast.dereferenceObject(dest, next) catch {
-                  case e: Exception => ast.fromArray(List())
+                  case e: Exception => ast.fromObject(Map())
 		}
-	      } else ???
+	      } else ast.fromObject(Map())
 	      
               val addition = Map(next -> nav(list, d, v))
 
 	      if(ast.isObject(dest)) {
 		ast.fromObject(ast.getObject(dest) ++ addition)
-	      } else ???
+	      } else ast.fromObject(addition)
             
 	    case Left(next) :: list =>
-	      if(ast.isObject(dest)) {
-	        val addition = nav(list, ast.getObject(dest), v)
-	      } else if(ast.isArray(dest)) {
-
-	      }
-	     
-	      if(ast.isObject(dest)) {
-	        ast.fromObject(ast.getObject(dest) ++ Map())
-	      } else ???
+	      val d = if(ast.isArray(dest)) {
+		try ast.dereferenceArray(dest, next) catch {
+                  case e: Exception => ast.fromArray(List())
+		}
+	      } else ast.fromArray(List())
+	      
+              val src = if(ast.isArray(dest)) ast.getArray(dest) else Nil
+              ast.fromArray(src.padTo(next + 1, ast.fromObject(Map())).updated(next, nav(list, d, v)))
+            
 	  }
 	  }
 
