@@ -14,7 +14,7 @@ package rapture.xml.test
 
 import rapture.core._
 import rapture.xml._
-import rapture.data.{Parser, DataTypes}
+import rapture.data.Parser
 import rapture.test._
 
 import scala.util

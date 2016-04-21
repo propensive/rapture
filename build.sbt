@@ -334,8 +334,8 @@ lazy val xmlStdlibJS = `xml-stdlib`.js
 lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.2")
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.2")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.4")
  
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
@@ -345,7 +345,7 @@ lazy val jsonJawnJS = `json-jawn`.js
 lazy val `json-play` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-play")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.2")
+  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.5.2")
  
 lazy val jsonPlayJVM = `json-play`.jvm
 lazy val jsonPlayJS = `json-play`.js
@@ -354,7 +354,7 @@ lazy val jsonPlayJS = `json-play`.js
 lazy val `json-json4s` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-json4s")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0.RC3")
+  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0")
  
 lazy val jsonJson4sJVM = `json-json4s`.jvm
 lazy val jsonJson4sJS = `json-json4s`.js
@@ -372,7 +372,7 @@ lazy val jsonSprayJS = `json-spray`.js
 lazy val `json-argonaut` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-argonaut")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.1")
+  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.2-M1")
  
 lazy val jsonArgonautJVM = `json-argonaut`.jvm
 lazy val jsonArgonautJS = `json-argonaut`.js
@@ -381,7 +381,7 @@ lazy val jsonArgonautJS = `json-argonaut`.js
 lazy val `json-jackson` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jackson")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.3")
+  .settings(libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.2")
  
 lazy val jsonJacksonJVM = `json-jackson`.jvm
 lazy val jsonJacksonJS = `json-jackson`.js

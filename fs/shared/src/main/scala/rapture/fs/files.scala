@@ -17,7 +17,6 @@ import rapture.io._
 import rapture.uri._
 
 import java.io.{Reader => _, Writer => _, _}
-import java.util.regex.Pattern
 
 trait FsMethods extends MethodConstraint
 

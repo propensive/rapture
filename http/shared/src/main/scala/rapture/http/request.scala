@@ -19,6 +19,7 @@ import rapture.uri._
 import rapture.time._
 import rapture.net._
 
+import scala.collection.mutable.ListBuffer
 
 object HttpRequest {
   sealed trait QueryParam { def name: String }

@@ -52,12 +52,12 @@ private[argonaut] object ArgonautAst extends JsonBufferAst {
   }
   
   def getDouble(double: Any): Double = double match {
-    case j: AJson if j.isNumber => j.number.get.toDouble
+    case j: AJson if j.isNumber => j.number.get.toDouble.get
     case _ => throw TypeMismatchException(getType(double), DataTypes.Number)
   }
   
   def getBigDecimal(bigDecimal: Any): BigDecimal = bigDecimal match {
-    case j: AJson if j.isNumber => BigDecimal(j.number.get.toDouble)
+    case j: AJson if j.isNumber => BigDecimal(j.number.get.toDouble.get)
     case _ => throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
   }
   

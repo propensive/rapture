@@ -17,6 +17,8 @@ import rapture.core.{Errata, NotMatchingFilter, Result}
 import scala.reflect.ClassTag
 import scalaz.{Functor, _}
 
+import language.higherKinds
+
 /**
  * ResultT monad transformer
  *

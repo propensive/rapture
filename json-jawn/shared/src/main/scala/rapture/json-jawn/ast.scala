@@ -18,6 +18,8 @@ import rapture.data.DataTypes
 import rapture.data.TypeMismatchException
 import rapture.data.MissingValueException
 
+import jawn.ast._
+
 private[jawn] object JawnAst extends JsonBufferAst {
  
   override def dereferenceObject(obj: Any, element: String): Any =

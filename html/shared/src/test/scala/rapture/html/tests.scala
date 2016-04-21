@@ -159,9 +159,6 @@ object Tests {
 
   //def `Should fail` = Html(src = "foo")
 
-  def `Get Tds` = {
-    val table = Table(Tbody(Tr(Td, Td, Td), Tr(Td, Td, Td)))
-    println(table \ Tbody \ Tr \ Td)
-  }
+  def `Get Tds` = Table(Tbody(Tr(Td, Td, Td), Tr(Td, Td, Td)))
 
 }

@@ -18,7 +18,6 @@ import rapture.base._
 import rapture.fs._
 
 import scala.reflect._
-import scala.util.Try
 
 import java.net.URLClassLoader
 
