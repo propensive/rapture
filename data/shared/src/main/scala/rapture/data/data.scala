@@ -106,9 +106,7 @@ object DataType {
       dataType.$wrap(merge(left, right), Vector())
     }
 
-    def +(pv: DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]]): T = add(pv)
-    
-    def add(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
+    def copy(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
       dataType.$wrap(pvs.foldLeft(dataType.$normalize) { case (cur, pv) =>
         
 	val dPath = pv(DynamicPath(Nil))
@@ -116,35 +114,19 @@ object DataType {
 	
 	if(dPath.application.nothing) cur else {
  
-	  def nav(path: List[Either[Int, String]], dest: Any, v: Any): Any = {
-	  path match {
+	  def nav(path: List[Either[Int, String]], dest: Any, v: Any): Any = path match {
             case Nil =>
 	      v
             
 	    case Right(next) :: list =>
-	      val d = if(ast.isObject(dest)) {
-		try ast.dereferenceObject(dest, next) catch {
-                  case e: Exception => ast.fromArray(List())
-		}
-	      } else ???
-	      
-              val addition = Map(next -> nav(list, d, v))
+	      val d = try ast.dereferenceObject(dest, next) catch { case e: Exception => ast.fromObject(Map()) }
+	      val src = ast.getObject(if(ast.isObject(dest)) dest else Map())
+	      ast.fromObject(src + ((next, nav(list, d, v))))
 
-	      if(ast.isObject(dest)) {
-		ast.fromObject(ast.getObject(dest) ++ addition)
-	      } else ???
-            
 	    case Left(next) :: list =>
-	      if(ast.isObject(dest)) {
-	        val addition = nav(list, ast.getObject(dest), v)
-	      } else if(ast.isArray(dest)) {
-
-	      }
-	     
-	      if(ast.isObject(dest)) {
-	        ast.fromObject(ast.getObject(dest) ++ Map())
-	      } else ???
-	  }
+	      val d = try ast.dereferenceArray(dest, next) catch { case e: Exception => ast.fromArray(List()) }
+              val src = if(ast.isArray(dest)) ast.getArray(dest) else Nil
+              ast.fromArray(src.padTo(next + 1, ast.fromObject(Map())).updated(next, nav(list, d, v)))
 	  }
 
 	  nav(dPath.path.reverse, cur, dPath.application.value)
