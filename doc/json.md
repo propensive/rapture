@@ -281,7 +281,7 @@ syntax:
 
 ```scala
 val j = json"""{ "fruit": "plum" }"""
-j + (_.color, "purple")
+j + (_.color = "purple")
 ```
 
 This syntax is designed to resemble the syntax for adding a value to a
