@@ -97,7 +97,7 @@ object Macros {
       val params = declarations(c)(weakTypeOf[T]).collect {
         case m: MethodSymbol if m.isCaseAccessor => m.asMethod
       }.zipWithIndex map { case (p, idx) =>
-        val deref = q"""data.selectDynamic(${Literal(Constant(p.name.decodedName))})"""
+        val deref = q"""data.selectDynamic(${Literal(Constant(p.name.decodedName.toString))})"""
 
         val NothingType = weakTypeOf[Nothing]
         
@@ -105,7 +105,7 @@ object Macros {
             false) catch {
           
           case e: Exception =>
-            implicitSearchFailures(p.returnType.toString) ::= p.name.toString
+            implicitSearchFailures(p.returnType.toString) ::= p.name.decodedName.toString
             null
         }
 
@@ -135,9 +135,9 @@ object Macros {
         }  
 
         if(defaults.contains(idx + 1)) q"""
-          mode.unwrap(if($deref.is($imp)) $deref.as($imp, mode.generic) else mode.wrap(${companionRef(weakTypeOf[T])}.${termName(c, "apply$default$"+(idx + 1))}.asInstanceOf[${p.returnType}]), ${Literal(Constant("."+p.name))})
+          mode.unwrap(if($deref.is($imp)) $deref.as($imp, mode.generic) else mode.wrap(${companionRef(weakTypeOf[T])}.${termName(c, "apply$default$"+(idx + 1))}.asInstanceOf[${p.returnType}]), ${Literal(Constant("."+p.name.decodedName))})
         """ else q"""
-          mode.unwrap($deref.as($imp, mode.generic), ${Literal(Constant("."+p.name))})
+          mode.unwrap($deref.as($imp, mode.generic), ${Literal(Constant("."+p.name.decodedName))})
         """
       }
 
@@ -247,7 +247,7 @@ object Macros {
               termName(c, "Tuple2")
             ),
             List(
-              Literal(Constant(p.name.toString)),
+              Literal(Constant(p.name.decodedName.toString)),
               Apply(
                 Select(
                   c.inferImplicitValue(appliedType(serializer, List(p.returnType,
