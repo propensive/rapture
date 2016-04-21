@@ -97,8 +97,7 @@ object Macros {
       val params = declarations(c)(weakTypeOf[T]).collect {
         case m: MethodSymbol if m.isCaseAccessor => m.asMethod
       }.zipWithIndex map { case (p, idx) =>
-       
-        val deref = q"""data.selectDynamic(${Literal(Constant(p.name.toString))})"""
+        val deref = q"""data.selectDynamic(${Literal(Constant(p.name.decodedName))})"""
 
         val NothingType = weakTypeOf[Nothing]
         
