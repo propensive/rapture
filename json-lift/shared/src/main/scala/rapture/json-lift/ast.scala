@@ -16,8 +16,6 @@ import rapture.core._
 import rapture.json._
 import rapture.data.DataTypes
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
 import net.liftweb.json._
 
 private[lift] object LiftAst extends JsonBufferAst {

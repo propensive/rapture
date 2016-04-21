@@ -16,8 +16,6 @@ import rapture.io._
 import rapture.uri._
 import rapture.core._
 
-import language.existentials
-
 import java.io._
 import java.net._
 import javax.net.ssl._

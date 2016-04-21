@@ -14,7 +14,6 @@ package rapture.core
 
 import scala.language.existentials
 import scala.language.higherKinds
-import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
 import scala.annotation.unchecked._

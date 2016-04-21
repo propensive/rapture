@@ -14,11 +14,6 @@ package rapture.dom
 
 import rapture.base._
 
-import language.experimental.macros
-import language.implicitConversions
-
-import language.higherKinds
-
 object DomMacros {
  
   // The macro is invoked primarily to provide meaningful errors 

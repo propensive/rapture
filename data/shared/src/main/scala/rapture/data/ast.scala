@@ -14,9 +14,6 @@ package rapture.data
 
 import rapture.core._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 object DataTypes {
   sealed class DataType(val name: String)
   case object Number extends DataType("number")

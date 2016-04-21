@@ -16,8 +16,6 @@ package rapture.uri
 import rapture.base._
 import rapture.core._
 
-import language.experimental.macros
-
 object Paramable {
   implicit val stringParamable = new Paramable[String] { def paramize(s: String): String = s }
   implicit val intParamable = new Paramable[Int] { def paramize(s: Int): String = s.toString }

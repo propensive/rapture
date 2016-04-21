@@ -17,7 +17,6 @@ import rapture.data._
 
 import scala.util._
 
-import language.experimental.macros
 import language.higherKinds
 
 private[json] case class JsonCastExtractor[T](ast: JsonAst, dataType: DataTypes.DataType)

@@ -16,9 +16,6 @@ import rapture.core._
 import rapture.json._
 import rapture.data.DataTypes
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 import spray.json._
 
 import DefaultJsonProtocol._

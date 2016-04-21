@@ -18,8 +18,6 @@ import rapture.mime._
 import rapture.core._
 import rapture.codec._
 
-import language.existentials
-
 import java.io._
 import javax.net.ssl._
 

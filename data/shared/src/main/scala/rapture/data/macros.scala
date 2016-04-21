@@ -15,9 +15,6 @@ package rapture.data
 import rapture.base._
 import rapture.core._
 
-import language.experimental.macros
-import language.higherKinds
-
 object Macros {
 
   // FIXME: Include enclosing position in the HashSet too

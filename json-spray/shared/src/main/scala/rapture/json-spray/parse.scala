@@ -17,9 +17,6 @@ import rapture.json._
 
 import rapture.data._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 import spray.json._
 
 private[spray] object SprayParser extends Parser[String, JsonBufferAst] {

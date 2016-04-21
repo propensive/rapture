@@ -18,12 +18,6 @@ import rapture.data.DataTypes
 import rapture.data.TypeMismatchException
 import rapture.data.MissingValueException
 
-import jawn.{Parser => JawnParser}
-import jawn.ast._
-
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 private[jawn] object JawnAst extends JsonBufferAst {
  
   override def dereferenceObject(obj: Any, element: String): Any =

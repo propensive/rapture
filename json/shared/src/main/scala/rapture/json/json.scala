@@ -15,10 +15,6 @@ package rapture.json
 import rapture.core._
 import rapture.data._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-
-import language.dynamics
-import language.higherKinds
 import language.experimental.macros
 
 private[json] trait Json_2 {

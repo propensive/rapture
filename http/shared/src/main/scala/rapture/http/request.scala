@@ -12,7 +12,6 @@
 \******************************************************************************************************************/
 package rapture.http
 
-import scala.collection.mutable.{HashMap, ListBuffer}
 import java.io._
 import rapture.io._
 import rapture.mime._

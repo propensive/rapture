@@ -16,7 +16,6 @@ import rapture.codec._
 
 import java.security._
 import javax.crypto.Mac
-import language.implicitConversions
 
 trait DigestType
 trait Sha1 extends DigestType

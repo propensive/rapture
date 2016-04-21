@@ -15,7 +15,6 @@ package rapture.json
 import rapture.core._
 import rapture.data._
 
-import language.experimental.macros
 import language.higherKinds
 
 private[json] case class DirectJsonSerializer[T](ast: JsonAst)

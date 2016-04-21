@@ -15,8 +15,6 @@ package rapture.log
 
 import rapture.core._
 
-import language.experimental.macros
-
 object parts {
 
   abstract class Part(width: Int, align: Alignment) { part =>

@@ -15,8 +15,6 @@ package rapture.data
 import rapture.base._
 import rapture.core._
 
-import language.experimental.macros
-
 object patternMatching {
   object exactArrays {
     implicit val implicitArrayMachingConfig =

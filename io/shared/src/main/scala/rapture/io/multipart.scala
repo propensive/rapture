@@ -14,8 +14,6 @@ package rapture.io
 import rapture.core._
 import rapture.mime._
 
-import scala.collection.mutable.{HashMap, ListBuffer}
-
 case class Multipart(data: Array[Byte], headers: Map[String, String]) {
   def contentType: Option[MimeTypes.MimeType] =
     headers.get("Content-Type") map {

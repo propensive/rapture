@@ -15,8 +15,6 @@ import rapture.core._
 import rapture.json._
 import rapture.data.DataTypes
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-
 import com.fasterxml.jackson.databind._
 import scala.collection.JavaConversions._
 

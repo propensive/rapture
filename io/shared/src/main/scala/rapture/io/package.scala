@@ -15,9 +15,6 @@ package rapture.io
 import rapture.core._
 import rapture.uri._
 import java.io._
-import language.higherKinds
-
-import language.experimental.macros
 
 trait `Appendable#appendOutput` extends MethodConstraint
 trait `Readable#input` extends MethodConstraint

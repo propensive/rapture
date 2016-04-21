@@ -18,9 +18,6 @@ import rapture.data.DataTypes
 import rapture.data.TypeMismatchException
 import rapture.data.MissingValueException
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 import scala.xml._
 
 private[stdlib] object StdlibAst extends XmlBufferAst {

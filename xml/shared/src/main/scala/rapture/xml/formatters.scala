@@ -15,9 +15,6 @@ package rapture.xml
 import rapture.core._
 import rapture.data._
 
-import language.experimental.macros
-import language.higherKinds
-
 object formatters {
   object compact {
     def apply[Ast <: XmlAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } = xmlFormatterImplicit[Ast]

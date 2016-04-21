@@ -18,7 +18,7 @@ import rapture.core._
 
 import annotation.tailrec
 
-import encodings.system
+import encodings.system._
 
 import scala.collection.immutable.ListMap
 

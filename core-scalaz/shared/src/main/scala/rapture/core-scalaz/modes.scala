@@ -12,8 +12,6 @@
 \******************************************************************************************************************/
 package rapture.core.scalazInterop
 
-import language.higherKinds
-
 import rapture.core._
 
 import java.util.concurrent.ExecutorService

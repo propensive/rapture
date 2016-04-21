@@ -13,10 +13,8 @@
 package rapture.core
 
 import language.higherKinds
-import language.experimental.macros
 
 import scala.reflect._
-import reflect.runtime.universe.WeakTypeTag
 import scala.util._
 
 import scala.concurrent._

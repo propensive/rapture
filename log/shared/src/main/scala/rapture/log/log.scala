@@ -18,7 +18,6 @@ import rapture.core._
 import rapture.io._
 
 import scala.annotation._
-import scala.concurrent.Channel
 
 import language.experimental.macros
 

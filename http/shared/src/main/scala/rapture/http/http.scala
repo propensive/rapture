@@ -12,9 +12,6 @@
 \******************************************************************************************************************/
 package rapture.http
 
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.ListMap
-
 import rapture.core._
 
 trait `HttpServer.listen` extends MethodConstraint

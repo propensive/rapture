@@ -5,8 +5,8 @@ enablePlugins(GitBranchPrompt)
 
 lazy val buildSettings = Seq(
   organization := "com.propensive",
-  scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.11.7", "2.10.5")
+  scalaVersion := "2.11.8",
+  crossScalaVersions := Seq("2.11.8", "2.10.5")
 )
 
 lazy val commonSettings = Seq(
