@@ -77,19 +77,7 @@ package environments {
   }
 }
 
-object ProcessInterpreter {
-  implicit val stringProcessInterpreter: ProcessInterpreter[String] =
-    new ProcessInterpreter[String] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): String = {
-        val out = input.slurp[Char]
-        val err = stderr.slurp[Char]
-        exitStatus() match {
-          case n => if(out == "" || out.last != '\n') out else out.init
-          //case n => throw ShellProcessException(n, out.trim)
-        }
-      }
-    }
- 
+trait ProcessInterpreter_1 {
   implicit def genSeqInterpreter[Coll[_], T](implicit cbf:
       collection.generic.CanBuildFrom[Nothing, T, Coll[T]], stringParser: StringParser[T]):
       ProcessInterpreter[Coll[T]] = new ProcessInterpreter[Coll[T]] {
@@ -108,6 +96,23 @@ object ProcessInterpreter {
     }
   }
 
+}
+ 
+object ProcessInterpreter extends ProcessInterpreter_1 {
+  
+  implicit def stringProcessInterpreter[T](implicit stringParser: StringParser[T]): ProcessInterpreter[T] =
+    new ProcessInterpreter[T] {
+      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): T = {
+        val out = input.slurp[Char]
+        val err = stderr.slurp[Char]
+        exitStatus() match {
+          case n =>
+            stringParser.parse(if(out == "" || out.last != '\n') out else out.init, modes.throwExceptions())
+          //case n => throw ShellProcessException(n, out.trim)
+        }
+      }
+    }
+  
   implicit val bytesProcessInterpreter: ProcessInterpreter[Bytes] =
     new ProcessInterpreter[Bytes] {
       def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): Bytes = {
@@ -131,15 +136,18 @@ object ProcessInterpreter {
         input.input[T]
     }
   
-  implicit val intProcessInterpreter: ProcessInterpreter[Int] =
-    new ProcessInterpreter[Int] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): Int = exitStatus()
+  implicit val exitStatusProcessInterpreter: ProcessInterpreter[ExitStatus] =
+    new ProcessInterpreter[ExitStatus] {
+      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): ExitStatus =
+        ExitStatus(exitStatus())
     }
 }
 
-trait ProcessInterpreter[+T] {
+trait ProcessInterpreter[T] {
   def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): T
 }
 
 case class ShellProcessException(exitStatus: Int, output: String) extends
     Exception("Shell process returned non-zero exit status: "+exitStatus)
+
+case class ExitStatus(value: Int)
