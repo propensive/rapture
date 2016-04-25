@@ -15,10 +15,22 @@
   See the License for the specific language governing permissions and limitations under the License.
 */
 
+
+package rapture.uri
+
+object UriCapable {
+  class Capability[Res: UriCapable](res: Res) {
+    def uri: Uri = implicitly[UriCapable[Res]].uri(res)
+  }
+}
+
+case class Uri(scheme: String, schemeSpecificPart: String) {
+  override def toString: String = s"$scheme:$schemeSpecificPart"
+}
+
 trait UriCapable[-Res] {
   def uri(res: Res): Uri
 }
-
 
 object Linkable {
   class Capability[Res: Linkable](res: Res) {
