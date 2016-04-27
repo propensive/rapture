@@ -25,6 +25,12 @@ object Linkable {
   }
 }
 
+object PathLink {
+  implicit def linkLinkable: Linkable[PathLink] = new Linkable[PathLink] {
+    def link(lnk: PathLink): PathLink = lnk
+  }
+}
+
 case class PathLink(link: String) {
   override def toString: String = link
 }
