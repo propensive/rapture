@@ -17,8 +17,6 @@ import rapture.core._
 import scala.util.Try
 
 import language.dynamics
-import language.higherKinds
-import language.existentials
 
 @implicitNotFound("Cannot find an implicit Formatter for ${AstType} data.")
 trait Formatter[-AstType <: DataAst] {

@@ -18,9 +18,6 @@ import rapture.json._
 
 import jawn.{Parser => JawnParser, _}
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 private[jawn] class JawnStringParser(implicit f: Facade[_]) extends Parser[String, JsonBufferAst] {
   
   override def toString = "<JawnStringParser>"

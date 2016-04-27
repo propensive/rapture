@@ -14,10 +14,6 @@ package rapture.dom
 
 import rapture.core._
 
-import language.higherKinds
-import language.implicitConversions
-import language.dynamics
-
 package domFormatters {
   object compact {
     implicit val domFormatterImplicit = new DomFormatter[String] {

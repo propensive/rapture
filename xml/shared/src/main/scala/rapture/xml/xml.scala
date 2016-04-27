@@ -15,10 +15,6 @@ package rapture.xml
 import rapture.core._
 import rapture.data._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-
-import language.dynamics
-import language.higherKinds
 import language.experimental.macros
 
 private[xml] trait Xml_2 {

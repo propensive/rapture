@@ -13,7 +13,6 @@
 package rapture.test
 
 import scala.language.experimental.macros
-import java.util.regex.Pattern
 import rapture.base._
 
 object deferTypeErrors {

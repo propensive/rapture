@@ -15,9 +15,6 @@ package rapture.json
 import rapture.base._
 import rapture.data._
 
-import language.experimental.macros
-import language.higherKinds
-
 private[json] object JsonMacros {
   def jsonExtractorMacro[T: c.WeakTypeTag, Th](c: WhiteboxContext): c.Expr[Extractor[T, Json] { type Throws = Th }] =
     Macros.extractorMacro[T, Json, Th](c)

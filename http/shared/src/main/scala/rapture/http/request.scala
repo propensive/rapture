@@ -12,7 +12,6 @@
 \******************************************************************************************************************/
 package rapture.http
 
-import scala.collection.mutable.{HashMap, ListBuffer}
 import java.io._
 import rapture.io._
 import rapture.mime._
@@ -20,6 +19,7 @@ import rapture.uri._
 import rapture.time._
 import rapture.net._
 
+import scala.collection.mutable.ListBuffer
 
 object HttpRequest {
   sealed trait QueryParam { def name: String }

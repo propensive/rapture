@@ -15,7 +15,6 @@ package rapture.xml
 import rapture.core._
 import rapture.data._
 
-import language.experimental.macros
 import language.higherKinds
 
 private[xml] case class DirectXmlSerializer[T](ast: XmlAst)

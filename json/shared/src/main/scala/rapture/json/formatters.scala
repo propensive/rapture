@@ -15,9 +15,6 @@ package rapture.json
 import rapture.core._
 import rapture.data._
 
-import language.experimental.macros
-import language.higherKinds
-
 object formatters extends formatters_1 {
   object compact {
     def apply[Ast <: JsonAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } =

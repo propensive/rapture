@@ -15,8 +15,6 @@ import rapture.core._
 import rapture.json._
 import rapture.data._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-
 import com.fasterxml.jackson.databind.ObjectMapper
 
 private[jackson] object JacksonParser extends Parser[String, JsonAst] {

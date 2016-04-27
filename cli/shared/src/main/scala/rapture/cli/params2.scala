@@ -13,12 +13,9 @@
 package rapture.cli
 
 import scala.util.Try
-import scala.collection.immutable.ListMap
 import scala.annotation.tailrec
 
 import rapture.core._
-
-import scala.reflect._, runtime.universe.TypeTag
 
 object New {
   case class ParamUsage(map: ParamMap, used: Set[String]) {

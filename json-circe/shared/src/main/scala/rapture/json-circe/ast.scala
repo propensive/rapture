@@ -16,9 +16,6 @@ import rapture.core._
 import rapture.data.DataTypes
 import rapture.json._
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import scala.collection.JavaConverters
-
 import io.circe.{Json => CirceJson}
 
 private[circe] object CirceAst extends JsonBufferAst {

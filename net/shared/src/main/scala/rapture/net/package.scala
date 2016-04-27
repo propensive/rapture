@@ -15,7 +15,6 @@ import rapture.io._
 import rapture.uri._
 import rapture.core._
 import rapture.codec._
-import rapture.mime._
 
 import java.io.{Reader => _, Writer => _, _}
 

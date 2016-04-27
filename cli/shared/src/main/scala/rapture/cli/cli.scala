@@ -20,12 +20,8 @@ import rapture.core._
 import rapture.uri._
 import rapture.log._
 
-import annotation.tailrec
-
 import encodings.system._
 import logLevels.trace._
-
-import scala.collection.immutable.ListMap
 
 import language.higherKinds
 import language.experimental.macros

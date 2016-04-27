@@ -14,8 +14,6 @@ package rapture.core
 
 import rapture.base._
 
-import language.experimental.macros
-
 private[core] object CoreMacros {
   def enumerateMacro[Cls: c.WeakTypeTag, T: c.WeakTypeTag](c: BlackboxContext)(value: c.Expr[Cls]):
       c.Expr[List[T]] = {

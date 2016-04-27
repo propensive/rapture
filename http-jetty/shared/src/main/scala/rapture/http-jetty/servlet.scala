@@ -93,16 +93,13 @@ class JettyHttpRequest(req: HttpServletRequest, resp: HttpServletResponse) exten
       input.slurp()
     }
 
-  lazy val headers = new scala.collection.immutable.HashMap[String, Seq[String]] {
-    private def enum2list(e: java.util.Enumeration[_]) = {
-      val lb = new ListBuffer[String]
-      while(e.hasMoreElements) lb += e.nextElement.asInstanceOf[String]
-      lb
-    }
-    override def get(key: String) = Some(enum2list(req.getHeaders(key)))
-    override def size = enum2list(req.getHeaderNames).length
-    override def iterator = enum2list(req.getHeaderNames).map(n => (n, enum2list(req.getHeaders(n)))).iterator
-  }
+  private def enumToList(e: java.util.Enumeration[_], list: List[String] = Nil): List[String] =
+    if(e.hasMoreElements) enumToList(e, e.nextElement.asInstanceOf[String] :: list) else list 
+
+  lazy val headers = enumToList(req.getHeaderNames).map { h =>
+    h -> enumToList(req.getHeaders(h))
+  }.toMap
+
 }
 
 abstract class ServletWrapper extends HttpServlet { wrapper =>

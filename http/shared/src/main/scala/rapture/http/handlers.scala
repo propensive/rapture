@@ -13,8 +13,6 @@
 package rapture.http
 
 import scala.xml._
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.ListMap
 
 import scala.concurrent._
 

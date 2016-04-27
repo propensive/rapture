@@ -17,7 +17,6 @@ import rapture.base._
 import scala.reflect._
 
 import language.implicitConversions
-import language.experimental.macros
 
 object `package` {
 

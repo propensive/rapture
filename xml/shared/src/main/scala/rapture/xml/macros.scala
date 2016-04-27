@@ -15,9 +15,6 @@ package rapture.xml
 import rapture.base._
 import rapture.data._
 
-import language.experimental.macros
-import language.higherKinds
-
 private[xml] object XmlMacros {
   def xmlExtractorMacro[T: c.WeakTypeTag, Th](c: WhiteboxContext): c.Expr[Extractor[T, Xml] { type Throws = Th }] =
     Macros.extractorMacro[T, Xml, Th](c)

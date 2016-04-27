@@ -12,13 +12,10 @@
 \******************************************************************************************************************/
 package rapture.cli
 
-import rapture.codec._
 import rapture.fs._
 import rapture.core._
 
 import annotation.tailrec
-
-import encodings.system
 
 import scala.collection.immutable.ListMap
 
