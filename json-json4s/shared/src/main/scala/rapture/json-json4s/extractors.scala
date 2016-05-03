@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json.jsonBackends.json4s
 
@@ -25,22 +25,22 @@ import org.json4s._
 private[json4s] trait Extractors {
   implicit val json4sJValueExtractor: JsonCastExtractor[JValue] =
     JsonCastExtractor(Json4sAst, DataTypes.Any)
-  
+
   implicit val json4sJDecimalExtractor: JsonCastExtractor[JDecimal] =
     JsonCastExtractor(Json4sAst, DataTypes.Number)
-  
+
   implicit val json4sJDoubleExtractor: JsonCastExtractor[JDouble] =
     JsonCastExtractor(Json4sAst, DataTypes.Number)
-  
+
   implicit val json4sJStringExtractor: JsonCastExtractor[JString] =
     JsonCastExtractor(Json4sAst, DataTypes.String)
-  
+
   implicit val json4sJIntExtractor: JsonCastExtractor[JInt] =
     JsonCastExtractor(Json4sAst, DataTypes.Number)
-  
+
   implicit val json4sJArrayExtractor: JsonCastExtractor[JArray] =
     JsonCastExtractor(Json4sAst, DataTypes.Array)
-  
+
   implicit val json4sJObjectExtractor: JsonCastExtractor[JObject] =
     JsonCastExtractor(Json4sAst, DataTypes.Object)
 }

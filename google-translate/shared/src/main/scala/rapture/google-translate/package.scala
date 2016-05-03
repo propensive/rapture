@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.i18n.googleTranslate
 
@@ -36,20 +36,26 @@ class NotString[S <: String]
 class GoogleApiKey[S <: String](key: S)(implicit notString: NotString[S])
 
 object GoogleApiKey {
-  def apply[S <: String](key: S)(implicit notString: NotString[key.type]): GoogleApiKey[key.type] =
+  def apply[S <: String](key: S)(
+      implicit notString: NotString[key.type]): GoogleApiKey[key.type] =
     new GoogleApiKey[key.type](key)(notString)
 }
 
 object `package` {
-  implicit def upcast[ToLang <: Language, FromLang <: Language, S <: String](from: I18n[String, FromLang])(implicit license: GoogleApiKey[S]): I18n[String, ToLang] =
-    macro Macros.missingTranslationsMacro[ToLang, FromLang, S]
+  implicit def upcast[ToLang <: Language, FromLang <: Language, S <: String](
+      from: I18n[String, FromLang])(
+      implicit license: GoogleApiKey[S]): I18n[String, ToLang] = macro Macros
+    .missingTranslationsMacro[ToLang, FromLang, S]
 }
 
 object Macros {
-  
-  def missingTranslationsMacro[ToLang <: Language: c.WeakTypeTag, FromLang <: Language: c.WeakTypeTag, S <: String: c.WeakTypeTag](c:
-      BlackboxContext)(from: c.Expr[I18n[String, FromLang]])(license: c.Expr[GoogleApiKey[S]]): c.Expr[I18n[String, ToLang]] = {
-    
+
+  def missingTranslationsMacro[ToLang <: Language : c.WeakTypeTag,
+                               FromLang <: Language : c.WeakTypeTag,
+                               S <: String : c.WeakTypeTag](
+      c: BlackboxContext)(from: c.Expr[I18n[String, FromLang]])(
+      license: c.Expr[GoogleApiKey[S]]): c.Expr[I18n[String, ToLang]] = {
+
     import c.universe._
     import compatibility._
 
@@ -69,31 +75,42 @@ object Macros {
     val missing = toLangs -- fromLangs
 
     def langs(tree: Tree): Map[String, String] = tree match {
-      case Apply(Select(Apply(Select(Select(Select(id1, id2), id3), id4), List(Apply(_, List(Literal(Constant(
-          str: String)))))), lang), _) if id1.toString == "rapture" && id2.toString == "i18n" &&
-          id3.toString == "package" && id4.toString == "I18nEnrichedStringContext" =>
-        
+      case Apply(
+          Select(Apply(Select(Select(Select(id1, id2), id3), id4),
+                       List(Apply(_, List(Literal(Constant(str: String)))))),
+                 lang),
+          _)
+          if id1.toString == "rapture" && id2.toString == "i18n" &&
+          id3.toString == "package" &&
+          id4.toString == "I18nEnrichedStringContext" =>
         Map(lang.toString -> str)
-      
+
       case Apply(app: Apply, _) =>
         langs(app)
-      
-      case Apply(TypeApply(Select(q, id6), _), List(app)) if id6.toString == "$bar" =>
+
+      case Apply(TypeApply(Select(q, id6), _), List(app))
+          if id6.toString == "$bar" =>
         langs(q) ++ langs(app)
     }
 
     val ls = langs(from.tree)
-    val extras = ls.find(_._1 == "en").orElse(ls.find(_._1 == "fr")).getOrElse(ls.head) match {
+    val extras = ls
+      .find(_._1 == "en")
+      .orElse(ls.find(_._1 == "fr"))
+      .getOrElse(ls.head) match {
       case (lang, text) =>
         missing.map { to =>
-          val tran = GoogleTranslate.translate(key, text, lang.toUpperCase, to.toUpperCase).replaceAll("\"", "\\\\\"")
-	  s"""${to.toLowerCase}"${tran}""""
+          val tran = GoogleTranslate
+            .translate(key, text, lang.toUpperCase, to.toUpperCase)
+            .replaceAll("\"", "\\\\\"")
+          s"""${to.toLowerCase}"${tran}""""
         }
     }
 
-    c.abort(c.enclosingPosition, s"""Not all required language translations have been provided. Consider appending the following translations to the expression:\n\n  ${extras.mkString("& ", " & ", "")}\n""")
-
-
+    c.abort(
+        c.enclosingPosition,
+        s"""Not all required language translations have been provided. Consider appending the following translations to the expression:\n\n  ${extras
+          .mkString("& ", " & ", "")}\n""")
   }
 }
 
@@ -105,7 +122,13 @@ object GoogleTranslate {
   import rapture.json._, jsonBackends.jawn._
 
   def translate(key: String, text: String, from: String, to: String): String = {
-    val out = uri"https://www.googleapis.com/language/translate/v2".query(Map("q" -> text, "target" -> to, "format" -> "text", "source" -> from, "key" -> key)).slurp[Char]
+    val out = uri"https://www.googleapis.com/language/translate/v2"
+      .query(Map("q" -> text,
+                 "target" -> to,
+                 "format" -> "text",
+                 "source" -> from,
+                 "key" -> key))
+      .slurp[Char]
     Json.parse(out).data.translations(0).translatedText.as[String]
   }
 }

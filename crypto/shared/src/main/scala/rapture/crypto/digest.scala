@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.crypto
 import rapture.core._
@@ -38,28 +38,27 @@ package ciphers {
     implicit def desDecryption = Des.decryption
     implicit def desEncryption = Des.encryption
   }
-  
+
   object blowfish {
-    implicit def blowfishGenerator: KeyGenerator[Blowfish] = Blowfish.keyGenerator
+    implicit def blowfishGenerator: KeyGenerator[Blowfish] =
+      Blowfish.keyGenerator
     implicit def blowfishDecryption = Blowfish.decryption
     implicit def blowfishEncryption = Blowfish.encryption
   }
-  
+
   object aes {
     implicit def aesGenerator: KeyGenerator[Aes] = Aes.keyGenerator
     implicit def aesDecryption = Aes.decryption
     implicit def aesEncryption = Aes.encryption
   }
-
 }
 
 class EncryptedData[C <: CipherType](bytes: Array[Byte]) extends Bytes(bytes)
 
 object Hash {
-  def digest[D <: DigestType: Digester](msg: Bytes): Digest[D] =
+  def digest[D <: DigestType : Digester](msg: Bytes): Digest[D] =
     new Digest[D](?[Digester[D]].digest(msg.bytes))
 }
-
 
 object Digester {
   implicit val sha1: Digester[Sha1] = digests.sha1
@@ -70,6 +69,7 @@ object Digester {
   implicit val md2: Digester[Md2] = digests.md2
 }
 abstract class Digester[D <: DigestType] {
+
   /** Digests the array of bytes. */
   def digest(msg: Array[Byte]): Array[Byte]
 }
@@ -77,16 +77,19 @@ abstract class Digester[D <: DigestType] {
 case class Salt(value: String)
 
 object Password {
-  def apply(value: String)(implicit salt: Salt) = new HashedPassword(value)(salt)
+  def apply(value: String)(implicit salt: Salt) =
+    new HashedPassword(value)(salt)
 }
 
 class Password(private val value: String)(implicit salt: Salt) {
-  def digest: String = Bytes(Digester.sha256.digest((value + salt).getBytes("UTF-8"))).encode[Hex]
+  def digest: String =
+    Bytes(Digester.sha256.digest((value + salt).getBytes("UTF-8"))).encode[Hex]
   override def toString = s"password:$digest"
   def check(password: String) = new Password(password).digest == digest
 }
 
-class HashedPassword(hash: String)(implicit salt: Salt) extends Password(null)(salt) {
+class HashedPassword(hash: String)(implicit salt: Salt)
+    extends Password(null)(salt) {
   override def digest: String = hash
 }
 
@@ -99,6 +102,7 @@ object digests {
 
   /** SHA-256 digester, with additional methods for secure password encoding. */
   implicit val sha256: Digester[Sha256] = new Digester[Sha256] {
+
     /** Digests the given bytes. */
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("SHA-256").digest(msg)
@@ -109,7 +113,7 @@ object digests {
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("SHA-512").digest(msg)
   }
-  
+
   /** SHA-384 digester, with additional methods for secure password encoding. */
   implicit val sha384: Digester[Sha384] = new Digester[Sha384] {
     def digest(msg: Array[Byte]): Array[Byte] =
@@ -122,7 +126,7 @@ object digests {
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("MD5").digest(msg)
   }
-  
+
   implicit val md2: Digester[Md2] = new Digester[Md2] {
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("MD2").digest(msg)
@@ -133,22 +137,25 @@ trait CipherType
 trait Blowfish extends CipherType
 
 class JavaxCryptoImplementations[Codec <: CipherType](codec: String) {
-  implicit def encryption: Encryption[Codec, Bytes] = new Encryption[Codec, Bytes] {
-    def encrypt(key: Array[Byte], message: Bytes) = {
-      val cipher = javax.crypto.Cipher.getInstance(codec)
-      cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, new javax.crypto.spec.SecretKeySpec(key, codec))
-      cipher.doFinal(message.bytes)
+  implicit def encryption: Encryption[Codec, Bytes] =
+    new Encryption[Codec, Bytes] {
+      def encrypt(key: Array[Byte], message: Bytes) = {
+        val cipher = javax.crypto.Cipher.getInstance(codec)
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE,
+                    new javax.crypto.spec.SecretKeySpec(key, codec))
+        cipher.doFinal(message.bytes)
+      }
     }
-  }
-  
+
   implicit def decryption = new Decryption[Codec] {
     def decrypt(key: Array[Byte], message: Array[Byte]) = {
       val cipher = javax.crypto.Cipher.getInstance(codec)
-      cipher.init(javax.crypto.Cipher.DECRYPT_MODE, new javax.crypto.spec.SecretKeySpec(key, codec))
+      cipher.init(javax.crypto.Cipher.DECRYPT_MODE,
+                  new javax.crypto.spec.SecretKeySpec(key, codec))
       cipher.doFinal(message)
     }
   }
-  
+
   implicit def keyGenerator: KeyGenerator[Codec] = new KeyGenerator[Codec] {
     def generate(): Array[Byte] = {
       val keyGen = javax.crypto.KeyGenerator.getInstance(codec)
@@ -156,7 +163,6 @@ class JavaxCryptoImplementations[Codec <: CipherType](codec: String) {
     }
   }
 }
-
 
 trait Aes extends CipherType
 object Aes extends JavaxCryptoImplementations[Aes]("AES")
@@ -182,7 +188,8 @@ trait Decryption[C <: CipherType] {
 }
 
 object Key {
-  def generate[K <: CipherType]()(implicit gen: KeyGenerator[K]): Key[gen.KeyType] =
+  def generate[K <: CipherType]()(
+      implicit gen: KeyGenerator[K]): Key[gen.KeyType] =
     new Key[gen.KeyType](?[KeyGenerator[K]].generate())
 
   def read[K <: CipherType](key: Bytes): Key[K] =
@@ -190,15 +197,18 @@ object Key {
 }
 
 class Key[C <: CipherType](bytes: Array[Byte]) extends Bytes(bytes) {
-  def encrypt[Msg](message: Msg)(implicit encryption: Encryption[C, Msg]): EncryptedData[C] =
+  def encrypt[Msg](message: Msg)(
+      implicit encryption: Encryption[C, Msg]): EncryptedData[C] =
     new EncryptedData[C](encryption.encrypt(bytes, message))
 
-  def decrypt(message: EncryptedData[C])
-      (implicit mode: Mode[`Key#decrypt`], decryption: Decryption[C]): mode.Wrap[Bytes, DecryptionException] = mode wrap {
-    try Bytes(decryption.decrypt(bytes, message.bytes)) catch {
-      case e: Exception => mode.exception(DecryptionException())
+  def decrypt(message: EncryptedData[C])(
+      implicit mode: Mode[`Key#decrypt`],
+      decryption: Decryption[C]): mode.Wrap[Bytes, DecryptionException] =
+    mode wrap {
+      try Bytes(decryption.decrypt(bytes, message.bytes)) catch {
+        case e: Exception => mode.exception(DecryptionException())
+      }
     }
-  }
 }
 
 case class HmacSigner(key: Bytes) {
@@ -206,10 +216,10 @@ case class HmacSigner(key: Bytes) {
   implicit val hmac: Digester[Sha256Hmac] = new Digester[Sha256Hmac] {
     def digest(msg: Array[Byte]): Array[Byte] = {
       val mac = Mac.getInstance("HmacSHA256")
-      val secretKey = new javax.crypto.spec.SecretKeySpec(key.bytes, "HmacSHA256")
+      val secretKey =
+        new javax.crypto.spec.SecretKeySpec(key.bytes, "HmacSHA256")
       mac.init(secretKey)
       mac.doFinal(msg)
     }
   }
-
 }

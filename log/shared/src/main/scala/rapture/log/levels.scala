@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.log
 
@@ -26,29 +26,34 @@ trait Error extends Warn
 trait Fatal extends Error
 
 object logLevels {
-  
+
   object trace {
-    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(0, "trace")
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(
+        0, "trace")
   }
 
   object debug {
-    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(1, "debug")
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(
+        1, "debug")
   }
 
   object info {
-    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(2, "info")
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(
+        2, "info")
   }
 
   object warn {
-    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(3, "warn")
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(
+        3, "warn")
   }
 
   object error {
-    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(4, "error")
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(
+        4, "error")
   }
 
   object fatal {
-    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(5, "fatal")
+    implicit val logLevelImplicit: NamedLogAction = new NamedLogAction(
+        5, "fatal")
   }
 }
-

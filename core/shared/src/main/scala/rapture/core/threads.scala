@@ -13,21 +13,23 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core
 
 import java.lang.{ClassLoader => JClassLoader, Thread => JThread}
 
 object ClasspathUrlItem {
-  implicit def toClasspathUrlItem[T: ClasspathUrlable](t: T): ClasspathUrlItem =
+  implicit def toClasspathUrlItem[T : ClasspathUrlable](
+      t: T): ClasspathUrlItem =
     ?[ClasspathUrlable[T]].toClasspathUrlItem(t)
 }
 
 case class ClasspathUrlItem(javaUrl: List[java.net.URL])
 
 object ClasspathUrlable {
-  implicit def seqUrlable[T](implicit urlable: ClasspathUrlable[T]): ClasspathUrlable[List[T]] =
+  implicit def seqUrlable[T](
+      implicit urlable: ClasspathUrlable[T]): ClasspathUrlable[List[T]] =
     new ClasspathUrlable[List[T]] {
       def toClasspathUrlItem(xs: List[T]): ClasspathUrlItem =
         ClasspathUrlItem(xs.flatMap(urlable.toClasspathUrlItem(_).javaUrl))
@@ -40,7 +42,8 @@ object ClassLoader {
     new ClassLoader(JThread.currentThread.getContextClassLoader)
 
   def apply(urls: ClasspathUrlItem*): ClassLoader =
-    new ClassLoader(new java.net.URLClassLoader(urls.flatMap(_.javaUrl).to[Array]))
+    new ClassLoader(
+        new java.net.URLClassLoader(urls.flatMap(_.javaUrl).to[Array]))
 }
 
 class ClassLoader(val javaClassLoader: JClassLoader) {
@@ -54,17 +57,16 @@ class ClassLoader(val javaClassLoader: JClassLoader) {
 }
 
 object Thread {
-  def fork(threadName: String, daemon: Boolean = false)(blk: => Unit)
-      (implicit cl: ClassLoader): Thread =
+  def fork(threadName: String, daemon: Boolean = false)(blk: => Unit)(
+      implicit cl: ClassLoader): Thread =
     ThreadSpec(threadName, daemon)(blk).spawn()
 
-  def sleep[D: TimeSystem.ByDuration](duration: D) =
+  def sleep[D : TimeSystem.ByDuration](duration: D) =
     JThread.sleep(?[TimeSystem.ByDuration[D]].fromDuration(duration))
-
 }
 
-case class ThreadSpec(name: String, daemon: Boolean = false)(blk: => Unit)
-    (implicit cl: ClassLoader) {
+case class ThreadSpec(name: String, daemon: Boolean = false)(
+    blk: => Unit)(implicit cl: ClassLoader) {
 
   def spawn(): Thread = {
     val parentThread = JThread.currentThread
@@ -77,7 +79,7 @@ case class ThreadSpec(name: String, daemon: Boolean = false)(blk: => Unit)
     javaThread.setDaemon(daemon)
     javaThread.setContextClassLoader(cl.javaClassLoader)
     javaThread.start()
-    
+
     new Thread(this, javaThread) {
       def parentAlive = javaThread.isAlive
     }

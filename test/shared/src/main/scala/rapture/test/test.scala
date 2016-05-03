@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.test
 
@@ -36,13 +36,25 @@ object Util {
     import java.util.zip._
     import scala.collection.JavaConversions._
     val zf = new ZipFile(f.javaFile)
-    entries.getOrElseUpdate(f, zf.entries.to[List].filter(_.getName
-        endsWith ".class").filter(!_.getName.contains("$")).map(_.getName.dropRight(6)))
+    entries.getOrElseUpdate(f,
+                            zf.entries
+                              .to[List]
+                              .filter(_.getName endsWith ".class")
+                              .filter(!_.getName.contains("$"))
+                              .map(_.getName.dropRight(6)))
   }
 
   def getAllZipfiles(): List[FsUrl] = {
-    val urls: Array[java.net.URL] = java.lang.Thread.currentThread.getContextClassLoader.asInstanceOf[URLClassLoader].getURLs
-    urls.to[List].map { u => File.parse("file://"+u.getFile) }.filter(_.writable)
+    val urls: Array[java.net.URL] =
+      java.lang.Thread.currentThread.getContextClassLoader
+        .asInstanceOf[URLClassLoader]
+        .getURLs
+    urls
+      .to[List]
+      .map { u =>
+        File.parse("file://" + u.getFile)
+      }
+      .filter(_.writable)
   }
 }
 
@@ -93,11 +105,14 @@ sealed trait TestResult { def message: Option[String] }
 case object Success extends TestResult { def message = None }
 case class Failure(msg: String) extends TestResult { def message = Some(msg) }
 case class Error(error: Throwable) extends TestResult {
-  private val stack = error.getStackTrace.map(_.toString).takeWhile(!_.startsWith("rapture.test"))
+  private val stack = error.getStackTrace
+    .map(_.toString)
+    .takeWhile(!_.startsWith("rapture.test"))
 
   private val stackString = stack.mkString("    ", "\n    ", "")
 
-  def message = Some(s"Exception thrown during test: ${error.toString}\n${stackString}")
+  def message =
+    Some(s"Exception thrown during test: ${error.toString}\n${stackString}")
 }
 
 trait TestCase
@@ -105,18 +120,21 @@ trait TestCase
 trait TestSuite {
 
   abstract class Test extends TestCase { thisTest =>
-  
+
     type Return
 
     def dependencies = Set[Test]()
     def action(): Return
     def check(run: () => Return): TestResult
     def name: String
-    def runCheck(): TestResult = try check(action) catch { case e: Throwable => Error(e) }
+    def runCheck(): TestResult =
+      try check(action) catch { case e: Throwable => Error(e) }
 
-    protected def compare[T](x: T, y: T): TestResult = if(x == y) Success else {
-      Failure(s"Found $x, but expected $y")
-    }
+    protected def compare[T](x: T, y: T): TestResult =
+      if (x == y) Success
+      else {
+        Failure(s"Found $x, but expected $y")
+      }
 
     def returns(chk: => Return)(implicit assigned: AssignedName) = new Test {
       type Return = thisTest.Return
@@ -125,46 +143,55 @@ trait TestSuite {
       def check(run: () => Return): TestResult = {
         val result = run()
         val y = chk
-        if(result == y) Success else Failure(s"Found $result but expected $y")
-      }
-    }
-   
-    def satisfies(chk: Return => Boolean)(implicit assigned: AssignedName) = new Test {
-      type Return = thisTest.Return
-      def name = assigned.name
-      def action(): Return = thisTest.action()
-      def check(run: () => Return): TestResult = {
-        val result = run()
-        if(chk(result)) Success else Failure(s"Result $result did not satisfy predicate.")
+        if (result == y) Success else Failure(s"Found $result but expected $y")
       }
     }
 
-    def throws[E <: Throwable: ClassTag](cls: Class[E])(implicit assigned: AssignedName): Test = new Test {
+    def satisfies(chk: Return => Boolean)(implicit assigned: AssignedName) =
+      new Test {
+        type Return = thisTest.Return
+        def name = assigned.name
+        def action(): Return = thisTest.action()
+        def check(run: () => Return): TestResult = {
+          val result = run()
+          if (chk(result)) Success
+          else Failure(s"Result $result did not satisfy predicate.")
+        }
+      }
+
+    def throws[E <: Throwable : ClassTag](cls: Class[E])(
+        implicit assigned: AssignedName): Test = new Test {
       type Return = thisTest.Return
       def name = assigned.name
       def action(): Return = thisTest.action()
-      def check(run: () => Return): TestResult = try {
-        run()
-        Failure("Expected exception not thrown.")
-      } catch {
-        case e: E => Success
-        case e: Throwable => Failure(s"Expected exception of type `${classTag[E]}', but found exception `${e}'.")
-      }
+      def check(run: () => Return): TestResult =
+        try {
+          run()
+          Failure("Expected exception not thrown.")
+        } catch {
+          case e: E => Success
+          case e: Throwable =>
+            Failure(
+                s"Expected exception of type `${classTag[E]}', but found exception `${e}'.")
+        }
     }
-    
-    def throws[E <: Throwable](exp: E)(implicit assigned: AssignedName): Test = new Test {
-      type Return = thisTest.Return
-      def name = assigned.name
-      def action(): Return = thisTest.action()
-      def check(run: () => Return): TestResult = try {
-        run()
-        Failure("Expected exception not thrown.")
-      } catch {
-        case e if e == exp => Success
-        case e: Throwable => Failure(s"Expected exception `$exp`, but found exception `$e`.")
+
+    def throws[E <: Throwable](exp: E)(implicit assigned: AssignedName): Test =
+      new Test {
+        type Return = thisTest.Return
+        def name = assigned.name
+        def action(): Return = thisTest.action()
+        def check(run: () => Return): TestResult =
+          try {
+            run()
+            Failure("Expected exception not thrown.")
+          } catch {
+            case e if e == exp => Success
+            case e: Throwable =>
+              Failure(s"Expected exception `$exp`, but found exception `$e`.")
+          }
       }
-    }
-    
+
     /*def apply(done: Set[Test] = Set())(implicit reporter: Reporter): TestSummary = {
       val (_, (success, count)) = dependencies.foldLeft((done, (0, 0))) {
         case ((d, (s0, n0)), t) =>
@@ -183,14 +210,13 @@ trait TestSuite {
   }
 
   def test[T](act: => T): Test { type Return = T } = new Test {
-    
+
     type Return = T
-   
+
     def name = "Unnamed test"
     def action(): Return = act
     def check(run: () => Return): TestResult = Success
   }
-
 }
 
 trait `run` extends MethodConstraint
@@ -198,71 +224,99 @@ trait `run` extends MethodConstraint
 case class TestSummary(successes: Int, failures: Int, errors: Int)
 
 class BadTestResult(msg: String) extends Exception(msg)
-case class TestFailure(name: String, error: String) extends BadTestResult(s"Test `$name` failed with error `$error`")
+case class TestFailure(name: String, error: String)
+    extends BadTestResult(s"Test `$name` failed with error `$error`")
 
-case class TestError(name: String, exception: Throwable) extends
-    BadTestResult(s"Test `$name` failed with exception `$exception`")
+case class TestError(name: String, exception: Throwable)
+    extends BadTestResult(s"Test `$name` failed with exception `$exception`")
 
 object run {
-  def apply[TS <: TestSuite](ts: TS)(implicit mode: Mode[`run`]): Any =
-    macro run.runMacro[TS]
+  def apply[TS <: TestSuite](ts: TS)(implicit mode: Mode[`run`]): Any = macro run
+    .runMacro[TS]
 
-  def doTests(ts: List[TestSuite#Test], mode: Mode[`run`]): mode.Wrap[TestSummary, BadTestResult] = mode.wrap {
-    implicit val reporter: Reporter = new BasicReporter(116, System.out)
-    ansi { implicit tty =>
-      val (successes, failures, errors) = ts.foldLeft((0, 0, 0)) { case ((s, f, e), t) =>
-        val task = reporter.startTask(t.name)
-        val result = t.runCheck()
-        reporter.completeTask(task, result)
-        result.message foreach { msg => reporter.report(msg, inset = true) }
-        result match {
-          case Success =>
-            (s + 1, f, e)
-          case Failure(msg) =>
-            mode.exception(TestFailure(t.name, msg))
-            (s, f + 1, e)
-          case Error(msg) =>
-            mode.exception(TestError(t.name, msg))
-            (s, f, e + 1)
+  def doTests(ts: List[TestSuite#Test],
+              mode: Mode[`run`]): mode.Wrap[TestSummary, BadTestResult] =
+    mode.wrap {
+      implicit val reporter: Reporter = new BasicReporter(116, System.out)
+      ansi { implicit tty =>
+        val (successes, failures, errors) = ts.foldLeft((0, 0, 0)) {
+          case ((s, f, e), t) =>
+            val task = reporter.startTask(t.name)
+            val result = t.runCheck()
+            reporter.completeTask(task, result)
+            result.message foreach { msg =>
+              reporter.report(msg, inset = true)
+            }
+            result match {
+              case Success =>
+                (s + 1, f, e)
+              case Failure(msg) =>
+                mode.exception(TestFailure(t.name, msg))
+                (s, f + 1, e)
+              case Error(msg) =>
+                mode.exception(TestError(t.name, msg))
+                (s, f, e + 1)
+            }
         }
-      }
 
-      if(successes + failures + errors == 0) reporter.summary(0, "No tests found.")
-      else if(failures + errors == 0) reporter.summary(1, "All tests passed.")
-      else if(successes == 0) reporter.summary(-1, "All tests failed.")
-      else reporter.summary(0, s"${successes} out of ${successes + failures + errors} tests passed.")
-    
-      TestSummary(successes, failures, errors)
+        if (successes + failures + errors == 0)
+          reporter.summary(0, "No tests found.")
+        else if (failures + errors == 0)
+          reporter.summary(1, "All tests passed.")
+        else if (successes == 0) reporter.summary(-1, "All tests failed.")
+        else
+          reporter.summary(
+              0,
+              s"${successes} out of ${successes + failures + errors} tests passed.")
+
+        TestSummary(successes, failures, errors)
+      }
     }
+
+  def runMacro[TS <: TestSuite : c.WeakTypeTag](c: WhiteboxContext)(
+      ts: c.Expr[TS])(mode: c.Expr[Mode[`run`]]): c.Expr[Any] = {
+    import c.universe._
+    import compatibility._
+
+    val cls = weakTypeOf[TS]
+    val allMethods =
+      weakTypeOf[TS].members.to[List].filter(_.isMethod).map(_.asMethod)
+    val matchingMethods =
+      allMethods filter { m =>
+        paramLists(c)(m).isEmpty &&
+        m.returnType.weak_<:<(weakTypeOf[TestSuite#Test])
+      }
+    val methodNames =
+      matchingMethods map { m =>
+        Select(ts.tree, termName(c, m.name.toString))
+      }
+    val listApply = Select(reify(List).tree, termName(c, "apply"))
+
+    c.Expr(
+        q"""_root_.rapture.test.run.doTests(_root_.scala.List(..$methodNames), $mode)""")
   }
 
-  def runMacro[TS <: TestSuite: c.WeakTypeTag](c: WhiteboxContext)(ts: c.Expr[TS])(mode: c.Expr[Mode[`run`]]): c.Expr[Any] = {
+  def includeMacro[TS <: TestSuite : c.WeakTypeTag](c: WhiteboxContext)(
+      suite: c.Expr[TS]): c.Expr[Unit] = {
     import c.universe._
     import compatibility._
 
     val cls = weakTypeOf[TS]
-    val allMethods = weakTypeOf[TS].members.to[List].filter(_.isMethod).map(_.asMethod)
-    val matchingMethods = allMethods filter { m => paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test]) }
-    val methodNames = matchingMethods map { m => Select(ts.tree, termName(c, m.name.toString)) }
+    val allMethods =
+      weakTypeOf[TS].members.to[List].filter(_.isMethod).map(_.asMethod)
+    val matchingMethods =
+      allMethods filter { m =>
+        paramLists(c)(m).isEmpty &&
+        m.returnType.weak_<:<(weakTypeOf[TestSuite#Test])
+      }
+    val methodNames =
+      matchingMethods map { m =>
+        val sel = Select(suite.tree, termName(c, m.name.toString))
+        val suiteName = cls.toString.replaceAll(".type$", "").split("\\.").last
+        q"""($suiteName+" / "+$sel.name, $sel)"""
+      }
     val listApply = Select(reify(List).tree, termName(c, "apply"))
- 
-    c.Expr(q"""_root_.rapture.test.run.doTests(_root_.scala.List(..$methodNames), $mode)""")
-  }  
-  
-  def includeMacro[TS <: TestSuite: c.WeakTypeTag](c: WhiteboxContext)(suite: c.Expr[TS]): c.Expr[Unit] = {
-    import c.universe._
-    import compatibility._
 
-    val cls = weakTypeOf[TS]
-    val allMethods = weakTypeOf[TS].members.to[List].filter(_.isMethod).map(_.asMethod)
-    val matchingMethods = allMethods filter { m => paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test]) }
-    val methodNames = matchingMethods map { m =>
-      val sel = Select(suite.tree, termName(c, m.name.toString))
-      val suiteName = cls.toString.replaceAll(".type$", "").split("\\.").last
-      q"""($suiteName+" / "+$sel.name, $sel)"""
-    }
-    val listApply = Select(reify(List).tree, termName(c, "apply"))
- 
     c.Expr[Unit](q"""includeAll(_root_.scala.List(..$methodNames))""")
-  }  
+  }
 }

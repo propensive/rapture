@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core.scalazInterop
 
@@ -24,39 +24,46 @@ import java.util.concurrent.ExecutorService
 import scalaz._
 import scalaz.concurrent._
 
-class ReturnTasks[+Group <: MethodConstraint](implicit pool: ExecutorService) extends Mode[Group] {
+class ReturnTasks[+Group <: MethodConstraint](implicit pool: ExecutorService)
+    extends Mode[Group] {
   type Wrap[+T, E <: Exception] = Task[T]
   def wrap[T, E <: Exception](t: => T): Task[T] = Task.delay(t)
-  def unwrap[T](t: => Wrap[T, _ <: Exception]): T = t.attemptRun.valueOr { throw _ }
+  def unwrap[T](t: => Wrap[T, _ <: Exception]): T =
+    t.attemptRun.valueOr { throw _ }
 }
 
 class ReturnValidation[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+T, E <: Exception] = Validation[E, T]
-  def wrap[T, E <: Exception](t: => T): Validation[E, T] = try Success(t) catch { case e: E => Failure(e) }
+  def wrap[T, E <: Exception](t: => T): Validation[E, T] =
+    try Success(t) catch { case e: E => Failure(e) }
   def unwrap[T](t: => Validation[_ <: Exception, T]): T = t.valueOr { throw _ }
 }
 
 class ReturnDisjunction[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+T, E <: Exception] = \/[E, T]
-  def wrap[T, E <: Exception](t: => T): \/[E, T] = try \/-(t) catch { case e: E => -\/(e) }
+  def wrap[T, E <: Exception](t: => T): \/[E, T] =
+    try \/-(t) catch { case e: E => -\/(e) }
   def unwrap[T](t: => \/[_ <: Exception, T]): T = t.valueOr { throw _ }
 }
 
 class ScalazExplicits[+T, E <: Exception](explicit: modes.Explicitly[T, E]) {
-  def task(implicit pool: ExecutorService): Task[T] = returnTasks.wrap(explicit.get)
+  def task(implicit pool: ExecutorService): Task[T] =
+    returnTasks.wrap(explicit.get)
   def validation: Validation[E, T] = returnValidations.wrap(explicit.get)
 }
 
-
 object `package` {
 
-  implicit def scalazExplicits[T, E <: Exception](explicit: modes.Explicitly[T, E]): ScalazExplicits[T, E] =
+  implicit def scalazExplicits[T, E <: Exception](
+      explicit: modes.Explicitly[T, E]): ScalazExplicits[T, E] =
     new ScalazExplicits[T, E](explicit)
 
-  implicit def returnTasks[Group <: MethodConstraint](implicit pool: ExecutorService) = new ReturnTasks[Group]
+  implicit def returnTasks[Group <: MethodConstraint](
+      implicit pool: ExecutorService) = new ReturnTasks[Group]
   // FIXME: This should be modified to collect multiple failures
-  implicit def returnValidations[Group <: MethodConstraint] = new ReturnValidation[Group]
+  implicit def returnValidations[Group <: MethodConstraint] =
+    new ReturnValidation[Group]
 
-  implicit def returnDisjunction[Group <: MethodConstraint] = new ReturnDisjunction[Group]
-
+  implicit def returnDisjunction[Group <: MethodConstraint] =
+    new ReturnDisjunction[Group]
 }

@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.base
 
@@ -32,7 +32,8 @@ class Compat210() {
   def typeName(c: Context, s: String) = c.universe.newTypeName(s)
   def constructor(c: Context) = c.universe.nme.CONSTRUCTOR
   def wildcard(c: Context) = c.universe.nme.WILDCARD
-  def typeIntersection(c: Context)(xs: List[c.universe.Type]) = c.universe.intersectionType(xs)
+  def typeIntersection(c: Context)(xs: List[c.universe.Type]) =
+    c.universe.intersectionType(xs)
   def paramLists(c: Context)(t: c.universe.MethodSymbol) = t.paramss
   def normalize(c: Context)(t: c.universe.Type) = t.normalize
   def declarations(c: Context)(t: c.universe.Type) = t.declarations

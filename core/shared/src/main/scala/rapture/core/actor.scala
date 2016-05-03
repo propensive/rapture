@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core
 
@@ -30,9 +30,12 @@ case object Ignore extends ActorResponse[Nothing, Nothing]
 
 object Actor {
   class ActorOf[Msg] {
-    def apply[Res, State](init: State)(fn: Transition[Msg, State] => ActorResponse[Res, State])(implicit ec: ExecutionContext): Actor[Msg, Res, State] =
+    def apply[Res, State](init: State)(
+        fn: Transition[Msg, State] => ActorResponse[Res, State])(
+        implicit ec: ExecutionContext): Actor[Msg, Res, State] =
       new Actor[Msg, Res, State](init) {
-        def handle(trans: Transition[Msg, State]): ActorResponse[Res, State] = fn(trans)
+        def handle(trans: Transition[Msg, State]): ActorResponse[Res, State] =
+          fn(trans)
       }
   }
 
@@ -41,32 +44,36 @@ object Actor {
 
 case class IgnoredException() extends Exception("Message was ignored")
 
-abstract class Actor[Msg, Res, State](init: State)(implicit executionContext: ExecutionContext) {
- 
+abstract class Actor[Msg, Res, State](init: State)(
+    implicit executionContext: ExecutionContext) {
+
   private var future: Future[Res] = Future.successful(null.asInstanceOf[Res])
   private var stateVar: State = init
 
-  protected def enqueue(fn: => ActorResponse[Res, State]): Future[Res] = future.synchronized {
-    val promise = Promise[Res]
-    future = future.andThen { case _ =>
-      val result = Try(fn) match {
-        case Success(Ignore) =>
-          promise.failure(IgnoredException())
-        case Success(Update(r, s)) =>
-          promise.success(r)
-          stateVar = s
-        case Success(Reply(r)) =>
-          promise.success(r)
-        case Failure(err) =>
-          promise.failure(err)
+  protected def enqueue(fn: => ActorResponse[Res, State]): Future[Res] =
+    future.synchronized {
+      val promise = Promise[Res]
+      future = future.andThen {
+        case _ =>
+          val result = Try(fn) match {
+            case Success(Ignore) =>
+              promise.failure(IgnoredException())
+            case Success(Update(r, s)) =>
+              promise.success(r)
+              stateVar = s
+            case Success(Reply(r)) =>
+              promise.success(r)
+            case Failure(err) =>
+              promise.failure(err)
+          }
       }
+      promise.future
     }
-    promise.future
-  }
 
   def state: State = stateVar
 
-  def cue(msg: Msg): Future[Res] = enqueue { handle(Transition(msg, stateVar)) }
+  def cue(msg: Msg): Future[Res] =
+    enqueue { handle(Transition(msg, stateVar)) }
 
   def handle(trans: Transition[Msg, State]): ActorResponse[Res, State]
 }

@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.net
 import rapture.core._
@@ -24,12 +24,16 @@ import scala.collection.mutable.HashMap
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-case class Cookie[I, D](domain: String, name: String, value: String,
-    path: RootedPath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
+case class Cookie[I, D](domain: String,
+                        name: String,
+                        value: String,
+                        path: RootedPath,
+                        expiry: Option[I],
+                        secure: Boolean)(implicit ts: TimeSystem[I, D]) {
   lazy val pathString = path.toString
 }
 
-class Browser[I: TimeSystem.ByInstant]() {
+class Browser[I : TimeSystem.ByInstant]() {
   val browserString = "Rapture Browser 2.0.0"
   private val Rfc1036Pattern = "EEE, dd-MMM-yyyy HH:mm:ss zzz"
 
@@ -39,31 +43,45 @@ class Browser[I: TimeSystem.ByInstant]() {
     new HashMap[(String, String, RootedPath), Cookie[I, _]]
 
   def parseCookie(s: String, domain: String): Cookie[I, _] = {
-    val ps = s.split(";").map(_.trim.split("=")) map { a =>
-      a(0) -> (if(a.length > 1) a(1).urlDecode else "")
-    }
+    val ps =
+      s.split(";").map(_.trim.split("=")) map { a =>
+        a(0) -> (if (a.length > 1) a(1).urlDecode else "")
+      }
     val details = ps.tail.toMap
 
-    Cookie(details.get("domain").getOrElse(domain), ps.head._1, ps.head._2,
-      RootedPath.parse(details.get("path").getOrElse("")).getOrElse(RootedPath(Vector())),
-      details.get("expires") map { exp =>
-        ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US).parse(exp).getTime)
-      }, details.contains("secure"))
+    Cookie(details.get("domain").getOrElse(domain),
+           ps.head._1,
+           ps.head._2,
+           RootedPath
+             .parse(details.get("path").getOrElse(""))
+             .getOrElse(RootedPath(Vector())),
+           details.get("expires") map { exp =>
+             ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US)
+                   .parse(exp)
+                   .getTime)
+           },
+           details.contains("secure"))
   }
 
   def domainCookies(domain: String, secure: Boolean, path: String): String = {
     val now = System.currentTimeMillis
     cookies foreach { c =>
-      if(c._2.expiry.map(e => ts.fromInstant(e) < now).getOrElse(false))
+      if (c._2.expiry.map(e => ts.fromInstant(e) < now).getOrElse(false))
         cookies.remove((c._2.domain, c._2.name, c._2.path))
     }
 
-    cookies.toList.filter(secure || !_._2.secure).filter(domain endsWith
-        _._2.domain).filter(path startsWith _._2.pathString).map(_._2).groupBy(_.name) map { c =>
-        c._1+"="+c._2.maxBy(_.pathString.length).value.urlEncode } mkString "; "
+    cookies.toList
+      .filter(secure || !_._2.secure)
+      .filter(domain endsWith _._2.domain)
+      .filter(path startsWith _._2.pathString)
+      .map(_._2)
+      .groupBy(_.name) map { c =>
+      c._1 + "=" + c._2.maxBy(_.pathString.length).value.urlEncode
+    } mkString "; "
   }
 
-  def accept[I2, D](c: Cookie[I2, D]): Boolean = c.domain.split("\\.").length > 1
+  def accept[I2, D](c: Cookie[I2, D]): Boolean =
+    c.domain.split("\\.").length > 1
 
   /*class BrowserUrl(url: HttpUrl) {
 
@@ -108,4 +126,3 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   def apply(url: HttpUrl): BrowserUrl = new BrowserUrl(url)*/
 }
-

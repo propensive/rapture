@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.net
 import rapture.io._
@@ -37,42 +37,55 @@ object `package` {
 
   implicit class EnrichedHttpUriContext(uc: UriContext.type) {
     def http(constants: List[String])(variables: List[String]) =
-      Http.parse("http:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
-    
+      Http.parse("http:" +
+          constants.zip(variables :+ "").map { case (a, b) => a + b }.mkString)
+
     def https(constants: List[String])(variables: List[String]) =
-      Https.parse("https:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
+      Https.parse("https:" +
+          constants.zip(variables :+ "").map { case (a, b) => a + b }.mkString)
   }
 
-  implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout, toUri: UriCapable[HttpUrl]): Sizable[HttpUrl, Byte] = new Sizable[HttpUrl, Byte] {
-    type ExceptionType = HttpExceptions
-    HttpSupport.basicHttpSupport
-    def size(url: HttpUrl): Long = url.httpHead().headers.get("Content-Length").get.head.toLong
-  }
+  implicit def httpUrlSizable(
+      implicit httpTimeout: HttpTimeout,
+      toUri: UriCapable[HttpUrl]): Sizable[HttpUrl, Byte] =
+    new Sizable[HttpUrl, Byte] {
+      type ExceptionType = HttpExceptions
+      HttpSupport.basicHttpSupport
+      def size(url: HttpUrl): Long =
+        url.httpHead().headers.get("Content-Length").get.head.toLong
+    }
 
-  implicit def httpCapable[Res: HttpSupport](res: Res): HttpSupport.Capability[Res] = new HttpSupport.Capability[Res](res)
+  implicit def httpCapable[Res : HttpSupport](
+      res: Res): HttpSupport.Capability[Res] =
+    new HttpSupport.Capability[Res](res)
 
   implicit val httpStreamByteReader: JavaInputStreamReader[HttpUrl] =
     new JavaInputStreamReader[HttpUrl]({ u =>
-      new java.net.URL(u.uri.toString).openConnection.asInstanceOf[java.net.HttpURLConnection].getInputStream
+      new java.net.URL(u.uri.toString).openConnection
+        .asInstanceOf[java.net.HttpURLConnection]
+        .getInputStream
     })
-  
+
   implicit val httpQueryStreamByteReader: JavaInputStreamReader[HttpQuery] =
     new JavaInputStreamReader[HttpQuery]({ u =>
-      new java.net.URL(u.uri.toString).openConnection.asInstanceOf[java.net.HttpURLConnection].getInputStream
+      new java.net.URL(u.uri.toString).openConnection
+        .asInstanceOf[java.net.HttpURLConnection]
+        .getInputStream
     })
-  
+
   implicit val httpResponseCharReader: Reader[HttpResponse, Char] =
-      new Reader[HttpResponse, Char] {
-    def input(response: HttpResponse): Input[Char] = {
-      import encodings.`UTF-8`._
-      response.input[Char]
+    new Reader[HttpResponse, Char] {
+      def input(response: HttpResponse): Input[Char] = {
+        import encodings.`UTF-8`._
+        response.input[Char]
+      }
     }
-  }
 
   implicit val httpResponseByteReader: Reader[HttpResponse, Byte] =
     new Reader[HttpResponse, Byte] {
       def input(response: HttpResponse): Input[Byte] =
-        response.input[Byte](?[InputBuilder[InputStream, Byte]], modes.throwExceptions())
+        response.input[Byte](
+            ?[InputBuilder[InputStream, Byte]], modes.throwExceptions())
     }
 
   implicit val socketStreamByteReader: JavaInputStreamReader[SocketUri] =
@@ -80,8 +93,7 @@ object `package` {
 
   implicit val socketStreamByteWriter: JavaOutputStreamWriter[SocketUri] =
     new JavaOutputStreamWriter[SocketUri](_.javaSocket.getOutputStream)
-  
+
   implicit val socketStreamByteAppender: JavaOutputAppender[SocketUri] =
     new JavaOutputAppender[SocketUri](_.javaSocket.getOutputStream)
 }
-

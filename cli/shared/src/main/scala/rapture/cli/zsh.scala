@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.cli
 
@@ -23,8 +23,9 @@ object Encoder {
   private val Translations = "<>#{}|\\^~[]`/?:@=&$!*:; ".to[Vector]
 
   def encode(s: String): String = s flatMap { c =>
-    if(Translations contains c) {
-      "%"+(c/16 + c/160*7 + 48).toChar+(c%16 + c%16/10*7 + 48).toChar
+    if (Translations contains c) {
+      "%" + (c / 16 + c / 160 * 7 + 48).toChar +
+      (c % 16 + c % 16 / 10 * 7 + 48).toChar
     } else c.toString
   }
 }
@@ -36,27 +37,34 @@ object Compadd {
 
   def padRows(lists: Vector[Vector[String]]): Vector[String] = {
     val widths = maxWidths(lists)
-    lists.map(_.zip(widths).map { case (s, w) => s.padTo(w, ' ') }.mkString("  "))
+    lists.map(
+        _.zip(widths).map { case (s, w) => s.padTo(w, ' ') }.mkString("  "))
   }
 
-  def apply(groupTitle: Option[String] = None, completions: Vector[String] = Vector(),
-      columns: Boolean = true, descriptions: String => Vector[String] = _ => Vector(),
-      colWidth: Int = 1000, hidden: Boolean): Vector[String] = {
-    
+  def apply(groupTitle: Option[String] = None,
+            completions: Vector[String] = Vector(),
+            columns: Boolean = true,
+            descriptions: String => Vector[String] = _ => Vector(),
+            colWidth: Int = 1000,
+            hidden: Boolean): Vector[String] = {
+
     val display: Option[Vector[String]] = {
       val ds: Vector[Vector[String]] = completions.to[Vector] map descriptions
-      if(ds.forall(_.isEmpty)) None
+      if (ds.forall(_.isEmpty)) None
       else Some(padRows(completions zip ds map { case (c, d) => c +: d }))
     }
-    
-    display.toVector.flatten.map(s => "let "+Encoder.encode(s.take(colWidth - 1))) :+ Vector.strap(
-      "compadd",
-      groupTitle.to[Vector].flatMap(Seq("-J", _)),
-      if(columns) Some("-l") else None,
-      if(hidden) None else Some("-d matches"),
-      if(hidden) Some("-n") else None,
-      "--",
-      completions.map(Encoder.encode)
-    ).mkString(" ")
+
+    display.toVector.flatten
+      .map(s => "let " + Encoder.encode(s.take(colWidth - 1))) :+ Vector
+      .strap(
+          "compadd",
+          groupTitle.to[Vector].flatMap(Seq("-J", _)),
+          if (columns) Some("-l") else None,
+          if (hidden) None else Some("-d matches"),
+          if (hidden) Some("-n") else None,
+          "--",
+          completions.map(Encoder.encode)
+      )
+      .mkString(" ")
   }
 }

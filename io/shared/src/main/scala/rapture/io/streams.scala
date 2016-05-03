@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.io
 import rapture.core._
@@ -30,11 +30,14 @@ trait Closable[-R] { def close(resource: R): Unit }
 object Utils {
 
   /** Safely closes a stream after processing */
-  def ensuring[Res, Strm: Closable](create: Strm)(blk: Strm => Res) = {
+  def ensuring[Res, Strm : Closable](create: Strm)(blk: Strm => Res) = {
     val stream = create
     val result = try { blk(stream) } catch {
-      case e: Throwable => try { implicitly[Closable[Strm]].close(stream) } catch { case e2: Exception => () }
-      throw e
+      case e: Throwable =>
+        try { implicitly[Closable[Strm]].close(stream) } catch {
+          case e2: Exception => ()
+        }
+        throw e
     }
 
     implicitly[Closable[Strm]].close(stream)
@@ -44,29 +47,34 @@ object Utils {
 }
 
 /** Makes a `String` viewable as an `rapture.io.Input[Char]` */
-case class StringIsInput(string: String) extends CharInput(alloc[StringReader](string))
+case class StringIsInput(string: String)
+    extends CharInput(alloc[StringReader](string))
 
 /** Makes an `Array[Byte]` viewable as an `Input[Byte]` */
-case class ByteArrayInput(array: Array[Byte]) extends ByteInput(alloc[ByteArrayInputStream](array))
+case class ByteArrayInput(array: Array[Byte])
+    extends ByteInput(alloc[ByteArrayInputStream](array))
 
 object InputBuilder {
-  implicit def stringInputBuilder(implicit encoding: Encoding): InputBuilder[InputStream,
-      String] =
+  implicit def stringInputBuilder(
+      implicit encoding: Encoding): InputBuilder[InputStream, String] =
     new InputBuilder[InputStream, String] {
       def input(s: InputStream): Input[String] =
         alloc[LineInput](alloc[InputStreamReader](s, encoding.name))
     }
+
   /** Type class definition for creating an Input[Char] from a Java InputStream, taking an
     * [[Encoding]] implicitly for converting between `Byte`s and `Char`s */
-  implicit def inputStreamCharBuilder(implicit encoding: Encoding):
-      InputBuilder[InputStream, Char] =
+  implicit def inputStreamCharBuilder(
+      implicit encoding: Encoding): InputBuilder[InputStream, Char] =
     new InputBuilder[InputStream, Char] {
       def input(s: InputStream): Input[Char] =
         alloc[CharInput](alloc[InputStreamReader](s, encoding.name))
     }
-  implicit val buildInputStream: InputBuilder[InputStream, Byte] = InputStreamBuilder
+  implicit val buildInputStream: InputBuilder[InputStream, Byte] =
+    InputStreamBuilder
   implicit val buildReader: InputBuilder[java.io.Reader, Char] = ReaderBuilder
-  implicit val buildLineReader: InputBuilder[java.io.Reader, String] = LineReaderBuilder
+  implicit val buildLineReader: InputBuilder[java.io.Reader, String] =
+    LineReaderBuilder
 }
 
 object Input {
@@ -85,25 +93,25 @@ trait InputBuilder[InputType, Data] {
 }
 
 object OutputBuilder {
-  implicit val buildOutputStream: OutputBuilder[OutputStream, Byte] = OutputStreamBuilder
+  implicit val buildOutputStream: OutputBuilder[OutputStream, Byte] =
+    OutputStreamBuilder
   implicit val buildWriter: OutputBuilder[java.io.Writer, Char] = WriterBuilder
 
-  implicit def stringOutputBuilder(implicit encoding: Encoding):
-      OutputBuilder[OutputStream, String] =
+  implicit def stringOutputBuilder(
+      implicit encoding: Encoding): OutputBuilder[OutputStream, String] =
     new OutputBuilder[OutputStream, String] {
       def output(s: OutputStream): Output[String] =
         new LineOutput(new OutputStreamWriter(s, encoding.name))
     }
+
   /** Type class definition for creating an Output[Char] from a Java OutputStream, taking an
     * [[Encoding]] implicitly for converting between `Byte`s and `Char`s */
-  implicit def outputStreamCharBuilder(implicit encoding: Encoding):
-      OutputBuilder[OutputStream, Char] =
+  implicit def outputStreamCharBuilder(
+      implicit encoding: Encoding): OutputBuilder[OutputStream, Char] =
     new OutputBuilder[OutputStream, Char] {
       def output(s: OutputStream): Output[Char] =
         alloc[CharOutput](alloc[OutputStreamWriter](s, encoding.name))
     }
-
-
 }
 
 /** Type trait for building a new `Output[Data]` from particular kind of output stream
@@ -122,53 +130,69 @@ object AppenderBuilder {
     }
 }
 
-trait AppenderBuilder[OutputType, Data] { def appendOutput(s: OutputType): Output[Data] }
+trait AppenderBuilder[OutputType, Data] {
+  def appendOutput(s: OutputType): Output[Data]
+}
 
 object Appendable {
   class Capability[Res](res: Res) {
-    def appendOutput[Data](implicit sa: Appender[Res, Data], mode: Mode[`Appendable#appendOutput`]) =
+    def appendOutput[Data](implicit sa: Appender[Res, Data],
+                           mode: Mode[`Appendable#appendOutput`]) =
       sa.appendOutput(res)
-    
-    def handleAppend[Data, Res2](body: Output[Data] => Res2)(implicit sw:
-        Appender[Res, Data]): Res2 = {
+
+    def handleAppend[Data, Res2](body: Output[Data] => Res2)(
+        implicit sw: Appender[Res, Data]): Res2 = {
       ensuring(appendOutput[Data])(body)
     }
   }
-
 }
 
 object Readable {
   class Capability[Res](res: Res) {
 
     /** Gets the input for the resource specified in this resource */
-    def input[Data](implicit sr: Reader[Res, Data], mode: Mode[`Readable#input`]):
-      mode.Wrap[Input[Data], Exception] = mode.wrap(sr.input(res))
-   
+    def input[Data](
+        implicit sr: Reader[Res, Data],
+        mode: Mode[`Readable#input`]): mode.Wrap[Input[Data], Exception] =
+      mode.wrap(sr.input(res))
+
     /** Pumps the input for the specified resource to the destination resource provided */
-    def redirectTo[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data], sw: Writer[DestRes, Data],
-        mode: Mode[`Readable#redirectTo`], mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
-      mode.wrap(handleInput[Data, Int] { in =>
+    def redirectTo[Data, DestRes](dest: DestRes)(
+        implicit sr: Reader[Res, Data],
+        sw: Writer[DestRes, Data],
+        mode: Mode[`Readable#redirectTo`],
+        mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
+      mode.wrap(
+          handleInput[Data, Int] { in =>
         writable(dest).handleOutput[Data, Int](in pumpTo _)
       })
-    
-    def >[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data], sw: Writer[DestRes, Data],
-        mode: Mode[`Readable#redirectTo`], mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
-      redirectTo[Data, DestRes](dest)(sr, sw, mode, mf)
-    
-    def pipeTo[Data, DestRes](dest: DestRes)(implicit sr:
-        Reader[Res, Data], sw: Writer[DestRes, Data], mf: ClassTag[Data]):
-        DestRes = {
-          redirectTo(dest)
-          dest
-        }
 
-    def |[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data], sw: Writer[DestRes, Data],
-        mf: ClassTag[Data]): DestRes = pipeTo(dest)(sr, sw, mf)
-
-    def >>[Data, DestRes](dest: DestRes)(implicit sr:
-        Reader[Res, Data], sw: Appender[DestRes, Data], mode: Mode[`Readable#appendTo`],
+    def >[Data, DestRes](dest: DestRes)(
+        implicit sr: Reader[Res, Data],
+        sw: Writer[DestRes, Data],
+        mode: Mode[`Readable#redirectTo`],
         mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
-      mode.wrap(handleInput[Data, Int] { in =>
+      redirectTo[Data, DestRes](dest)(sr, sw, mode, mf)
+
+    def pipeTo[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data],
+                                             sw: Writer[DestRes, Data],
+                                             mf: ClassTag[Data]): DestRes = {
+      redirectTo(dest)
+      dest
+    }
+
+    def |[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data],
+                                        sw: Writer[DestRes, Data],
+                                        mf: ClassTag[Data]): DestRes =
+      pipeTo(dest)(sr, sw, mf)
+
+    def >>[Data, DestRes](
+        dest: DestRes)(implicit sr: Reader[Res, Data],
+                       sw: Appender[DestRes, Data],
+                       mode: Mode[`Readable#appendTo`],
+                       mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
+      mode.wrap(
+          handleInput[Data, Int] { in =>
         dest.handleAppend[Data, Int](in pumpTo _)
       })
 
@@ -176,8 +200,10 @@ object Readable {
       *
       * @tparam Data The type that the data should be pumped as
       * @param out The destination for data to be pumped to */
-    def >[Data](out: Output[Data])(implicit sr: Reader[Res, Data],
-        mode: Mode[`Readable#redirectTo`], mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
+    def >[Data](out: Output[Data])(
+        implicit sr: Reader[Res, Data],
+        mode: Mode[`Readable#redirectTo`],
+        mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
       mode.wrap(handleInput[Data, Int](_ pumpTo out))
 
     /** Carefully handles writing to the input stream, ensuring that it is closed following
@@ -187,59 +213,67 @@ object Readable {
       * @tparam Data The type of data the stream should carry
       * @tparam Res2 The type of body's result
       * @param body The code to be executed upon the this Input before it is closed */
-    def handleInput[Data, Res2](body: Input[Data] => Res2)(implicit sr:
-        Reader[Res, Data]): Res2 =
+    def handleInput[Data, Res2](body: Input[Data] => Res2)(
+        implicit sr: Reader[Res, Data]): Res2 =
       ensuring(input[Data])(body)
   }
 }
 
 object Writable {
   class Capability[Res](res: Res) {
-    
+
     /** Gets the output stream directly
       *
       * @tparam Data The type of data to be carried by the `Output` */
-    def output[Data](implicit sw: Writer[Res, Data], mode: Mode[`Writable#output`]):
-        mode.Wrap[Output[Data], Exception] = mode.wrap(sw.output(res))
-    
+    def output[Data](
+        implicit sw: Writer[Res, Data],
+        mode: Mode[`Writable#output`]): mode.Wrap[Output[Data], Exception] =
+      mode.wrap(sw.output(res))
+
     /** Carefully handles writing to the output stream, ensuring that it is closed following
       * data being written.
       *
       * @param body The code to be executed upon this `Output` before being closed.
       * @return The result from executing the body */
-    def handleOutput[Data, Res2](body: Output[Data] => Res2)(implicit sw:
-        Writer[Res, Data]): Res2 =
+    def handleOutput[Data, Res2](body: Output[Data] => Res2)(
+        implicit sw: Writer[Res, Data]): Res2 =
       ensuring(output[Data])(body)
   }
 }
 
 object Writer {
   implicit def byteToLineWriters[T](implicit jisw: JavaOutputStreamWriter[T],
-      encoding: Encoding): Writer[T, String] = new Writer[T, String] {
-    def output(t: T): Output[String] = alloc[LineOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
-  }
+                                    encoding: Encoding): Writer[T, String] =
+    new Writer[T, String] {
+      def output(t: T): Output[String] =
+        alloc[LineOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
+    }
 
   implicit def byteToCharWriters[T](implicit jisw: JavaOutputStreamWriter[T],
-      encoding: Encoding): Writer[T, Char] = new Writer[T, Char] {
-    def output(t: T): Output[Char] = alloc[CharOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
-  }
-  
+                                    encoding: Encoding): Writer[T, Char] =
+    new Writer[T, Char] {
+      def output(t: T): Output[Char] =
+        alloc[CharOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
+    }
+
   implicit val stdoutWriter: JavaOutputStreamWriter[Stdout.type] =
     new JavaOutputStreamWriter[Stdout.type](x => System.out, _ => ())
 
-  implicit val stderrWriter: Writer[Stderr.type, Byte] = new Writer[Stderr.type, Byte] {
-    def output(stderr: Stderr.type): Output[Byte] =
-      ?[OutputBuilder[OutputStream, Byte]].output(System.out)
-  }
+  implicit val stderrWriter: Writer[Stderr.type, Byte] =
+    new Writer[Stderr.type, Byte] {
+      def output(stderr: Stderr.type): Output[Byte] =
+        ?[OutputBuilder[OutputStream, Byte]].output(System.out)
+    }
 }
 
 /** Type trait for defining how a resource of type U should 
   *
   * @tparam Resource Resource for which this corresponds
   * @tparam Data Units of data to be streamed, typically `Byte` or `Char` */
-@implicitNotFound(msg = "Cannot write ${Data} data to ${Resource} resources. Note that if you "+
-    "are working with Char data, you will require an implicit character encoding, e.g. "+
-    "import encodings.system._ or import encodings.`UTF-8`._.")
+@implicitNotFound(
+    msg = "Cannot write ${Data} data to ${Resource} resources. Note that if you " +
+      "are working with Char data, you will require an implicit character encoding, e.g. " +
+      "import encodings.system._ or import encodings.`UTF-8`._.")
 trait Writer[-Resource, @specialized(Byte, Char) Data] {
   def output(res: Resource): Output[Data]
 }
@@ -247,19 +281,21 @@ trait Writer[-Resource, @specialized(Byte, Char) Data] {
 object Appender extends Appender_1 {
 
   implicit def byteToCharAppenders[T](implicit jisw: JavaOutputAppender[T],
-      encoding: Encoding): Appender[T, Char] = new Appender[T, Char] {
-    def appendOutput(t: T): Output[Char] =
-      alloc[CharOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
-  }
-  
-  implicit def byteToLineAppender[Res](implicit appender: Appender[Res, Byte], enc: Encoding) = {
+                                      encoding: Encoding): Appender[T, Char] =
+    new Appender[T, Char] {
+      def appendOutput(t: T): Output[Char] =
+        alloc[CharOutput](alloc[OutputStreamWriter](jisw.getOutputStream(t)))
+    }
+
+  implicit def byteToLineAppender[Res](
+      implicit appender: Appender[Res, Byte], enc: Encoding) = {
     new Appender[Res, String] {
       def appendOutput(res: Res): Output[String] = new Output[String] {
         private lazy val output = appender.appendOutput(res)
         def close() = output.close()
         def flush() = output.flush()
         def write(s: String) = {
-          output.writeBlock((s+"\n").getBytes(enc.name))
+          output.writeBlock((s + "\n").getBytes(enc.name))
           output.flush()
         }
       }
@@ -274,21 +310,21 @@ object Appender extends Appender_1 {
 
   implicit val stdoutCharAppender: Appender[Stdout.type, Char] =
     byteToCharAppenders(stdoutAppender, encodings.system())
-  
+
   implicit val stderrCharAppender: Appender[Stderr.type, Char] =
     byteToCharAppenders(stderrAppender, encodings.system())
-
 }
 
 trait Appender_1 {
-  implicit def charToLineAppender[Res](implicit appender: Appender[Res, Char]) = {
+  implicit def charToLineAppender[Res](
+      implicit appender: Appender[Res, Char]) = {
     new Appender[Res, String] {
       def appendOutput(res: Res): Output[String] = new Output[String] {
         private lazy val output = appender.appendOutput(res)
         def close() = output.close()
         def flush() = output.flush()
         def write(s: String) = {
-          output.writeBlock((s+"\n").to[Array])
+          output.writeBlock((s + "\n").to[Array])
           output.flush()
         }
       }
@@ -326,12 +362,13 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
   private var beingHandled = false
 
   override def toString() = "<input>"
- 
+
   // FIXME: This just shouldn't be a Seq
-  def length: Int = throw alloc[Exception]("Cannot calculate length of a stream")
+  def length: Int =
+    throw alloc[Exception]("Cannot calculate length of a stream")
 
   def apply(n: Int) = {
-    for(i <- 0 until n) read()
+    for (i <- 0 until n) read()
     read().get
   }
 
@@ -359,7 +396,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
     * will result in a new instance of `Some` to be constructed, so for reading larger block,
     * use the `readBlock` method which may be implemented more efficiently. */
   def read(): Option[Data]
- 
+
   /** Default implementation for reading a block of data from the input stream into the
     * specified array.
     *
@@ -374,7 +411,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
     * @return The number of items of data transferred */
   def readBlock(array: Array[Data], offset: Int = 0, length: Int = -1): Int = {
 
-    val end = if(length < 0) (array.length - offset) else (offset + length)
+    val end = if (length < 0) (array.length - offset) else (offset + length)
 
     read() match {
       case None => -1
@@ -382,7 +419,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
         array(offset) = c
         var i = offset + 1
         var continue = true
-        while(i < end && continue) {
+        while (i < end && continue) {
           read() match {
             case None =>
               continue = false
@@ -398,7 +435,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
 
   /** Closes the input stream so that no further data will be provided. */
   def close(): Unit
-  
+
   /** Pumps data from this `Input` to the specified `Output` until the end of the stream is
     * reached.
     *
@@ -407,7 +444,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
     val buf: Array[Data] = alloc(65536)
     var len = readBlock(buf)
     var count = 0
-    while(len >= 0) {
+    while (len >= 0) {
       out.writeBlock(buf, length = len)
       count += len
       len = readBlock(buf)
@@ -427,29 +464,30 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
     private var buf: Seq[T] = Nil
     private var cur = 0
     private var avail = 0
-    
-    def read(): Option[T] = if(cur == avail) {
-      cur = 0
-      avail = 0
-      thisInput.read().map(fn) match {
-        case None => None
-        case Some(xs) =>
-          if(xs.isEmpty) read()
-          else if(xs.length == 1) xs.headOption
-          else {
-            avail = xs.length
-            cur += 1
-            buf = xs
-            xs.headOption
-          }
+
+    def read(): Option[T] =
+      if (cur == avail) {
+        cur = 0
+        avail = 0
+        thisInput.read().map(fn) match {
+          case None => None
+          case Some(xs) =>
+            if (xs.isEmpty) read()
+            else if (xs.length == 1) xs.headOption
+            else {
+              avail = xs.length
+              cur += 1
+              buf = xs
+              xs.headOption
+            }
+        }
+      } else {
+        cur += 1
+        Some(buf(cur - 1))
       }
-    } else {
-      cur += 1
-      Some(buf(cur - 1))
-    }
-    
+
     def ready(): Boolean = cur < avail || thisInput.ready()
-    
+
     def close(): Unit = {
       cur = 0
       avail = 0
@@ -459,7 +497,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
 
   override def foreach[U](fn: Data => U): Unit = {
     var next: Option[Data] = read()
-    while(next != None) {
+    while (next != None) {
       fn(next.get)
       next = read()
     }
@@ -467,15 +505,16 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
 }
 
 object Output {
-  implicit def outputClosable[T]: Closable[Output[T]] = new Closable[Output[T]] {
-    def close(out: Output[T]): Unit = out.close()
-  }
+  implicit def outputClosable[T]: Closable[Output[T]] =
+    new Closable[Output[T]] {
+      def close(out: Output[T]): Unit = out.close()
+    }
 }
 
 /** Defines a generic output stream */
 trait Output[@specialized(Byte, Char) Data] {
   private var beingHandled = false
- 
+
   /** Writes one item of data to this stream
     *
     * @param data The data to be written */
@@ -494,13 +533,13 @@ trait Output[@specialized(Byte, Char) Data] {
     *        remainder of the array.
     * @return The number of data items written. */
   def writeBlock(array: Array[Data], offset: Int = 0, length: Int = -1): Int = {
-    
-    val end = if(length < 0) (array.length - offset) else (offset + length)
+
+    val end = if (length < 0) (array.length - offset) else (offset + length)
     array.slice(offset, end).foreach(write)
 
     end - offset
   }
- 
+
   /** Flushes the stream */
   def flush(): Unit
 
@@ -509,11 +548,13 @@ trait Output[@specialized(Byte, Char) Data] {
 }
 
 trait Reader_1 {
-  implicit def stringByteReader(implicit encoding: Encoding): Reader[String, Byte] =
+  implicit def stringByteReader(
+      implicit encoding: Encoding): Reader[String, Byte] =
     new Reader[String, Byte] {
-      def input(s: String): Input[Byte] = ByteArrayInput(s.getBytes(encoding.name))
+      def input(s: String): Input[Byte] =
+        ByteArrayInput(s.getBytes(encoding.name))
     }
-  
+
   implicit val stringLineReader: Reader[String, String] = StringLineReader
 }
 
@@ -523,16 +564,17 @@ object Reader extends Reader_1 {
       def input(in: I[T]): Input[T] = in
     }
 
-  implicit def byteInputToCharReader(implicit encoding: Encoding): Reader[Input[Char], Byte] =
+  implicit def byteInputToCharReader(
+      implicit encoding: Encoding): Reader[Input[Char], Byte] =
     new Reader[Input[Char], Byte] {
       def input(in: Input[Char]): Input[Byte] = new Input[Byte] {
         private var cued: Array[Byte] = Array()
         private var index = 0
         def read(): Option[Byte] = {
-          if(index >= cued.length) {
+          if (index >= cued.length) {
             // FIXME: Find a less stupid way of doing this
             val next = in.read()
-            if(next.isEmpty) return None
+            if (next.isEmpty) return None
             cued = next.get.toString.getBytes(encoding.name)
             index = 0
           }
@@ -544,64 +586,69 @@ object Reader extends Reader_1 {
         def close(): Unit = in.close()
       }
     }
-    
-  implicit def charInputToByteReader(implicit encoding: Encoding): Reader[Input[Byte], Char] =
+
+  implicit def charInputToByteReader(
+      implicit encoding: Encoding): Reader[Input[Byte], Char] =
     new Reader[Input[Byte], Char] {
       def input(in: Input[Byte]): Input[Char] = {
         val javaInputStream = new InputStream {
           def read(): Int = {
             val r = in.read()
-            if(r.isDefined) r.get.toInt else -1
+            if (r.isDefined) r.get.toInt else -1
           }
         }
-        alloc[CharInput](alloc[InputStreamReader](javaInputStream, encoding.name))
+        alloc[CharInput](
+            alloc[InputStreamReader](javaInputStream, encoding.name))
       }
     }
 
-
   implicit def byteToLineReaders[T](implicit jisr: JavaInputStreamReader[T],
-      encoding: Encoding): Reader[T, String] = new Reader[T, String] {
-    def input(t: T): Input[String] =
-      alloc[LineInput](alloc[InputStreamReader](jisr.getInputStream(t)))
-  }
+                                    encoding: Encoding): Reader[T, String] =
+    new Reader[T, String] {
+      def input(t: T): Input[String] =
+        alloc[LineInput](alloc[InputStreamReader](jisr.getInputStream(t)))
+    }
 
   implicit def byteToCharReaders[T](implicit jisr: JavaInputStreamReader[T],
-      encoding: Encoding): Reader[T, Char] = new Reader[T, Char] {
-    def input(t: T): Input[Char] =
-      alloc[CharInput](alloc[InputStreamReader](jisr.getInputStream(t)))
-  }
+                                    encoding: Encoding): Reader[T, Char] =
+    new Reader[T, Char] {
+      def input(t: T): Input[Char] =
+        alloc[CharInput](alloc[InputStreamReader](jisr.getInputStream(t)))
+    }
 
-  implicit def resourceBytes[Res](res: Res)(implicit sr: Reader[Res, Byte]): Bytes =
+  implicit def resourceBytes[Res](res: Res)(
+      implicit sr: Reader[Res, Byte]): Bytes =
     slurpable(res).slurp[Byte]
 
   implicit val stringCharReader: Reader[String, Char] = StringCharReader
   implicit val byteArrayReader: Reader[Array[Byte], Byte] = ByteArrayReader
   implicit val bytesReader: Reader[Bytes, Byte] = BytesReader
 
-  implicit val stdinReader: Reader[Stdin.type, Byte] = new Reader[Stdin.type, Byte] {
-    def input(stdin: Stdin.type): Input[Byte] =
-      ?[InputBuilder[InputStream, Byte]].input(System.in)
-  }
-  
+  implicit val stdinReader: Reader[Stdin.type, Byte] =
+    new Reader[Stdin.type, Byte] {
+      def input(stdin: Stdin.type): Input[Byte] =
+        ?[InputBuilder[InputStream, Byte]].input(System.in)
+    }
 }
 
 /** Generic type class for reading a particular kind of data from 
   */
-@implicitNotFound(msg = "Cannot find implicit Reader for ${Resource} resources. "+
-    "${Resource} resources can only be read if a Reader implicit exists within scope. "+
-    "Note that if you are working with Char data, you will require an implicit character "+
-    "encoding, e.g. import encodings.system._ or import encodings.`UTF-8`._.")
+@implicitNotFound(
+    msg = "Cannot find implicit Reader for ${Resource} resources. " +
+      "${Resource} resources can only be read if a Reader implicit exists within scope. " +
+      "Note that if you are working with Char data, you will require an implicit character " +
+      "encoding, e.g. import encodings.system._ or import encodings.`UTF-8`._.")
 trait Reader[-Resource, @specialized(Byte, Char) Data] {
-  
+
   /** Creates the `Input` for streaming data of the specified type from the given resource
     *
     * @param res The resource to get the input stream from
     * @return an `Input[Data]` for the specified resource */
   def input(res: Resource): Input[Data]
-  
+
   /** Pumps data from the specified resource to the given destination resource */
-  def pump[DestResource](res: Resource, dest: DestResource)(implicit sw:
-      Writer[DestResource, Data], mf: ClassTag[Data]): Int =
+  def pump[DestResource](res: Resource, dest: DestResource)(
+      implicit sw: Writer[DestResource, Data], mf: ClassTag[Data]): Int =
     input(res) pumpTo sw.output(dest)
 }
 
@@ -618,7 +665,7 @@ object StringLineReader extends Reader[String, String] {
     def close() = ()
     def read() = {
       cur += 1
-      if(ready()) Some(lines(cur)) else None
+      if (ready()) Some(lines(cur)) else None
     }
   }
 }

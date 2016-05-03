@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.cli
 
@@ -28,25 +28,32 @@ import language.higherKinds
 trait `Process#exec` extends MethodConstraint
 
 case class Process(params: Vector[String]) {
-  def exec[T: ProcessInterpreter](implicit mode: Mode[`Process#exec`], env: Environment):
-      mode.Wrap[T, CliException] = mode.wrap {
-    val javaProcess = Runtime.getRuntime().exec(params.to[Array],
-        env().map { case (k, v) => s"$k=$v" }.to[Array],
-	new File(env.workDir.getOrElse(System.getenv("HOME"))))
-    val stream = new ByteInput(new BufferedInputStream(javaProcess.getInputStream))
-    val stderr = new ByteInput(new BufferedInputStream(javaProcess.getErrorStream))
-    ?[ProcessInterpreter[T]].interpret(stream, stderr, () => javaProcess.waitFor())
+  def exec[T : ProcessInterpreter](
+      implicit mode: Mode[`Process#exec`],
+      env: Environment): mode.Wrap[T, CliException] = mode.wrap {
+    val javaProcess = Runtime
+      .getRuntime()
+      .exec(params.to[Array],
+            env().map { case (k, v) => s"$k=$v" }.to[Array],
+            new File(env.workDir.getOrElse(System.getenv("HOME"))))
+    val stream =
+      new ByteInput(new BufferedInputStream(javaProcess.getInputStream))
+    val stderr =
+      new ByteInput(new BufferedInputStream(javaProcess.getErrorStream))
+    ?[ProcessInterpreter[T]]
+      .interpret(stream, stderr, () => javaProcess.waitFor())
   }
 
   override def toString = {
-    val escaped = params.map(_.flatMap {
+    val escaped = params.map(
+        _.flatMap {
       case '\'' => "\\'"
       case '"' => "\\\""
       case '\\' => "\\\\"
       case ' ' => "\\ "
       case chr => chr.toString
     })
-    
+
     s"""sh"${escaped.mkString(" ")}""""
   }
 }
@@ -69,58 +76,68 @@ trait Environment {
 package environments {
   object empty {
     def apply(): Environment = implicitEnvironment
-    implicit val implicitEnvironment: Environment =
-      new Environment {
-        def apply(): Map[String, String] = Map()
-	def workDir = None
-      }
+    implicit val implicitEnvironment: Environment = new Environment {
+      def apply(): Map[String, String] = Map()
+      def workDir = None
+    }
   }
 
   object enclosing {
     def apply(): Environment = implicitEnvironment
-    implicit val implicitEnvironment: Environment = Environment.defaultEnvironment
+    implicit val implicitEnvironment: Environment =
+      Environment.defaultEnvironment
   }
 }
 
 trait ProcessInterpreter_1 {
-  implicit def genSeqInterpreter[Coll[_], T](implicit cbf:
-      collection.generic.CanBuildFrom[Nothing, T, Coll[T]], stringParser: StringParser[T]):
-      ProcessInterpreter[Coll[T]] = new ProcessInterpreter[Coll[T]] {
-    def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int):
-        Coll[T] = {
-      val out = input.slurp[Char]
-      exitStatus() match {
-        case 0 =>
-          val builder = cbf()
-          // FIXME: Reimplement this using a streaming method
-          out.split("\n").foreach { s => builder += stringParser.parse(s, modes.throwExceptions()) }
-          builder.result()
-        case n =>
-          throw ShellProcessException(n, out.trim)
+  implicit def genSeqInterpreter[Coll[_], T](
+      implicit cbf: collection.generic.CanBuildFrom[Nothing, T, Coll[T]],
+      stringParser: StringParser[T]): ProcessInterpreter[Coll[T]] =
+    new ProcessInterpreter[Coll[T]] {
+      def interpret(input: Input[Byte],
+                    stderr: Input[Byte],
+                    exitStatus: () => Int): Coll[T] = {
+        val out = input.slurp[Char]
+        exitStatus() match {
+          case 0 =>
+            val builder = cbf()
+            // FIXME: Reimplement this using a streaming method
+            out.split("\n").foreach { s =>
+              builder += stringParser.parse(s, modes.throwExceptions())
+            }
+            builder.result()
+          case n =>
+            throw ShellProcessException(n, out.trim)
+        }
       }
     }
-  }
-
 }
- 
+
 object ProcessInterpreter extends ProcessInterpreter_1 {
-  
-  implicit def stringProcessInterpreter[T](implicit stringParser: StringParser[T]): ProcessInterpreter[T] =
+
+  implicit def stringProcessInterpreter[T](
+      implicit stringParser: StringParser[T]): ProcessInterpreter[T] =
     new ProcessInterpreter[T] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): T = {
+      def interpret(input: Input[Byte],
+                    stderr: Input[Byte],
+                    exitStatus: () => Int): T = {
         val out = input.slurp[Char]
         val err = stderr.slurp[Char]
         exitStatus() match {
           case n =>
-            stringParser.parse(if(out == "" || out.last != '\n') out else out.init, modes.throwExceptions())
+            stringParser.parse(
+                if (out == "" || out.last != '\n') out else out.init,
+                modes.throwExceptions())
           //case n => throw ShellProcessException(n, out.trim)
         }
       }
     }
-  
+
   implicit val bytesProcessInterpreter: ProcessInterpreter[Bytes] =
     new ProcessInterpreter[Bytes] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): Bytes = {
+      def interpret(input: Input[Byte],
+                    stderr: Input[Byte],
+                    exitStatus: () => Int): Bytes = {
         val out = input.slurp[Byte]
         exitStatus() match {
           case 0 => out
@@ -128,31 +145,39 @@ object ProcessInterpreter extends ProcessInterpreter_1 {
         }
       }
     }
-  
+
   implicit val byteInputProcessInterpreter: ProcessInterpreter[Input[Byte]] =
     new ProcessInterpreter[Input[Byte]] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): Input[Byte] = input
+      def interpret(input: Input[Byte],
+                    stderr: Input[Byte],
+                    exitStatus: () => Int): Input[Byte] = input
     }
-  
-  implicit def inputProcessInterpreter[T](implicit rdr: Reader[Input[Byte], T]):
-      ProcessInterpreter[Input[T]] =
+
+  implicit def inputProcessInterpreter[T](
+      implicit rdr: Reader[Input[Byte], T]): ProcessInterpreter[Input[T]] =
     new ProcessInterpreter[Input[T]] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): Input[T] =
+      def interpret(input: Input[Byte],
+                    stderr: Input[Byte],
+                    exitStatus: () => Int): Input[T] =
         input.input[T]
     }
-  
+
   implicit val exitStatusProcessInterpreter: ProcessInterpreter[ExitStatus] =
     new ProcessInterpreter[ExitStatus] {
-      def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): ExitStatus =
+      def interpret(input: Input[Byte],
+                    stderr: Input[Byte],
+                    exitStatus: () => Int): ExitStatus =
         ExitStatus(exitStatus())
     }
 }
 
 trait ProcessInterpreter[T] {
-  def interpret(input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): T
+  def interpret(
+      input: Input[Byte], stderr: Input[Byte], exitStatus: () => Int): T
 }
 
-case class ShellProcessException(exitStatus: Int, output: String) extends
-    Exception("Shell process returned non-zero exit status: "+exitStatus)
+case class ShellProcessException(exitStatus: Int, output: String)
+    extends Exception(
+        "Shell process returned non-zero exit status: " + exitStatus)
 
 case class ExitStatus(value: Int)

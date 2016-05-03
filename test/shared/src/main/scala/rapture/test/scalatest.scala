@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.test
 
@@ -21,15 +21,16 @@ import language.experimental.macros
 
 class Programme extends org.scalatest.FunSuite {
 
-  def include[TS <: TestSuite](suite: TS): Unit =
-    macro rapture.test.run.includeMacro[TS]
+  def include[TS <: TestSuite](suite: TS): Unit = macro rapture.test.run
+    .includeMacro[TS]
 
   def includeAll(tests: List[(String, TestSuite#Test)]): Unit = {
-    tests.foreach { case (n, t) =>
-      test(n) {
-        val result = t.runCheck()
-        assert(result == Success)
-      }
+    tests.foreach {
+      case (n, t) =>
+        test(n) {
+          val result = t.runCheck()
+          assert(result == Success)
+        }
     }
   }
 }

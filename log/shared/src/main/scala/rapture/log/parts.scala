@@ -13,8 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
-
+ */
 
 package rapture.log
 
@@ -26,15 +25,16 @@ object parts {
     def text(level: Int, lineNo: Int, source: String): String
     def fit(level: Int, lineNo: Int, source: String) = {
       val t = text(level, lineNo, source)
-      if(t.length > width) t.substring(0, width)
-      else if(align == Left) t.padTo(width, ' ')
-      else " "*(width - t.length)+t
+      if (t.length > width) t.substring(0, width)
+      else if (align == Left) t.padTo(width, ' ')
+      else " " * (width - t.length) + t
     }
-   
-    def apply(width: Int = width, align: Alignment = align): Part = new Part(width, align) {
-      def text(level: Int, lineNo: Int, source: String) =
-        part.text(level, lineNo, source)
-    }
+
+    def apply(width: Int = width, align: Alignment = align): Part =
+      new Part(width, align) {
+        def text(level: Int, lineNo: Int, source: String) =
+          part.text(level, lineNo, source)
+      }
   }
 
   sealed trait Alignment
@@ -62,7 +62,8 @@ object parts {
   }
 
   class Time(time: Long) extends Part(12, Left) {
-    def text(level: Int, lineNo: Int, source: String) = Time.timeFormat.format(time)
+    def text(level: Int, lineNo: Int, source: String) =
+      Time.timeFormat.format(time)
   }
 
   object Date {
@@ -71,7 +72,8 @@ object parts {
   }
 
   class Date(date: Long) extends Part(9, Left) {
-    def text(level: Int, lineNo: Int, source: String) = Date.dateFormat.format(date)
+    def text(level: Int, lineNo: Int, source: String) =
+      Date.dateFormat.format(date)
   }
 
   object sourceFile extends Part(4, Left) {
@@ -83,11 +85,11 @@ object parts {
   }
 
   object Thread {
-    implicit def currentThread: Thread = new Thread(java.lang.Thread.currentThread.getName)
+    implicit def currentThread: Thread =
+      new Thread(java.lang.Thread.currentThread.getName)
   }
 
   class Thread(name: String) extends Part(10, Left) {
     def text(level: Int, lineNo: Int, source: String) = name
   }
 }
-

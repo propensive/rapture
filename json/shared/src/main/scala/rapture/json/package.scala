@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json
 
@@ -33,12 +33,14 @@ object `package` {
   val TypeMismatchException = rapture.data.TypeMismatchException
   val MissingValueException = rapture.data.MissingValueException
 
-  implicit def jsonStringContext(sc: StringContext)(implicit parser: Parser[String, JsonAst]) =
+  implicit def jsonStringContext(sc: StringContext)(
+      implicit parser: Parser[String, JsonAst]) =
     new JsonStrings(sc)
-  
-  implicit def jsonBufferStringContext(sc: StringContext)
-      (implicit parser: Parser[String, JsonBufferAst]) =
+
+  implicit def jsonBufferStringContext(sc: StringContext)(
+      implicit parser: Parser[String, JsonBufferAst]) =
     new JsonBufferStrings(sc)
 
-  implicit class JsonOperations(json: Json) extends DataType.DataClassOperations[Json, JsonAst](json)
+  implicit class JsonOperations(json: Json)
+      extends DataType.DataClassOperations[Json, JsonAst](json)
 }

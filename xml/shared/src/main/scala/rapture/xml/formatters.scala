@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.xml
 
@@ -22,14 +22,16 @@ import rapture.data._
 
 object formatters {
   object compact {
-    def apply[Ast <: XmlAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } = xmlFormatterImplicit[Ast]
+    def apply[Ast <: XmlAst]()(
+        implicit ast: Ast): Formatter[Ast] { type Out = String } =
+      xmlFormatterImplicit[Ast]
 
-    implicit def xmlFormatterImplicit[Ast <: XmlAst](implicit ast: Ast): Formatter[Ast] { type Out = String } =
+    implicit def xmlFormatterImplicit[Ast <: XmlAst](
+        implicit ast: Ast): Formatter[Ast] { type Out = String } =
       new Formatter[Ast] {
         type Out = String
         // FIXME: This is a lazy implementation
         def format(xml: Any): String = xml.toString
-      }      
+      }
   }
 }
-

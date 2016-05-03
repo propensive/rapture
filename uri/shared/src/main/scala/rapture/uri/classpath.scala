@@ -13,27 +13,31 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
-
+ */
 
 package rapture.uri
 
 import rapture.core._
 
 object ClasspathUrl {
-  implicit def cpSlashString: Dereferenceable[ClasspathUrl, String, ClasspathUrl] =
+  implicit def cpSlashString: Dereferenceable[
+      ClasspathUrl, String, ClasspathUrl] =
     new Dereferenceable[ClasspathUrl, String, ClasspathUrl] {
-      def dereference(p1: ClasspathUrl, p2: String) = ClasspathUrl(p1.elements :+ p2)
-    }
-  
-  implicit def cpSlashRelativePath[RP <: RelativePath]: Dereferenceable[ClasspathUrl, RP, ClasspathUrl] =
-    new Dereferenceable[ClasspathUrl, RP, ClasspathUrl] {
-      def dereference(p1: ClasspathUrl, p2: RP) = ClasspathUrl(p1.elements.dropRight(p2.ascent) ++ p2.elements)
+      def dereference(p1: ClasspathUrl, p2: String) =
+        ClasspathUrl(p1.elements :+ p2)
     }
 
-  implicit def uriCapable: UriCapable[ClasspathUrl] = new UriCapable[ClasspathUrl] {
-    def uri(cp: ClasspathUrl) = Uri("classpath", cp.elements.mkString("/"))
-  }
+  implicit def cpSlashRelativePath[RP <: RelativePath]: Dereferenceable[
+      ClasspathUrl, RP, ClasspathUrl] =
+    new Dereferenceable[ClasspathUrl, RP, ClasspathUrl] {
+      def dereference(p1: ClasspathUrl, p2: RP) =
+        ClasspathUrl(p1.elements.dropRight(p2.ascent) ++ p2.elements)
+    }
+
+  implicit def uriCapable: UriCapable[ClasspathUrl] =
+    new UriCapable[ClasspathUrl] {
+      def uri(cp: ClasspathUrl) = Uri("classpath", cp.elements.mkString("/"))
+    }
 }
 
 case class ClasspathUrl(elements: Vector[String]) {

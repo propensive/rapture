@@ -13,32 +13,38 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.xml
 
 private[xml] object XmlValidator {
 
-  case class ValidationException(strNo: Int, pos: Int, expected: String, found: Char)
+  case class ValidationException(
+      strNo: Int, pos: Int, expected: String, found: Char)
       extends Exception
-  
-  case class DuplicateKeyException(strNo: Int, pos: Int, key: String) extends Exception
-  
+
+  case class DuplicateKeyException(strNo: Int, pos: Int, key: String)
+      extends Exception
+
   def validate(parts: List[String]) = {
     var i = 0
     var n = 0
     var stack: List[String] = Nil
     def s = parts(n)
-    def cur = if(i >= s.length) '\u0000' else s(i)
-    def ahead(j: Int) = if(i + j >= s.length) '\u0000' else s(i + j)
+    def cur = if (i >= s.length) '\u0000' else s(i)
+    def ahead(j: Int) = if (i + j >= s.length) '\u0000' else s(i + j)
 
     def fail(expected: String) = throw ValidationException(n, i, expected, cur)
-    def failPosition(expected: String) = throw ValidationException(n, i, expected, cur)
-    def duplicateKey(start: Int, key: String) = throw DuplicateKeyException(n, start, key)
-    
-    def takeWhitespace(): Unit = while(cur.isWhitespace) next()
+    def failPosition(expected: String) =
+      throw ValidationException(n, i, expected, cur)
+    def duplicateKey(start: Int, key: String) =
+      throw DuplicateKeyException(n, start, key)
 
-    def consume(cs: Char*): Unit = cs foreach { c => if(cur == c) next() else fail(s"'$c'") }
+    def takeWhitespace(): Unit = while (cur.isWhitespace) next()
+
+    def consume(cs: Char*): Unit = cs foreach { c =>
+      if (cur == c) next() else fail(s"'$c'")
+    }
 
     def next() = i += 1
 
@@ -50,20 +56,20 @@ private[xml] object XmlValidator {
         case '!' => takeSpecial()
         case _ => takeStartTag(i)
       }
-      if(!stack.isEmpty) takeText()
+      if (!stack.isEmpty) takeText()
     }
 
     def takePi(): Unit = {
       consume('?')
       takeName()
       takeWhitespace()
-      while(i < s.length && cur != '?') next()
+      while (i < s.length && cur != '?') next()
       consume('?', '>')
     }
 
     def takeComment(): Unit = {
       consume("--": _*)
-      while(i < s.length && !(cur == '-' && ahead(1) == '-')) next()
+      while (i < s.length && !(cur == '-' && ahead(1) == '-')) next()
       consume("-->": _*)
     }
 
@@ -81,7 +87,7 @@ private[xml] object XmlValidator {
             case _ =>
               fail("CDATA or PCDATA section")
           }
-          while(i < s.length && !(cur == ']' && ahead(1) == ']')) next()
+          while (i < s.length && !(cur == ']' && ahead(1) == ']')) next()
           consume("]]>": _*)
         case _ => fail("'-' or '['")
       }
@@ -96,8 +102,8 @@ private[xml] object XmlValidator {
 
     def takeName(): String = {
       val start = i
-      if(!cur.isLetter) fail("letter") else next()
-      while(cur.isLetterOrDigit && i < s.length) next()
+      if (!cur.isLetter) fail("letter") else next()
+      while (cur.isLetterOrDigit && i < s.length) next()
       s.substring(start, i)
     }
 
@@ -148,10 +154,10 @@ private[xml] object XmlValidator {
     }
 
     def takeAttributeValue(): Unit = cur match {
-      case quot@('\'' | '"') =>
+      case quot @ ('\'' | '"') =>
         consume(quot)
         var finished = false
-        while(!finished) cur match {
+        while (!finished) cur match {
           case `quot` =>
             consume(quot)
             finished = true
@@ -162,10 +168,10 @@ private[xml] object XmlValidator {
         }
       case _ => fail("single or double quote")
     }
-   
+
     takeTag()
     takeWhitespace()
 
-    if(i != s.length) fail("end of data")
+    if (i != s.length) fail("end of data")
   }
 }
