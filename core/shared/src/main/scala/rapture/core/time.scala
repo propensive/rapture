@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core
 
@@ -22,7 +22,8 @@ object TimeSystem {
   type ByDuration[T] = TimeSystem[_, T]
 }
 
-@implicitNotFound("an implicit TimeSystem is required; please import timeSystems.numeric._ or "+
+@implicitNotFound(
+    "an implicit TimeSystem is required; please import timeSystems.numeric._ or " +
     "timeSystems.javaUtil._")
 trait TimeSystem[Instant, Duration] {
   def instant(millis: Long): Instant
@@ -34,12 +35,13 @@ trait TimeSystem[Instant, Duration] {
 package timeSystems {
   object numeric {
     def apply(): TimeSystem[Long, Long] = timeSystemImplicit
-    implicit val timeSystemImplicit: TimeSystem[Long, Long] = new TimeSystem[Long, Long] {
-      def instant(millis: Long): Long = millis
-      def duration(from: Long, to: Long): Long = to - from
-      def fromInstant(inst: Long): Long = inst
-      def fromDuration(dur: Long): Long = dur
-    }
+    implicit val timeSystemImplicit: TimeSystem[Long, Long] =
+      new TimeSystem[Long, Long] {
+        def instant(millis: Long): Long = millis
+        def duration(from: Long, to: Long): Long = to - from
+        def fromInstant(inst: Long): Long = inst
+        def fromDuration(dur: Long): Long = dur
+      }
   }
 
   object javaUtil {

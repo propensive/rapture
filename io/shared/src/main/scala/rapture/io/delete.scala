@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.io
 import rapture.core._
@@ -30,9 +30,10 @@ object Deletable {
 
   class Capability[Res](res: Res) {
     def delete()(implicit mode: Mode[`Deletable#delete`],
-        deleter: Deleter[Res]): mode.Wrap[Summary, Exception] = mode wrap {
-      deleter.delete(res)
-      Summary(1)
-    }
+                 deleter: Deleter[Res]): mode.Wrap[Summary, Exception] =
+      mode wrap {
+        deleter.delete(res)
+        Summary(1)
+      }
   }
 }

@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json.jsonBackends.jawn
 
@@ -30,17 +30,22 @@ private[jawn] trait package_1 {
 
 object `package` extends package_1 with Extractors with Serializers {
   implicit val implicitJsonAst: JsonBufferAst = JawnAst
-  implicit def implicitJsonStringParser(implicit f: Facade[_]): Parser[String, JsonBufferAst] =
+  implicit def implicitJsonStringParser(
+      implicit f: Facade[_]): Parser[String, JsonBufferAst] =
     new JawnStringParser
-  
-  implicit def implicitJsonByteBufferParser(implicit f: Facade[_]): Parser[java.nio.ByteBuffer,
-      JsonBufferAst] = new JawnByteBufferParser
-  
-  implicit def implicitJsonFileParser(implicit f: Facade[_]): Parser[java.io.File,
-      JsonBufferAst] = new JawnFileParser
 
-  implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast): Formatter[Ast] {
-      type Out = String } = new Formatter[Ast] {
+  implicit def implicitJsonByteBufferParser(
+      implicit f: Facade[_]): Parser[java.nio.ByteBuffer, JsonBufferAst] =
+    new JawnByteBufferParser
+
+  implicit def implicitJsonFileParser(
+      implicit f: Facade[_]): Parser[java.io.File, JsonBufferAst] =
+    new JawnFileParser
+
+  implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast
+      ): Formatter[Ast] {
+    type Out = String
+  } = new Formatter[Ast] {
     type Out = String
     def format(json: Any): String = json match {
       case jv: JValue => jv.render(FastRenderer)

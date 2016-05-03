@@ -13,13 +13,12 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
-
+ */
 
 package rapture.uri
 
 object UriCapable {
-  class Capability[Res: UriCapable](res: Res) {
+  class Capability[Res : UriCapable](res: Res) {
     def uri: Uri = implicitly[UriCapable[Res]].uri(res)
   }
 }
@@ -33,13 +32,15 @@ trait UriCapable[-Res] {
 }
 
 object Linkable {
-  class Capability[Res: Linkable](res: Res) {
+  class Capability[Res : Linkable](res: Res) {
     def link: PathLink = implicitly[Linkable[Res]].link(res)
   }
 
-  implicit def linkableUri[Res: UriCapable]: Linkable[Res] = new Linkable[Res] {
-    def link(res: Res): PathLink = PathLink(implicitly[UriCapable[Res]].uri(res).toString)
-  }
+  implicit def linkableUri[Res : UriCapable]: Linkable[Res] =
+    new Linkable[Res] {
+      def link(res: Res): PathLink =
+        PathLink(implicitly[UriCapable[Res]].uri(res).toString)
+    }
 }
 
 object PathLink {

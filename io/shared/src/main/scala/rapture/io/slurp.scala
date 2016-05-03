@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.io
 
@@ -25,13 +25,18 @@ import scala.reflect._
 import java.io._
 
 trait AccumulatorBuilder_1 {
-  implicit val byteAccumulator: AccumulatorBuilder[Byte] { type Out = Bytes } = ByteAccumulator
-  implicit val stringAccumulator: AccumulatorBuilder[String] { type Out = String } = StringAccumulator
+  implicit val byteAccumulator: AccumulatorBuilder[Byte] { type Out = Bytes } =
+    ByteAccumulator
+  implicit val stringAccumulator: AccumulatorBuilder[String] {
+    type Out = String
+  } = StringAccumulator
 }
 
 object AccumulatorBuilder extends AccumulatorBuilder_1 {
-  implicit val charAccumulator: AccumulatorBuilder[Char] { type Out = String } = CharAccumulator
+  implicit val charAccumulator: AccumulatorBuilder[Char] { type Out = String } =
+    CharAccumulator
 }
+
 /** Interface for an accumulator which is a special kind of output which collects and stores all
   * input in a buffer which can be retrieved afterwards.  No guarantees are made about input
   * supplied after the buffer has been retrieved.
@@ -87,6 +92,7 @@ class StringOutput extends {
 
 object Slurpable {
   class Capability[Res](res: Res) {
+
     /** Reads in the entirety of the stream and accumulates it into an appropriate object
       * depending on the availability of implicit Accumulator type class objects in scope.
       *
@@ -94,8 +100,11 @@ object Slurpable {
       * @usecase def slurp[Byte](): Array[Byte]
       * @tparam Data The units of data being slurped
       * @return The accumulated data */
-    def slurp[Data]()(implicit accumulatorBuilder: AccumulatorBuilder[Data], mode: Mode[`Slurpable#slurp`],
-        sr: Reader[Res, Data], mf: ClassTag[Data]): mode.Wrap[accumulatorBuilder.Out, Exception] =
+    def slurp[Data](
+        )(implicit accumulatorBuilder: AccumulatorBuilder[Data],
+          mode: Mode[`Slurpable#slurp`],
+          sr: Reader[Res, Data],
+          mf: ClassTag[Data]): mode.Wrap[accumulatorBuilder.Out, Exception] =
       mode.wrap {
         val c = accumulatorBuilder.make()
         res.handleInput[Data, Int](_ pumpTo c)
@@ -104,4 +113,3 @@ object Slurpable {
       }
   }
 }
-

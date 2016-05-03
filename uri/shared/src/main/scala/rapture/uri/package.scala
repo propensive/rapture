@@ -13,8 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
-
+ */
 
 package rapture.uri
 
@@ -32,7 +31,13 @@ object `package` {
 
   implicit class EnrichedUriContext(uc: UriContext.type) {
     def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[Vector])
+      new ClasspathUrl(
+          constants
+            .zip(variables :+ "")
+            .map { case (a, b) => a + b }
+            .mkString
+            .split("/")
+            .to[Vector])
   }
 
   val $ : String = ""
@@ -41,11 +46,15 @@ object `package` {
 
   object ^ extends RootedPath(Vector())
 
-  implicit def dereferenceable[Res](res: Res): Dereferenceable.Capability[Res] = alloc(res)
-  implicit def uriCapable[Res: UriCapable](res: Res): UriCapable.Capability[Res] = alloc(res)
-  implicit def linkCapable[Res: Linkable](res: Res): Linkable.Capability[Res] = alloc(res)
-  implicit def parentable[Res](res: Res): Parentable.Capability[Res] = alloc(res)
-  implicit def navigableExtras[Res: Navigable](url: Res): NavigableExtras[Res] =
+  implicit def dereferenceable[Res](
+      res: Res): Dereferenceable.Capability[Res] = alloc(res)
+  implicit def uriCapable[Res : UriCapable](
+      res: Res): UriCapable.Capability[Res] = alloc(res)
+  implicit def linkCapable[Res : Linkable](
+      res: Res): Linkable.Capability[Res] = alloc(res)
+  implicit def parentable[Res](res: Res): Parentable.Capability[Res] =
+    alloc(res)
+  implicit def navigableExtras[Res : Navigable](
+      url: Res): NavigableExtras[Res] =
     new NavigableExtras(url)
-
 }

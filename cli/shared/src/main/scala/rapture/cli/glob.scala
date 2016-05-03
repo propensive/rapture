@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.cli
 
@@ -25,23 +25,25 @@ object globInterpreters {
    */
   object unix {
     def apply(): GlobInterpreter = implicitGlobInterpreter
-    implicit val implicitGlobInterpreter: GlobInterpreter = new GlobInterpreter {
-      def interpret(glob: String): Pattern = {
-        val sb = new StringBuilder
-        var start = true
-        glob foreach { c =>
-          start = false
-          sb.append(c match {
-            case '*' => if(start) "[^./][^/]*" else "[^/]*"
-            case '?' => if(start) "[^./][^/]*" else "[^/]*"
-            case '/' => start = true; "/"
-            case esc@('.' | '[' | '{' | '(' | '+' | '^' | '$' | '|') => "\\"+esc
-            case other => other.toString
-          })
+    implicit val implicitGlobInterpreter: GlobInterpreter =
+      new GlobInterpreter {
+        def interpret(glob: String): Pattern = {
+          val sb = new StringBuilder
+          var start = true
+          glob foreach { c =>
+            start = false
+            sb.append(c match {
+              case '*' => if (start) "[^./][^/]*" else "[^/]*"
+              case '?' => if (start) "[^./][^/]*" else "[^/]*"
+              case '/' => start = true; "/"
+              case esc @ ('.' | '[' | '{' | '(' | '+' | '^' | '$' | '|') =>
+                "\\" + esc
+              case other => other.toString
+            })
+          }
+          Pattern.compile(sb.toString)
         }
-        Pattern.compile(sb.toString)
       }
-    }
   }
 }
 

@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.xml
 
@@ -26,7 +26,8 @@ trait XmlAst extends DataAst {
 
   def isScalar(any: Any) = isString(any)
 
-  def getScala(any: Any) = Try(getString(any)) getOrElse { throw new Exception }
+  def getScala(any: Any) =
+    Try(getString(any)) getOrElse { throw new Exception }
 
   def getString(string: Any): String
 
@@ -44,26 +45,28 @@ trait XmlAst extends DataAst {
 
   /** Tests if the element represents a `String` */
   def isString(any: Any): Boolean
-  
+
   /** Returns the DataType instance for the particular type. */
   def getType(any: Any): DataTypes.DataType =
-    if(isString(any)) DataTypes.String
-    else if(isObject(any)) DataTypes.Object
-    else if(isArray(any)) DataTypes.Array
+    if (isString(any)) DataTypes.String
+    else if (isObject(any)) DataTypes.Object
+    else if (isArray(any)) DataTypes.Array
     else throw MissingValueException()
 
   def convert(v: Any, ast: DataAst): Any = {
     val oldAst = ast.asInstanceOf[XmlAst]
-    if(oldAst.isString(v)) fromString(oldAst.getString(v))
-    else if(oldAst.isArray(v)) fromArray(oldAst.getArray(v).map(convert(_, oldAst)))
-    else if(oldAst.isObject(v)) fromObject(oldAst.getObject(v).mapValues(convert(_, oldAst)))
+    if (oldAst.isString(v)) fromString(oldAst.getString(v))
+    else if (oldAst.isArray(v))
+      fromArray(oldAst.getArray(v).map(convert(_, oldAst)))
+    else if (oldAst.isObject(v))
+      fromObject(oldAst.getObject(v).mapValues(convert(_, oldAst)))
     else nullValue
   }
 
   val nullValue = ""
 
-  protected def typeTest(pf: PartialFunction[Any, Unit])(v: Any) = pf.isDefinedAt(v)
+  protected def typeTest(pf: PartialFunction[Any, Unit])(v: Any) =
+    pf.isDefinedAt(v)
 }
 
 trait XmlBufferAst extends XmlAst with MutableDataAst
-
