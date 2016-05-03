@@ -64,7 +64,7 @@ class NavigableExtras[UrlType : Navigable](url: UrlType) {
 
   def walkFilter(cond: UrlType => Boolean)(
       implicit mode: Mode[`Navigable#walkFilter`]
-      ): mode.Wrap[Seq[UrlType], Exception] = mode wrap {
+  ): mode.Wrap[Seq[UrlType], Exception] = mode wrap {
     children(modes.throwExceptions()) filter cond flatMap { f =>
       new NavigableExtras(f).walkFilter(cond)(modes.throwExceptions())
     }

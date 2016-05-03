@@ -62,7 +62,7 @@ abstract class AesEncryption {
 
   def decrypt(cipherText: Array[Byte], iv: Array[Byte] = null)(
       implicit mode: Mode[`AesEncryption#decrypt`]
-      ): mode.Wrap[Array[Byte], DecryptionException] = mode.wrap {
+  ): mode.Wrap[Array[Byte], DecryptionException] = mode.wrap {
     if (iv == null && cipherText.length < 48)
       mode.exception(DecryptionException())
 

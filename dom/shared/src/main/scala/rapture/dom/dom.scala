@@ -58,7 +58,7 @@ trait Applicable[+ChildType,
       Child <: ElementType, This <: ElementType, Att <: AttributeType](
       element: Element[Child, This, Att],
       applied: Applicable[Child, Att, AppliedType]*
-      ): AppliedType[Child, This, Att]
+  ): AppliedType[Child, This, Att]
 }
 
 sealed abstract class DomNode[+ChildType <: ElementType,
@@ -72,7 +72,7 @@ sealed abstract class DomNode[+ChildType <: ElementType,
       Child <: ElementType, This <: ElementType, Att <: AttributeType](
       element: Element[Child, This, Att],
       applied: Applicable[Child, Att, AppliedElement]*
-      ): AppliedElement[Child, This, Att] =
+  ): AppliedElement[Child, This, Att] =
     AppliedElement[Child, This, Att](
         element.tagName,
         element.attributes,
@@ -206,7 +206,7 @@ case class Tag[ChildType <: ElementType,
                         _ <: AttributeType] <: DomNode[_, _, _]](
       first: Applicable[ChildType, AttType, AppliedType],
       applied: Applicable[ChildType, AttType, AppliedType]*
-      ): AppliedType[ChildType, ThisType, AttType] =
+  ): AppliedType[ChildType, ThisType, AttType] =
     first.application(this, (first +: applied): _*)
 }
 
@@ -284,7 +284,7 @@ class Attribute[Elem <: ElementType, AttType <: AttributeType, Value](
       Child <: ElementType, This <: ElementType, Att <: AttributeType](
       element: Element[Child, This, Att],
       applied: Applicable[Child, Att, EmptyElement]*
-      ): EmptyElement[Child, This, Att] = {
+  ): EmptyElement[Child, This, Att] = {
 
     val as = applied
       .to[List]

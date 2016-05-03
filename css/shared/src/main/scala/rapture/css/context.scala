@@ -39,7 +39,7 @@ private[css] object CssMacros {
   // FIXME: Unify these two implementations
   def stylesheetContextMacro(c: BlackboxContext)(
       exprs: c.Expr[ForcedConversion[CssStylesheet]]*
-      ): c.Expr[CssStylesheet] = {
+  ): c.Expr[CssStylesheet] = {
     import c.universe._
     import compatibility._
 
