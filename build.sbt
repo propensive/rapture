@@ -345,7 +345,7 @@ lazy val jsonJawnJS = `json-jawn`.js
 lazy val `json-play` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-play")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.6")
+  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.5.3")
  
 lazy val jsonPlayJVM = `json-play`.jvm
 lazy val jsonPlayJS = `json-play`.js
