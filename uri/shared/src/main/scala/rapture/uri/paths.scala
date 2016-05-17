@@ -22,6 +22,14 @@ import language.implicitConversions
 
 import scala.annotation.implicitNotFound
 
+object RelativePath {
+  implicit val relativePathLinkable: Linkable[RelativePath] = new Linkable[RelativePath] {
+    def link(res: RelativePath): PathLink = PathLink(res.toString)
+  }
+  
+  val Self: RelativePath = RelativePath(0, Vector())
+}
+
 case class RelativePath(ascent: Int, elements: Vector[String]) {
   override def toString = if(ascent == 0 && elements.isEmpty) "." else "../"*ascent+elements.mkString("/")
     
@@ -39,7 +47,7 @@ object RootedPath {
     else None
   }
 
-  implicit def linkable: Linkable[RootedPath] = new Linkable[RootedPath] {
+  implicit val linkable: Linkable[RootedPath] = new Linkable[RootedPath] {
     def link(res: RootedPath): PathLink = PathLink(res.toString)
   }
 }
@@ -62,7 +70,7 @@ case class RootedPath(elements: Vector[String]) {
 }
 
 object Dereferenceable {
-  implicit def stringSlashString: Dereferenceable[String, String, RelativePath] = new Dereferenceable[String, String, RelativePath] {
+  implicit val stringSlashString: Dereferenceable[String, String, RelativePath] = new Dereferenceable[String, String, RelativePath] {
     def dereference(p1: String, p2: String): RelativePath = RelativePath(0, Vector(p1, p2))
   }
     
