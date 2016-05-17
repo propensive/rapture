@@ -139,7 +139,10 @@ class Json(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vect
     }
   
   override def toString =
-    try Json.format(this)(formatters.compact()($ast)) catch {
+    try {
+      val j = Json.format(this)(formatters.compact()($ast))
+      s"""json""${'"'}$j""""""
+    } catch {
       case e: Exception => "undefined"
     }
 }
@@ -161,7 +164,10 @@ class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] 
     }
   
   override def toString =
-    try JsonBuffer.format(this)(formatters.compact()($ast)) catch {
+    try {
+      val j = JsonBuffer.format(this)(formatters.compact()($ast))
+      s"""json""${'"'}$j""""""
+    } catch {
       case e: Exception => "undefined"
     }
 }
