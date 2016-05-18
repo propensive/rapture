@@ -56,7 +56,7 @@ private[css] object CssMacros {
 
 	parseSource(text, stringsUsed, true) foreach { case (n, offset, msg) =>
 	  val oldPos = ys(n).asInstanceOf[Literal].pos
-	  val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+	  val newPos = oldPos.withPoint((if(oldPos.isRange) oldPos.start else oldPos.point) + offset)
 	  c.error(newPos, msg)
 	}
 
@@ -103,7 +103,7 @@ private[css] object CssMacros {
 
 	parseSource(text, stringsUsed, false) foreach { case (n, offset, msg) =>
 	  val oldPos = ys(n).asInstanceOf[Literal].pos
-	  val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+	  val newPos = oldPos.withPoint((if(oldPos.isRange) oldPos.start else oldPos.point) + offset)
 	  c.error(newPos, msg)
 	}
 

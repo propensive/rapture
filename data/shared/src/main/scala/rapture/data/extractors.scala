@@ -114,7 +114,7 @@ object Extractor {
     }
 }
 
-@implicitNotFound("cannot extract type ${T} from ${D}.")
+@implicitNotFound("cannot extract type $"+"{T} from $"+"{D}.")
 abstract class Extractor[T, -D] extends Functor[({ type L[x] = Extractor[x, D] })#L, T] { ext =>
   type Throws <: Exception
   

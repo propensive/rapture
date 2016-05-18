@@ -405,7 +405,7 @@ object Forms extends Widgets with Parsers {
 }
 
 trait Parsers {
-  @annotation.implicitNotFound("Unable to use values of type ${Value} in form fields without a corresponding FieldParser.")
+  @implicitNotFound("Unable to use values of type $"+"{Value} in form fields without a corresponding FieldParser.")
   trait FieldParser[Value] {
     def parse(value: Option[String], data: Option[Array[Byte]] = None): Value
     def serialize(value: Value): Option[String]

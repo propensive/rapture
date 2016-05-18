@@ -92,7 +92,7 @@ object Dereferenceable {
   }
 }
 
-@implicitNotFound("it is not possible to dereference a value of type ${P1} by a value of type ${P2}.")
+@implicitNotFound("it is not possible to dereference a value of type $"+"{P1} by a value of type $"+"{P2}.")
 trait Dereferenceable[-P1, -P2, +Return] {
   def dereference(p1: P1, p2: P2): Return
 }
@@ -112,7 +112,7 @@ object Parentable {
   }
 }
 
-@implicitNotFound("type ${P} does not have a parent")
+@implicitNotFound("type $"+"{P} does not have a parent")
 trait Parentable[-P, +Return] {
   def parent(p1: P): Return
 }

@@ -32,7 +32,7 @@ object DataTypes {
   case object Any extends DataType("any")
 }
 
-@implicitNotFound(msg = "Cannot find ${Ast} parser for values of type ${Source}")
+@implicitNotFound(msg = "Cannot find $"+"{Ast} parser for values of type $"+"{Source}")
 trait Parser[-Source, +Ast <: DataAst] {
   val ast: Ast
   def parse(s: Source): Option[Any]

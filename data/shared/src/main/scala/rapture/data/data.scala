@@ -23,7 +23,7 @@ import scala.util.Try
 
 import language.dynamics
 
-@implicitNotFound("Cannot find an implicit Formatter for ${AstType} data.")
+@implicitNotFound("Cannot find an implicit Formatter for $"+"{AstType} data.")
 trait Formatter[-AstType <: DataAst] {
   type Out
   def format(any: Any): Out

@@ -187,7 +187,7 @@ case class AppliedElement[ChildType <: ElementType, ThisType <: ElementType, Att
 ) extends Element[ChildType, ThisType, AttType]
 
 
-@implicitNotFound("Cannot access the attribute ${Name} on ${AttType} DOM nodes")
+@implicitNotFound("Cannot access the attribute $"+"{Name} on $"+"{AttType} DOM nodes")
 abstract class AttributeKey[+Name <: String, AttType <: AttributeType](val name: String, actualName: String = null) {
   type Value
   override def toString = if(actualName == null) name else actualName

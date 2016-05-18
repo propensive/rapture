@@ -245,7 +245,7 @@ object Macros {
         } map { p =>
           Apply(
             Select(
-              Ident("scala"),
+              Ident(termName(c, "scala")),
               termName(c, "Tuple2")
             ),
             List(

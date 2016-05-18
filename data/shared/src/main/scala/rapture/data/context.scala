@@ -79,8 +79,8 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
 
         parseSource(text, stringsUsed) foreach { case (n, offset, msg) =>
           val oldPos = ys(n).asInstanceOf[Literal].pos
+	        val newPos = oldPos.withPoint((if(oldPos.isRange) oldPos.start else oldPos.point) + offset)
           
-          val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
           c.error(newPos, msg)
         }
         

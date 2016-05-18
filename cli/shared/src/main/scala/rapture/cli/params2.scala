@@ -89,7 +89,7 @@ object New {
   case class UnexpectedParam(param: String) extends
       ParamException(s"found unexpected parameter '$param'")
 
-  @implicitNotFound("Can not combine elements of type ${A} and ${B}")
+  @implicitNotFound("Can not combine elements of type $"+"{A} and $"+"{B}")
   trait Construct[-A <: Params, -B <: Params] { construct =>
     type And <: Params
     type Or <: Params

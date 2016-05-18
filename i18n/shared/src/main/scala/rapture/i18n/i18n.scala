@@ -71,7 +71,7 @@ object I18n {
   def apply[L <: Language] = new `I18n.apply`[L]()
 }
 
-@implicitNotFound("This I18nString already includes the language ${Lang}.")
+@implicitNotFound("This I18nString already includes the language $"+"{Lang}.")
 private[i18n] trait RequireLanguage[Lang]
 private[i18n] object RequireLanguage { implicit def requireLanguage: RequireLanguage[Language] = null }
 
