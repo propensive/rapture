@@ -203,7 +203,7 @@ object StringSerializer {
 }
 
 /** A generic string serializer */
-@implicitNotFound("It is not possible to serialize a value of type ${T} to a String without a"+
+@implicitNotFound("It is not possible to serialize a value of type $"+"{T} to a String without a"+
     " valid StringSerializer instance in scope.")
 trait StringSerializer[-T] { stringSerializer =>
   def serialize(string: T): String

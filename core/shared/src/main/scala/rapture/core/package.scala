@@ -26,6 +26,10 @@ object `package` {
 
   type CanBuildFrom[-From, -Elem, +To] = collection.generic.CanBuildFrom[From, Elem, To]
 
+  type ![A, B] = A with Tagged[B]
+
+  implicit def makeTaggedType[A, B](a: A): A!B = a.asInstanceOf[A!B]
+
   def alloc[T] = new AllocApply[T](0)
 
   def each[E <: Exception] = EachUnapplied[E]()

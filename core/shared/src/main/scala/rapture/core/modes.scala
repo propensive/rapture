@@ -34,7 +34,7 @@ object Mode extends Mode_1 {
   }
 }
 
-@implicitNotFound(msg = "No implicit mode was available for ${Group} methods. "+
+@implicitNotFound(msg = "No implicit mode was available for $"+"{Group} methods. "+
     "Please import a member of rapture.core.modes, e.g. modes.throwExceptions.")
 trait Mode[+Group <: MethodConstraint] { mode =>
   type Wrap[+_, _ <: Exception]
