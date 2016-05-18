@@ -39,4 +39,5 @@ class Compat210() {
   def readLine(): String = Console.readLine()
   def typecheck(c: Context)(s: c.Tree) = c.typeCheck(s)
   def freshName(c: Context)(s: String) = c.fresh(s)
+  def companion(c: Context)(t: c.universe.Symbol) = t.companionSymbol
 }

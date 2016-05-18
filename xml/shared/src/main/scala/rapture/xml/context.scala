@@ -25,7 +25,7 @@ import language.experimental.macros
 
 private[xml] object XmlDataMacros extends DataContextMacros[Xml, XmlAst] {
   
-  def companion(c: BlackboxContext): c.Expr[DataCompanion[Xml, XmlAst]] = c.universe.reify(Xml)
+  def companionObject(c: BlackboxContext): c.Expr[DataCompanion[Xml, XmlAst]] = c.universe.reify(Xml)
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]) = try {
     XmlValidator.validate(s)
@@ -46,7 +46,7 @@ private[xml] object XmlDataMacros extends DataContextMacros[Xml, XmlAst] {
 
 private[xml] object XmlBufferDataMacros extends DataContextMacros[XmlBuffer, XmlBufferAst] {
   
-  def companion(c: BlackboxContext): c.Expr[DataCompanion[XmlBuffer, XmlBufferAst]] =
+  def companionObject(c: BlackboxContext): c.Expr[DataCompanion[XmlBuffer, XmlBufferAst]] =
     c.universe.reify(XmlBuffer)
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]) = try {

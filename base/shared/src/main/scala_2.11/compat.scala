@@ -39,4 +39,5 @@ class Compat211() {
   def readLine(): String = scala.io.StdIn.readLine
   def typecheck[C <: blackbox.Context](c: C)(t: c.Tree) = c.typecheck(t)
   def freshName[C <: blackbox.Context](c: C)(s: String) = c.freshName(s)
+  def companion[C <: blackbox.Context](c: C)(t: c.universe.Symbol) = t.companion
 }

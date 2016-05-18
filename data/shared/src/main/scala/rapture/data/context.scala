@@ -55,7 +55,7 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]): Option[(Int, Int, String)]
 
-  def companion(c: BlackboxContext): c.Expr[DataCompanion[Data, AstType]]
+  def companionObject(c: BlackboxContext): c.Expr[DataCompanion[Data, AstType]]
 
   def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Data]]*)
       (parser: c.Expr[Parser[String, AstType]]): c.Expr[Data] = {
@@ -89,7 +89,7 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
           rawParts
         ))
         
-        val comp = companion(c)
+        val comp = companionObject(c)
        
         reify {
           val sb = new StringBuilder
@@ -112,7 +112,7 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
 }
 
 class DataContext[+Data <: DataType[Data, DataAst], -AstType <: DataAst]
-    (companion: DataCompanion[Data, AstType], sc: StringContext) {
+    (companionObject: DataCompanion[Data, AstType], sc: StringContext) {
 
   protected def uniqueNonSubstring(s: String) = {
     var cur, m = 0

@@ -91,7 +91,7 @@ object Macros {
     } else {
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
 
-      val defaults = weakTypeOf[T].typeSymbol.companionSymbol.typeSignature.declarations.to[List].map(_.name.decodedName.toString).filter(_ startsWith "apply$default$").map(_.substring(14).toInt).to[Set]
+      val defaults = declarations(c)(companion(c)(weakTypeOf[T].typeSymbol).typeSignature).to[List].map(_.name.decodedName.toString).filter(_ startsWith "apply$default$").map(_.substring(14).toInt).to[Set]
 
       // FIXME integrate these into a fold
       var throwsTypes: Set[Type] = Set(typeOf[DataGetException])
