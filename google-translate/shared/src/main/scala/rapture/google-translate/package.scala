@@ -105,7 +105,7 @@ object GoogleTranslate {
   import rapture.json._, jsonBackends.jawn._
 
   def translate(key: String, text: String, from: String, to: String): String = {
-    val out = uri"https://www.googleapis.com/language/translate/v2".query(Map("q" -> text, "target" -> to, "format" -> "text", "source" -> from, "key" -> key)).slurp[Char]
+    val out = uri"https://www.googleapis.com/language/translate/v2?q=$text&target=$to&format=text&source=$from&key=$key".slurp[Char]
     Json.parse(out).data.translations(0).translatedText.as[String]
   }
 }
