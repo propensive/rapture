@@ -341,11 +341,18 @@ lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
 
 
+lazy val playJsonDependencies: Seq[Setting[_]] = Seq(
+  libraryDependencies += (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 10)) => "com.typesafe.play" %% "play-json" % "2.4.6"
+    case Some((2, 11)) => "com.typesafe.play" %% "play-json" % "2.5.3"
+  })
+)
+
 // rapture-json-play
 lazy val `json-play` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-play")
-  .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.6")
+  .settings(raptureSettings: _*)
+  .settings(playJsonDependencies: _*)
  
 lazy val jsonPlayJVM = `json-play`.jvm
 lazy val jsonPlayJS = `json-play`.js
