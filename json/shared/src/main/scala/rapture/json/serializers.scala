@@ -24,10 +24,10 @@ import language.higherKinds
 
 private[json] case class DirectJsonSerializer[T](ast: JsonAst)
 
-private[json] trait Serializers {
+private[json] case class BasicJsonSerializer[T](serialization: T => Any)
+    extends Serializer[T, Json] { def serialize(t: T): Any = serialization(t) }
 
-  case class BasicJsonSerializer[T](serialization: T => Any)
-      extends Serializer[T, Json] { def serialize(t: T): Any = serialization(t) }
+private[json] trait Serializers extends Serializers_1 {
 
   implicit def jsonBufferSerializer[T](implicit ser: Serializer[T, Json]):
       Serializer[T, JsonBuffer] =
@@ -93,4 +93,9 @@ private[json] trait Serializers {
     BasicJsonSerializer[JsonType]({ j =>
       if(j.$ast == ast) j.$normalize else ast.convert(j.$normalize, j.$ast)
     })
+}
+  
+trait Serializers_1 {
+  implicit def generalStringSerializer[S](implicit ast: JsonAst, ss: StringSerializer[S]): Serializer[S, Json] =
+    BasicJsonSerializer(s => ast fromString ss.serialize(s))
 }
