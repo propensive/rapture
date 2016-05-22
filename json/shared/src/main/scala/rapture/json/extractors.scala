@@ -105,4 +105,10 @@ private[json] trait Extractors_2 {
         mode.wrap(JsonBuffer.construct(MutableCell(JsonDataType.jsonSerializer.serialize(any)), Vector()))
     }
 
+  implicit def generalStringExtractor[S](implicit parser: StringParser[S]): Extractor[S, Json] {
+      type Throws = DataGetException with parser.Throws } = new Extractor[S, Json] {
+    type Throws = DataGetException with parser.Throws
+    def extract(any: Json, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[S, DataGetException with parser.Throws] =
+      mode.wrap(mode.unwrap(parser.parse(any.$ast.getString(any.$normalize), mode)))
+  }
 }
