@@ -250,18 +250,51 @@ object HttpQuery {
     def serialize(h: HttpQuery): String = h.toString
   }
   
+  implicit val httpUrlParser: StringParser[HttpUrl] = new StringParser[HttpUrl] {
+    type Throws = ParseException
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[HttpUrl, Throws] =
+      mode.wrap(Http.parse(s))
+  }
+  
+  implicit val httpQueryParser: StringParser[HttpQuery] = new StringParser[HttpQuery] {
+    type Throws = ParseException
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[HttpQuery, Throws] =
+      mode.wrap(HttpQuery.parse(s))
+  }
+  
   implicit def uriCapable: UriCapable[HttpQuery] = new UriCapable[HttpQuery] {
     def uri(hq: HttpQuery) = {
       val httpUrlUri = HttpUrl.uriCapable.uri(hq.httpUrl)
       Uri(httpUrlUri.scheme, s"${httpUrlUri.schemeSpecificPart}?${hq.queryString}")
     }
   }
+  
+  private val UrlRegex =
+    """(https?):\/\/([\.\-a-z0-9]+)(:[1-9][0-9]*)?(\/?([^\?]*)(\?([^\?]*))?)""".r
+  
+  def parse(s: String): HttpQuery = s match {
+    case UrlRegex(scheme, server, port, _, path, _, after) =>
+      
+      val rp = RootedPath(path.split("/").to[Vector])
+
+      val httpUrl = scheme match {
+        case "http" =>
+          Http(server, if(port == null) 80 else port.substring(1).toInt) / rp
+        case "https" =>
+          Https(server, if(port == null) 443 else port.substring(1).toInt) / rp
+        case _ => throw new Exception(s)
+      }
+
+      HttpQuery(httpUrl, Option(after).getOrElse(""))
+      
+    case _ => throw new Exception(s)
+  }
 }
 
 case class HttpQuery(httpUrl: HttpUrl, queryString: String) {
   override def toString = {
     val httpUrlUri = HttpUrl.uriCapable.uri(httpUrl)
-    s"$httpUrlUri?$queryString"
+    if(queryString == "") "$httpUrlUri" else s"$httpUrlUri?$queryString"
   }
 }
 
@@ -298,25 +331,9 @@ object Http {
 
   def apply(hostname: String, port: Int = services.tcp.http.portNo) =
     HttpDomain(hostname, port, false)
+  
+  def parse(s: String): HttpUrl = HttpQuery.parse(s).httpUrl
 
-  private val UrlRegex =
-    """(https?):\/\/([\.\-a-z0-9]+)(:[1-9][0-9]*)?(\/?([^\?]*)(\?([^\?]*))?)""".r
-
-  def parse(s: String): HttpUrl = s match {
-    case UrlRegex(scheme, server, port, _, path, _, after) =>
-      
-      val rp = RootedPath(path.split("/").to[Vector])
-      
-      scheme match {
-        case "http" =>
-          Http(server, if(port == null) 80 else port.substring(1).toInt) / rp
-        case "https" =>
-          Https(server, if(port == null) 443 else port.substring(1).toInt) / rp
-        case _ => throw new Exception(s)
-      }
-      
-    case _ => throw new Exception(s)
-  }
 }
 
 object Https {
@@ -324,5 +341,5 @@ object Https {
   def apply(hostname: String, port: Int = services.tcp.https.portNo) =
     HttpDomain(hostname, port, true)
   
-  def parse(s: String): HttpUrl = Http.parse(s)
+  def parse(s: String): HttpUrl = HttpQuery.parse(s).httpUrl
 }

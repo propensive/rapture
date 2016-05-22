@@ -37,10 +37,10 @@ object `package` {
 
   implicit class EnrichedHttpUriContext(uc: UriContext.type) {
     def http(constants: List[String])(variables: List[String]) =
-      Http.parse("http:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
+      HttpQuery.parse("http:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
     
     def https(constants: List[String])(variables: List[String]) =
-      Https.parse("https:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
+      HttpQuery.parse("https:"+constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString)
   }
 
   implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout, toUri: UriCapable[HttpUrl]): Sizable[HttpUrl, Byte] = new Sizable[HttpUrl, Byte] {

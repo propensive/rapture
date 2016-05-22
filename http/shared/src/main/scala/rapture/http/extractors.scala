@@ -21,7 +21,7 @@ import rapture.mime._
 import rapture.codec._
 import rapture.uri._
 
-object RequestExtractors {
+object requestExtractors {
 
   /** A standard implementaiton of a response which confirms cross-domain access corntrol */
   def accessControlAllowOrigin(domain: String)(implicit enc: Encoding): Response =
