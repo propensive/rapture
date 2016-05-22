@@ -139,7 +139,7 @@ object htmlSyntax {
 
   object Data extends Dynamic {
     def selectDynamic(att: String) = Attribute[Global, String](att)(identity)
-    def updateDynamic[E <: ElementType](att: String)(v: String) = selectDynamic(att).set[E](v)
+    def updateDynamic[E <: ElementType](att: String)(v: String) = selectDynamic(s"data-$att").set[E](v)
   }
 
   implicit def id = Attribute[Global, Symbol]("id")(_.name)
