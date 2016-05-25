@@ -294,7 +294,7 @@ object HttpQuery {
 case class HttpQuery(httpUrl: HttpUrl, queryString: String) {
   override def toString = {
     val httpUrlUri = HttpUrl.uriCapable.uri(httpUrl)
-    if(queryString == "") "$httpUrlUri" else s"$httpUrlUri?$queryString"
+    if(queryString == "") httpUrlUri else s"$httpUrlUri?$queryString"
   }
 }
 
