@@ -244,15 +244,15 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
 
   val `Serialize string` = test {
     Json("Hello World!").toString
-  } returns """"Hello World!""""
+  } returns "json\"\"\"\"Hello World!\"\"\"\""
 
   val `Serialize int` = test {
     Json(1648).toString
-  } returns "1648"
+  } returns "json\"\"\"1648\"\"\""
 
   val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
-  } returns "[1,2,3]"
+  } returns "json\"\"\"[1,2,3]\"\"\""
 
   val `Serialize object` = test {
     import formatters.humanReadable._
@@ -281,7 +281,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   // Reported by @ajrnz
   val `Tabs should be escaped when serializing strings` = test {
     Json("\t").toString
-  } returns """"\t""""
+  } returns "json\"\"\"\"\\t\"\"\"\""
 
 }
 
