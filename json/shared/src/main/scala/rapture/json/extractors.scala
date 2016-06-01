@@ -61,6 +61,17 @@ private[json] trait Extractors_1 extends Extractors_2 {
         mode.wrap(mode.catching[DataGetException, String](any.$ast.getString(any.$normalize)))
     }
 
+  implicit val nullExtractor: Extractor[Null, Json] { type Throws = DataGetException } =
+    new Extractor[Null, Json] {
+      type Throws = DataGetException
+      override def extract(any: Json, ast: DataAst, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Null, this.Throws] = {
+        mode.wrap(mode.catching[DataGetException, Null](
+          if (any.$ast.isNull(any.$normalize)) null
+          else throw TypeMismatchException(any.$ast.getType(any.$normalize), DataTypes.Null)
+        ))
+      }
+    }
+
   implicit val doubleExtractor: Extractor[Double, Json] { type Throws = DataGetException } =
     new Extractor[Double, Json] {
       type Throws = DataGetException

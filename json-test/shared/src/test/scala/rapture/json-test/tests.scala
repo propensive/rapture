@@ -95,7 +95,9 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     "bar": { "foo": { "alpha": "test2", "beta": 2 }, "gamma": 2.7 },
     "baz": { "alpha": "test" },
     "baz2": { "alpha": "test", "beta": 7 },
-    "self": 0
+    "self": 0,
+    "boo": null,
+    "booInner": {"foo": null, "bar": "value"}
   }"""
 
   val `Extract Int` = test {
@@ -168,6 +170,34 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Extract object element` = test {
     source1.bar.foo.alpha.as[String]
   } returns "test2"
+
+  val `Extract null element` = test {
+    source1.boo.as[Null]
+  } returns null
+
+  val `Extract null element from inner value` = test {
+    source1.booInner.foo.as[Null]
+  } returns null
+
+  val `Try to extract null element from not null inner value` = test {
+    source1.booInner.bar.as[Null]
+  } throws TypeMismatchException(DataTypes.String, DataTypes.Null)
+
+  val `Try to extract null element from not null value` = test {
+    source1.double.as[Null]
+  } throws TypeMismatchException(DataTypes.Number, DataTypes.Null)
+
+  val `Match null element` = test {
+    source1 match {
+      case json""" { "boo": $h } """ => h.as[Null]
+    }
+  } returns null
+
+  val `Match inner null element` = test {
+    source1 match {
+      case json""" { "booInner": {"foo": $h } } """ => h.as[Null]
+    }
+  } returns null
 
   // For some reason these two tests work fine in the REPL, but not here.
   /*

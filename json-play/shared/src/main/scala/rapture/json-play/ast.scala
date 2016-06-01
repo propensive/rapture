@@ -136,7 +136,7 @@ private[play] object PlayAst extends JsonBufferAst {
   } catch { case e: Exception => false }
   
   def isNull(obj: Any): Boolean = obj match {
-    case JsDefined(JsNull) => true
+    case JsNull => true
     case _ => false
   }
   
