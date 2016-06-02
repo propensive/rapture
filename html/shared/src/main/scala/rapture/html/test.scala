@@ -230,8 +230,6 @@ object Testing {
   //val test = Html(style = css"color: bar")(Head, Body(style = css"color: bar")("Content"))
   //val test = Html(Head, Body(Table(Tbody(Tr(style = css"color:bar")(Td)))))
 
-  import language.implicitConversions
-
-  val test = Tr(stylex = css"display:none")
+  //val test = Tr(style = css"display:none")
   val test3 = Tr.applyDynamicNamed("")(convert("style" -> css"display:none")(styleAttribute))(Td)
 }

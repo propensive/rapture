@@ -2,9 +2,6 @@ package rapture.dom2
 
 import rapture.core._
 
-import language.implicitConversions
-import language.higherKinds
-import language.existentials
 import language.dynamics
 import language.experimental.macros
 
@@ -68,7 +65,7 @@ object `package` {
     Atts2 <: AttributeType,
     Child <: NodeType,
     Value
-  ](x: (AttName, Value))(implicit embeddable: EmbeddableAttribute[AttName, Value]): AttributeContent[That, ThatAtts, This, Child, Atts2] = ???
+  ](x: (AttName, Value))(implicit embeddable: EmbeddableAttribute[x.type]): AttributeContent[That, ThatAtts, This, Child, Atts2] = ???
     //AttributeContent[That, ThatAtts, This, Child, Atts2](new Attribute(this.asInstanceOf[AttributeKey[AttributeType]], value))
   
   implicit def embedNodes[
@@ -89,11 +86,11 @@ object EmbeddableAttribute {
   def apply[Value, Type]: WithType[Value, Type] = WithType[Value, Type]()
   
   case class WithType[Value, Type]() {
-    def apply[S <: String](name: S): EmbeddableAttribute[name.type, Value] = new EmbeddableAttribute[name.type, Value](name)
+    def apply[S <: String](name: S): EmbeddableAttribute[(name.type, Value)] = new EmbeddableAttribute[(name.type, Value)](name)
   }
 }
 
-class EmbeddableAttribute[S <: String, Value](name: S)
+class EmbeddableAttribute[S <: (String, Value)](nameVal: S)
 
 case class AttributeContent[
   That <: NodeType,
@@ -258,6 +255,13 @@ object Node {
     }
   }
 
+  object Empty {
+    trait TypeOf { type Singleton }
+    def typeOf[S <: String](s: S): TypeOf { type Singleton = s.type } = new TypeOf { type Singleton = s.type }
+    val Apply = typeOf("apply")
+    type Apply = Apply.type#Singleton
+  }
+
   case class Empty[
     This <: NodeType,
     Atts <: AttributeType,
@@ -270,10 +274,10 @@ object Node {
     
     def name = assignedName.name.toLowerCase
     
-    def applyDynamic[Return](method: String)(head: Content[This, Atts, Child, _, _, Return], contents: Content[This, Atts, Child, _, _, Return]*): Return =
+    def applyDynamic[Return](method: Empty.Apply)(head: Content[This, Atts, Child, _, _, Return], contents: Content[This, Atts, Child, _, _, Return]*): Return =
       head.returnValue(this, (head :: contents.to[List]).map(_.value.asInstanceOf[head.Position]))
     
-    def applyDynamicNamed[Return](method: String)(head: Content[This, Atts, Child, _, _, Return], contents: Content[This, Atts, Child, _, _, Return]*): Return =
+    def applyDynamicNamed[Return](method: Empty.Apply)(head: Content[This, Atts, Child, _, _, Return], contents: Content[This, Atts, Child, _, _, Return]*): Return =
       head.returnValue(this, (head :: contents.to[List]).map(_.value.asInstanceOf[head.Position]))
     
     def children = Iterable[DomNode[_, _, _]]()
