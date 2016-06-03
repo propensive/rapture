@@ -29,8 +29,8 @@ private[jackson] object JacksonAst extends JsonAst {
   override def toString = "<JacksonAst>"
 
   private val mapper = new ObjectMapper()
-    .configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
-    .configure(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS, true)
+    .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+    .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
   
   def getArray(array: Any): List[Any] = array match {
     case list: JsonNode if list.isArray => list.elements.to[List]

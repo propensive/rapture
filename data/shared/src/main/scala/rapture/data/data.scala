@@ -152,6 +152,8 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
 
   def \\(key: String): T = $wrap($ast.fromArray(derefRecursive(key, $normalize)))
 
+  def toBareString: String
+
   private def derefRecursive(key: String, any: Any): List[Any] =
     if(!$ast.isObject(any)) Nil else $ast.getKeys(any).to[List].flatMap {
       case k if k == key => List($ast.dereferenceObject(any, k))
@@ -166,9 +168,9 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
           if(e.bimap(x => $ast.isArray(j), x => $ast.isObject(j))) {
             try e.bimap($ast.dereferenceArray(j, _), $ast.dereferenceObject(j, _)) catch {
               case TypeMismatchException(exp, fnd) => throw TypeMismatchException(exp, fnd)
-              case e: Exception =>
+              case ex: Exception =>
                 if(orEmpty) DataCompanion.Empty
-                else throw MissingValueException()
+                else throw MissingValueException(e.bimap(i => s"index $i", k => s"key $k"))
             }
           } else throw TypeMismatchException(
             if($ast.isArray(j)) DataTypes.Array else DataTypes.Object,

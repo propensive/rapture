@@ -24,8 +24,6 @@ import rapture.test._
 
 import scala.util
 
-import org.scalatest._
-
 class TestRun extends Programme {
   include(PlayTests)
   include(JawnTests)
@@ -313,6 +311,21 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     Json("\t").toString
   } returns "json\"\"\"\"\\t\"\"\"\""
 
+  val `Extract Byte` = test {
+    val j = json"""{ "foo": 127 }"""
+    j.foo.as[Byte]
+  } returns (127.toByte)
+
+  val `Extract Short` = test {
+    val j = json"""{ "foo": 12345 }"""
+    j.foo.as[Short]
+  } returns (12345.toShort)
+
+  val `Extract Long` = test {
+    val j = json"""{ "foo": 1234567890123456789 }"""
+    j.foo.as[Long]
+  } returns 1234567890123456789L
+
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {
@@ -401,5 +414,4 @@ abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonB
     source2.inner.newArray += "Hello"
     source2.inner.newArray(0).as[String]
   } returns "Hello"
- 
 }

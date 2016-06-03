@@ -95,17 +95,6 @@ object GeneralExtractors {
 }
 
 object Extractor {
-  implicit def floatExtractor[Data](implicit ext: Extractor[Double, Data]): Extractor[Float, Data] { type Throws = ext.Throws } =
-    ext.smap(_.toFloat)
-
-  implicit def shortExtractor[Data](implicit ext: Extractor[Double, Data]): Extractor[Short, Data] { type Throws = ext.Throws } =
-    ext.smap(_.toShort)
-
-  implicit def longExtractor[Data](implicit ext: Extractor[Double, Data]): Extractor[Long, Data] { type Throws = ext.Throws } = ext.smap(_.toLong)
-
-  implicit def byteExtractor[Data](implicit ext: Extractor[Double, Data]): Extractor[Byte, Data] { type Throws = ext.Throws } =
-    ext.smap(_.toInt.toByte)
-
   implicit def anyExtractor[Data <: DataType[_, DataAst]]: Extractor[Any, Data] { type Throws = Nothing } =
     new Extractor[Any, Data] {
       type Throws = Nothing
@@ -122,7 +111,7 @@ abstract class Extractor[T, -D] extends Functor[({ type L[x] = Extractor[x, D] }
       mode.Wrap[T, Throws] = mode.wrap {
     try mode.unwrap(extract(any, ast, mode)) catch {
       case e@TypeMismatchException(_, _) => mode.exception(e)
-      case e@MissingValueException() => mode.exception(e)
+      case e@MissingValueException(_) => mode.exception(e)
     }
   }
   

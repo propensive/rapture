@@ -20,7 +20,7 @@ import rapture.core._
 import rapture.json._
 import rapture.data._
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind._
 
 private[jackson] object JacksonParser extends Parser[String, JsonAst] {
   
@@ -29,6 +29,8 @@ private[jackson] object JacksonParser extends Parser[String, JsonAst] {
   override def toString = "<JacksonParser>"
   
   private val mapper = new ObjectMapper()
+    .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+    .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
   
   def parse(s: String): Option[Any] =
     Some(mapper.readTree(s))

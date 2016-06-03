@@ -22,7 +22,7 @@ import rapture.data._
 
 object formatters extends formatters_1 {
   object compact {
-    def apply[Ast <: JsonAst]()(implicit ast: Ast): Formatter[Ast] { type Out = String } =
+    def apply[Ast <: JsonAst]()(implicit ast: Ast, df: DecimalFormat): Formatter[Ast] { type Out = String } =
       jsonFormatterImplicit[Ast]
 
     implicit def jsonFormatterImplicit[Ast <: JsonAst](implicit ast: Ast, df: DecimalFormat):
