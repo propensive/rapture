@@ -100,7 +100,7 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
           
           while(textParts.hasNext) {
             sb.append(comp.splice.construct(MutableCell(expressions.next.value),
-                Vector())(parser.splice.ast).toString)
+                Vector())(parser.splice.ast).toBareString)
             sb.append(textParts.next)
           }
           

@@ -152,6 +152,8 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
 
   def \\(key: String): T = $wrap($ast.fromArray(derefRecursive(key, $normalize)))
 
+  def toBareString: String
+
   private def derefRecursive(key: String, any: Any): List[Any] =
     if(!$ast.isObject(any)) Nil else $ast.getKeys(any).to[List].flatMap {
       case k if k == key => List($ast.dereferenceObject(any, k))

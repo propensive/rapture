@@ -137,14 +137,12 @@ class Json(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vect
       case Left(i) +: tail => apply(i).$extract(tail)
       case Right(e) +: tail => selectDynamic(e).$extract(tail)
     }
-  
-  override def toString =
-    try {
-      val j = Json.format(this)(formatters.compact()($ast))
-      s"""json""${'"'}$j""""""
-    } catch {
-      case e: Exception => "undefined"
-    }
+ 
+  def toBareString: String = try Json.format(this)(formatters.compact()($ast)) catch {
+    case e: Exception => "undefined"
+  }
+
+  override def toString: String = s"""json""${'"'}${toBareString}""${'"'}"""
 }
 
 class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vector())
@@ -163,11 +161,9 @@ class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] 
       case Right(e) +: tail => selectDynamic(e).$extract(tail)
     }
   
-  override def toString =
-    try {
-      val j = JsonBuffer.format(this)(formatters.compact()($ast))
-      s"""json""${'"'}$j""""""
-    } catch {
-      case e: Exception => "undefined"
-    }
+  def toBareString: String = try Json.format(this)(formatters.compact()($ast)) catch {
+    case e: Exception => "undefined"
+  }
+  
+  override def toString: String = s"""json""${'"'}${toBareString}""${'"'}"""
 }

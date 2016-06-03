@@ -108,13 +108,11 @@ class Xml(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vecto
       case Right(e) +: tail => selectDynamic(e).$extract(tail)
     }
   
-  override def toString =
-    try {
-      val x = Xml.format(this)(formatters.compact()($ast))
-      s"""xml""${'"'}$x""""""
-    } catch {
+  override def toBareString = try Xml.format(this)(formatters.compact()($ast)) catch {
       case e: Exception => "undefined"
     }
+
+  override def toString: String = s"""xml""${'"'}$toBareString""${'"'}"""
 }
 
 class XmlBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vector())
@@ -133,11 +131,9 @@ class XmlBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] =
       case Right(e) +: tail => selectDynamic(e).$extract(tail)
     }
   
-  override def toString =
-    try {
-      val x = Xml.format(this)(formatters.compact()($ast))
-      s"""xml""${'"'}$x""""""
-    } catch {
+  override def toBareString = try Xml.format(this)(formatters.compact()($ast)) catch {
       case e: Exception => "undefined"
     }
+
+  override def toString: String = s"""xml""${'"'}$toBareString""${'"'}"""
 }
