@@ -111,7 +111,7 @@ abstract class Extractor[T, -D] extends Functor[({ type L[x] = Extractor[x, D] }
       mode.Wrap[T, Throws] = mode.wrap {
     try mode.unwrap(extract(any, ast, mode)) catch {
       case e@TypeMismatchException(_, _) => mode.exception(e)
-      case e@MissingValueException() => mode.exception(e)
+      case e@MissingValueException(_) => mode.exception(e)
     }
   }
   

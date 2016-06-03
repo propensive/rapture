@@ -168,9 +168,9 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
           if(e.bimap(x => $ast.isArray(j), x => $ast.isObject(j))) {
             try e.bimap($ast.dereferenceArray(j, _), $ast.dereferenceObject(j, _)) catch {
               case TypeMismatchException(exp, fnd) => throw TypeMismatchException(exp, fnd)
-              case e: Exception =>
+              case ex: Exception =>
                 if(orEmpty) DataCompanion.Empty
-                else throw MissingValueException()
+                else throw MissingValueException(e.bimap(i => s"index $i", k => s"key $k"))
             }
           } else throw TypeMismatchException(
             if($ast.isArray(j)) DataTypes.Array else DataTypes.Object,
