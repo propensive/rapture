@@ -60,7 +60,7 @@ private[lift] object LiftAst extends JsonBufferAst {
   
   def getBigDecimal(bigDecimal: Any): BigDecimal = bigDecimal match {
     case JDouble(d) => BigDecimal(d)
-    case JInt(v) => BigDecimal(v.toDouble)
+    case JInt(v) => BigDecimal(v)
     case _ => throw TypeMismatchException(getType(bigDecimal), DataTypes.Number)
   }
   

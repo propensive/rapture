@@ -87,6 +87,19 @@ private[json] trait Extractors_1 extends Extractors_2 {
   
   implicit val bigIntExtractor: Extractor[BigInt, Json] { type Throws = DataGetException } =
     bigDecimalExtractor.smap(_.toBigInt)
+  
+  implicit val longExtractor: Extractor[Long, Json] { type Throws = DataGetException } =
+    bigIntExtractor.smap(_.toLong)
+  
+  implicit val byteExtractor: Extractor[Byte, Json] { type Throws = DataGetException } =
+    intExtractor.smap(_.toByte)
+  
+  implicit val floatExtractor: Extractor[Float, Json] { type Throws = DataGetException } =
+    doubleExtractor.smap(_.toFloat)
+  
+  implicit val shortExtractor: Extractor[Short, Json] { type Throws = DataGetException } =
+    intExtractor.smap(_.toShort)
+
 }
 
 private[json] trait Extractors_2 {
