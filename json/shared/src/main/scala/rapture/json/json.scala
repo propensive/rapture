@@ -138,7 +138,8 @@ class Json(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vect
       case Right(e) +: tail => selectDynamic(e).$extract(tail)
     }
  
-  def toBareString: String = try Json.format(this)(formatters.compact()($ast)) catch {
+  def toBareString: String = try Json.format(this)(formatters.compact.jsonFormatterImplicit($ast,
+      decimalFormats.exact())) catch {
     case e: Exception => "undefined"
   }
 
@@ -161,7 +162,8 @@ class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] 
       case Right(e) +: tail => selectDynamic(e).$extract(tail)
     }
   
-  def toBareString: String = try Json.format(this)(formatters.compact()($ast)) catch {
+  def toBareString: String = try Json.format(this)(formatters.compact.jsonFormatterImplicit($ast,
+      decimalFormats.exact())) catch {
     case e: Exception => "undefined"
   }
   
