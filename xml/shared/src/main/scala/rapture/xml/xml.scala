@@ -21,6 +21,7 @@ import rapture.core._
 import rapture.data._
 
 import language.experimental.macros
+import scala.language.implicitConversions
 
 private[xml] trait Xml_2 {
   implicit def xmlExtractorMacro[T <: Product, Th]: Extractor[T, Xml] { type Throws = Th } =
@@ -31,7 +32,7 @@ private[xml] trait Xml_2 {
 }
 
 private[xml] trait Xml_1 extends Xml_2 {
-  implicit def dynamicWorkaround(j: Xml) = new DynamicWorkaround(j)
+  implicit def dynamicWorkaround(j: Xml): DynamicWorkaround = new DynamicWorkaround(j)
 }
 
 private[xml] class DynamicWorkaround(xml: Xml) {

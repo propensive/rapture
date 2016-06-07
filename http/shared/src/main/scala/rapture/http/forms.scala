@@ -294,7 +294,7 @@ object Forms extends Widgets with Parsers {
           w.options.flatMap { opt => List(
             Span(
               Input(typ = "radio", htmlSyntax.name = f.name, value = w.id(opt),
-                  checked = (w.id(opt) == f.fieldValue)),
+                  checked = w.id(opt) == f.fieldValue),
               " "+w.description(opt),
               Br
             )

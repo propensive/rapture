@@ -38,7 +38,7 @@ object Tabulation {
     val contents = collection.map { e => cols.map(_(e)) }
     
     val contentsWithTitles = titles.map { ts =>
-      ts +: (ts.map { case Col(s, p) => Col(s.map(c => '-'), p) }) +: contents
+      ts +: ts.map { case Col(s, p) => Col(s.map(c => '-'), p) } +: contents
     }.getOrElse(contents)
     
     val widths = contentsWithTitles.map { _.map(_.content.length) }.reduce(_ zip _ map { case (a, b) => a max b })

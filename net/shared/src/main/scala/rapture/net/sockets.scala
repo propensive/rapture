@@ -61,7 +61,7 @@ object SocketUri {
   }
 }
 
-case class SocketUri(val hostname: String, val port: Int) {
+case class SocketUri(hostname: String, port: Int) {
   
   lazy val javaSocket: java.net.Socket = new java.net.Socket(hostname, port)
   

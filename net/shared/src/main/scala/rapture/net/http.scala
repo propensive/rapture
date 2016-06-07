@@ -120,7 +120,7 @@ object HttpSupport {
             "Basic "+NetUrl.base64.encode(s"$username:$password".getBytes("UTF-8")).mkString)
         }
         
-        ?[PostType[C]].contentType map { ct => conn.setRequestProperty("Content-Type", ct.name) }
+        ?[PostType[C]].contentType foreach { ct => conn.setRequestProperty("Content-Type", ct.name) }
         for((k, v) <- headers) conn.setRequestProperty(k, v)
   
         if(content != None)

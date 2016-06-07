@@ -31,7 +31,7 @@ private[spray] object SprayAst extends JsonBufferAst {
 
   override def dereferenceObject(obj: Any, element: String): Any =
     obj match {
-      case obj: JsObject => try obj.getFields(element)(0) catch {
+      case obj: JsObject => try obj.getFields(element).head catch {
         case e: IndexOutOfBoundsException => throw MissingValueException()
       }
       case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)

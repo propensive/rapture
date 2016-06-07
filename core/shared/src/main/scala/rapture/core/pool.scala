@@ -17,7 +17,7 @@
 
 package rapture.core
 
-import scala.collection.mutable.Queue
+import scala.collection.mutable
 
 /** Implements a dynamic pool of some resource, e.g. database connections. */
 abstract class Pool[Resource]
@@ -37,7 +37,7 @@ abstract class Pool[Resource]
   /** How long to leave surplus resources unused before discarding them. */
   protected def timeout = 10*60000L
 
-  private val pool = new Queue[Resource]
+  private val pool = new mutable.Queue[Resource]
   private var poolCount = 0
   private var lastLow = 0L
 

@@ -71,11 +71,11 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
           exprs.map(_.tree).to[List]
         ))
         
-        val stringsUsed: List[Boolean] = (listExprs.tree match {
+        val stringsUsed: List[Boolean] = listExprs.tree match {
           case Apply(_, bs) => bs.map {
             case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => nme.toString == "forceStringConversion"
           }
-        })
+        }
 
         parseSource(text, stringsUsed) foreach { case (n, offset, msg) =>
           val oldPos = ys(n).asInstanceOf[Literal].pos

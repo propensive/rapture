@@ -21,6 +21,7 @@ package rapture.uri
 import rapture.core._
 
 import language.experimental.macros
+import scala.language.implicitConversions
 
 object UriContext
 

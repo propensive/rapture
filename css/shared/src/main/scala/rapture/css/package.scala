@@ -20,5 +20,5 @@ package rapture.css
 import language.implicitConversions
 
 object `package` {
-  implicit def cssStringContext(sc: StringContext) = new CssStrings(sc)
+  implicit def cssStringContext(sc: StringContext): CssStrings = new CssStrings(sc)
 }

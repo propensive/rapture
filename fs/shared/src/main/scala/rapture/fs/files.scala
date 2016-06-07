@@ -184,7 +184,7 @@ object FsUrl {
 
 /** Defines a URL for the file: scheme, and provides standard filesystem operations on the file
   * represented by the URL. */
-case class FsUrl(val elements: Seq[String]) {
+case class FsUrl(elements: Seq[String]) {
 
   override def toString = s"file:///${elements.mkString("/")}"
 

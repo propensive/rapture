@@ -27,7 +27,7 @@ private[js] object JsValidator {
       extends Exception
   
   def validate(parts: List[String]): Unit = {
-    val script = parts.mkString("null");
+    val script = parts.mkString("null")
     val engine: Compilable = alloc[ScriptEngineManager]().getEngineByName("JavaScript") match {
       case e: Compilable => e
     }

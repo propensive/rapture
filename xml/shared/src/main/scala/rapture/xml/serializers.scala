@@ -40,7 +40,7 @@ private[xml] trait Serializers {
     BasicXmlSerializer(ast fromString _.toString)
 
   implicit def stringSerializer(implicit ast: XmlAst): Serializer[String, Xml] =
-    BasicXmlSerializer(ast fromString _)
+    BasicXmlSerializer(ast.fromString)
 
   implicit def floatSerializer(implicit ast: XmlAst): Serializer[Float, Xml] =
     BasicXmlSerializer(ast fromString _.toString)

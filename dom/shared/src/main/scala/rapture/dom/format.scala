@@ -89,7 +89,7 @@ object DomFormatter {
           k.name+"=\""+k.serialize(v.asInstanceOf[k.Value])+"\""
         }
         
-        if(xs.isEmpty && !elem.forceClosingTag) Vector((indent -> s"<${as.mkString(" ")}/>"))
+        if(xs.isEmpty && !elem.forceClosingTag) Vector(indent -> s"<${as.mkString(" ")}/>")
         else if(hasBlock || elem.block)
           (indent -> s"<${as.mkString(" ")}>") +: xs :+ (indent -> s"</${elem.tagName}>")
         else Vector(indent -> s"<${as.mkString(" ")}>${xs.map(_._2).mkString}</${elem.tagName}>")
