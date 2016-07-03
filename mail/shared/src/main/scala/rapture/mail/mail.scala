@@ -7,6 +7,7 @@ import rapture.net._
 import rapture.uri._
 import rapture.html._
 import rapture.mime._
+import rapture.codec._
 
 import scala.reflect._
 import scala.reflect.macros._
@@ -48,6 +49,7 @@ case class Inline(name: String, content: HttpUrl)
 sealed trait Attachment { def name: String }
 case class UrlAttachment(name: String, content: HttpUrl) extends Attachment
 case class FileAttachment(name: String, content: FsUrl) extends Attachment
+case class DataAttachment(name: String, content: Bytes) extends Attachment
 
 case class Recipient(email: String, name: String = "") {
   override def toString = if(name == "") email else s""""${name}" <${email}>"""
@@ -130,6 +132,28 @@ case class Smtp(hostname: String, port: Int = 25) {
     for(r <- cc) msg.addRecipient(Message.RecipientType.CC, new InternetAddress(r))
     msg.setSubject(subject)
 
+    def source(a: Attachment) = a match {
+      case FileAttachment(name, file) =>
+        val parts = name.split("\\.").to[List]
+        val extension = if(parts.length < 2) Nil else List(parts.last)
+        val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
+        new FileDataSource(file.javaFile) {
+          override def getContentType() = mime.name
+        }
+      case DataAttachment(name, data) =>
+        val parts = name.split("\\.").to[List]
+        val extension = if(parts.length < 2) Nil else List(parts.last)
+        val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
+        new DataSource {
+          override def getContentType() = mime.name
+          def getOutputStream() = throw new java.io.IOException()
+          def getInputStream() = new java.io.ByteArrayInputStream(data.bytes)
+          def getName = name
+        }
+      case UrlAttachment(name, url) =>
+        new URLDataSource(new URL(url.link.toString))
+    }
+
     bodyHtml match {
       case Some((html, inlines)) => {
         var top = new MimeMultipart("alternative")
@@ -166,19 +190,7 @@ case class Smtp(hostname: String, port: Int = 25) {
             val attPart = new MimeBodyPart()
             attPart.setDisposition(Part.ATTACHMENT)
             attPart.setFileName(a.name)
-            
-            val src = a match {
-              case FileAttachment(name, file) =>
-                val parts = name.split("\\.").to[List]
-                val extension = if(parts.length < 2) Nil else List(parts.last)
-                val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
-                new FileDataSource(file.javaFile) {
-                  override def getContentType() = mime.name
-                }
-              case UrlAttachment(name, url) =>
-                new URLDataSource(new URL(url.link.toString))
-            }
-            attPart.setDataHandler(new DataHandler(src))
+            attPart.setDataHandler(new DataHandler(source(a)))
             top.addBodyPart(attPart)
           }
         }
@@ -194,18 +206,7 @@ case class Smtp(hostname: String, port: Int = 25) {
             val attPart = new MimeBodyPart()
             attPart.setDisposition(Part.ATTACHMENT)
             attPart.setFileName(a.name)
-            val src = a match {
-              case FileAttachment(name, file) =>
-                val parts = name.split("\\.").to[List]
-                val extension = if(parts.length < 2) Nil else List(parts.last)
-                val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
-                new FileDataSource(file.javaFile) {
-                  override def getContentType() = mime.name
-                }
-              case UrlAttachment(name, url) =>
-                new URLDataSource(new URL(url.link.toString))
-            }
-            attPart.setDataHandler(new DataHandler(src))
+            attPart.setDataHandler(new DataHandler(source(a)))
             top.addBodyPart(attPart)
           }
           msg.setContent(top)
