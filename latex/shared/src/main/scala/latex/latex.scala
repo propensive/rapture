@@ -32,35 +32,41 @@ object TemporaryStorage {
 }
 
 case class TemporaryStorage(file: FsUrl) {
-  def tmpFile(prefix: String = "rapture", suffix: String = ".tmp") = File.parse(java.io.File.createTempFile(prefix, suffix, file.javaFile).getAbsolutePath)
+  def tmpFile(prefix: String = "rapture", suffix: String = ".tmp") =
+    File.parse(java.io.File.createTempFile(prefix, suffix, file.javaFile).getAbsolutePath)
 }
 
 trait LatexBackend {
-  def process(latex: Latex, mode: Mode[_], tmp: TemporaryStorage): PdfFile
+  def process(latex: Latex, data: Seq[(String, Bytes)], mode: Mode[_], tmp: TemporaryStorage): PdfFile
 }
 
 package latexBackends {
   object xelatex {
     implicit val implicitLatexBackend: LatexBackend = new LatexBackend {
-      def process(latex: Latex, mode: Mode[_], tmp: TemporaryStorage): PdfFile = {
-        val file = tmp.tmpFile(prefix = "tmp", suffix = ".tex")
+      def process(latex: Latex, data: Seq[(String, Bytes)], mode: Mode[_], tmp: TemporaryStorage): PdfFile = {
+        val dir = tmp.file / Guid.generate()()
+        dir.mkdir()
+        data.foreach { case (name, bytes) =>
+          val f = dir / name
+          bytes.copyTo(f)
+        }
+        val file = dir / "document.tex"
         implicit val env: Environment = new Environment {
-          def workDir = Some("/tmp")
+          def workDir = Some(dir.javaFile.getAbsolutePath)
           def apply() = environments.enclosing()()
         }
+
         latex.content.copyTo(file)
         val cmd = sh"/usr/bin/xelatex -interaction nonstopmode ${file}"
-        val output = cmd.exec[String]
-        val iter = output.split("\n").to[Iterator]
+        val output = cmd.exec[Iterator[String]]
 
-        // FIXME: Avoid using iterators
-        while(iter.hasNext) {
-          var next = iter.next()
+        while(output.hasNext) {
+          var next = output.next()
           if(next startsWith "! ") {
             val msg = next.drop(if(next.startsWith("! LaTeX Error: ")) 15 else 2)
             val content = new StringBuilder()
-            while(iter.hasNext && !next.startsWith("l.")) {
-              next = iter.next()
+            while(output.hasNext && !next.startsWith("l.")) {
+              next = output.next()
               if(!next.startsWith("l.")) content.append(s"$next\n")
               else {
                 val line = next.drop(2).takeWhile(_ != ' ').toInt
@@ -69,9 +75,8 @@ package latexBackends {
             }
           }
         }
-        val outFile = file.parent / file.filename.replaceAll("tex$", "pdf")
 
-        PdfFile(outFile)
+        PdfFile((file.parent / file.filename.replaceAll("tex$", "pdf")).slurp[Byte])
       }
     }
   }
@@ -95,12 +100,13 @@ case class LatexException(msg: String, line: Int, content: String) extends Excep
 }
 
 case class Latex(content: String) {
-  def generate()(implicit backend: LatexBackend, mode: Mode[`Latex#generate`],
+
+  def generate(data: (String, Bytes)*)(implicit backend: LatexBackend, mode: Mode[`Latex#generate`],
       tmp: TemporaryStorage): mode.Wrap[PdfFile, LatexException] =
-    mode.wrap { backend.process(this, mode, tmp) }
+    mode.wrap { backend.process(this, data, mode, tmp) }
 }
 
-case class PdfFile(file: FsUrl)
+case class PdfFile(data: Bytes)
 
 object Latexable {
   implicit val stringLatexable: Latexable[String] = new Latexable[String] {
@@ -118,14 +124,11 @@ object Latexable {
 
 trait Latexable[-T] { def toLatex(t: T): String }
 
-object ToLatex {
-  implicit def toLatex[T: Latexable](t: T): ToLatex = ToLatex(?[Latexable[T]].toLatex(t))
+case class LatexStringContext(sc: StringContext) {
+  def latex(variables: Annex[Latexable]*)(implicit process: TextProcess) =
+    Latex(process(sc.parts.zip(variables.map(_(_.toLatex))).map { case (a, b) => a+b }.mkString + sc.parts.last))
 }
-case class ToLatex(content: String)
 
 object `package` {
-  implicit class LatexStringContext(sc: StringContext) {
-    def latex(variables: ToLatex*)(implicit process: TextProcess) =
-      Latex(process(sc.parts.zip(variables.map(_.content)).map { case (a, b) => a+b }.mkString + sc.parts.last))
-  }
+  implicit def latexStringContext(sc: StringContext): LatexStringContext = LatexStringContext(sc)
 }

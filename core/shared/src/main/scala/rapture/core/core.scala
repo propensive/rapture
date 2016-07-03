@@ -18,6 +18,7 @@
 package rapture.core
 
 import language.experimental.macros
+import language.higherKinds
 
 object AssignedName {
   implicit def assignedNameImplicit: AssignedName = macro CoreMacros.assignedNameMacro
@@ -48,3 +49,20 @@ object Var {
     def update(t: T) = value = t
   }
 }
+
+object Annex {
+  implicit def annexValueWithTypeclass[V, Tc[_]](v: V)(implicit tc: Tc[V]): Annex[Tc] =
+    new Annex[Tc] {
+      type Value = V
+      def value: Value = v
+      def typeclass: Tc[Value] = tc
+    }
+}
+
+abstract class Annex[Typeclass[_]] {
+  type Value
+  def value: Value
+  def typeclass: Typeclass[Value]
+  def apply[Return](fn: Typeclass[Value] => Value => Return): Return = fn(typeclass)(value)
+}
+
