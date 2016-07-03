@@ -52,7 +52,7 @@ trait Optable[-T] {
   def hidden(t: T): Boolean
 }
 
-case class Opt(val name: String, val description: String, val hidden: Boolean = false)(opts: => Opts[Opt]) {
+case class Opt(name: String, description: String, hidden: Boolean = false)(opts: => Opts[Opt]) {
   def unapply(arg: Arg): Boolean = opts.unapply(arg) == Some(this)
 }
 
@@ -149,7 +149,7 @@ case class Params[T, P[_]](options: P[T]*)(implicit paramable: Paramable[T, P]) 
   
   private object ShortOpt {
     def unapply(arg: Arg): Option[String] =
-      if(arg.param.startsWith("-")) Some(arg(suggester(Set())).drop(1).take(1)) else None
+      if(arg.param.startsWith("-")) Some(arg(suggester(Set())).slice(1, 2)) else None
   }
 
   @tailrec

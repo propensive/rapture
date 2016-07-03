@@ -44,7 +44,7 @@ object Compadd {
       colWidth: Int = 1000, hidden: Boolean): Vector[String] = {
     
     val display: Option[Vector[String]] = {
-      val ds: Vector[Vector[String]] = completions.to[Vector] map descriptions
+      val ds: Vector[Vector[String]] = completions map descriptions
       if(ds.forall(_.isEmpty)) None
       else Some(padRows(completions zip ds map { case (c, d) => c +: d }))
     }

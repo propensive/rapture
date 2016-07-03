@@ -197,6 +197,9 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     }
   } returns null
 
+  val `Extract long element` = test {
+    source1.int.as[Long]
+  } returns 42L
   // For some reason these two tests work fine in the REPL, but not here.
   /*
   val `Extract missing value with case class default` = test {

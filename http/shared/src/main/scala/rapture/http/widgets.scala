@@ -20,11 +20,11 @@ package rapture.http
 trait Widgets {
   trait Widget
   
-  case class Dropdown[T](options: List[T])(val id: T => String = ((t: Any) =>
-      t.toString), val description: T => String = ((t: Any) => t.toString)) extends Widget
+  case class Dropdown[T](options: List[T])(val id: T => String = (t: Any) =>
+    t.toString, val description: T => String = (t: Any) => t.toString) extends Widget
   
-  case class RadioList[T](options: List[T])(val id: T => String = ((t: Any) => t.toString),
-      val description: T => String = ((t: Any) => t.toString)) extends Widget
+  case class RadioList[T](options: List[T])(val id: T => String = (t: Any) => t.toString,
+                                            val description: T => String = (t: Any) => t.toString) extends Widget
   
   case class TextArea(width: Int = 8, height: Int = 80, maxLength: Option[Int] = None) extends Widget
   case class HtmlEditor() extends Widget

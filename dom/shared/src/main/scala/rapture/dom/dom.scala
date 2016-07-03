@@ -138,7 +138,7 @@ sealed abstract class Element[ChildType <: ElementType, ThisType <: ElementType,
       DomNodes[Child, This, Att] =
     DomNodes(children.to[Vector].flatMap {
       case e: Element[_, _, _] =>
-        val found = (e \ tag)
+        val found = e \ tag
         found.elements ++ (e \\ tag).elements
       case _ => Vector()
     })
@@ -159,7 +159,7 @@ case class Tag[ChildType <: ElementType, ThisType <: ElementType, AttType <: Att
 
   def apply[AppliedType[_ <: ElementType, _ <: ElementType, _ <: AttributeType] <: DomNode[_, _, _]](
       first: Applicable[ChildType, AttType, AppliedType], applied: Applicable[ChildType, AttType, AppliedType]*):
-      AppliedType[ChildType, ThisType, AttType] = first.application(this, (first +: applied): _*)
+      AppliedType[ChildType, ThisType, AttType] = first.application(this, first +: applied: _*)
 }
 
 case class ElementSeq[ChildType <: ElementType, ThisType <: ElementType, AttType <: AttributeType](elems:

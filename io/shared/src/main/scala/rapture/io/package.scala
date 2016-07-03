@@ -21,6 +21,8 @@ import rapture.core._
 import rapture.uri._
 import java.io._
 
+import scala.language.implicitConversions
+
 trait `Appendable#appendOutput` extends MethodConstraint
 trait `Readable#input` extends MethodConstraint
 trait `Readable#redirectTo` extends MethodConstraint

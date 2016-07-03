@@ -45,7 +45,7 @@ object UriMacros {
             case _ => c.abort(c.enclosingPosition, "Could not find a valid scheme for this URI.")
           }
           
-          val constants = rawParts.to[List] match {
+          val constants = rawParts match {
             case Literal(Constant(h: String)) :: t =>
               Literal(Constant(h.substring(scheme.length + 1))) :: t
           }

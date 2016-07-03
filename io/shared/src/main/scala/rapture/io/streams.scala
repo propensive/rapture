@@ -148,7 +148,7 @@ object Readable {
     def redirectTo[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data], sw: Writer[DestRes, Data],
         mode: Mode[`Readable#redirectTo`], mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
       mode.wrap(handleInput[Data, Int] { in =>
-        writable(dest).handleOutput[Data, Int](in pumpTo _)
+        writable(dest).handleOutput[Data, Int](in.pumpTo)
       })
     
     def >[Data, DestRes](dest: DestRes)(implicit sr: Reader[Res, Data], sw: Writer[DestRes, Data],
@@ -169,7 +169,7 @@ object Readable {
         Reader[Res, Data], sw: Appender[DestRes, Data], mode: Mode[`Readable#appendTo`],
         mf: ClassTag[Data]): mode.Wrap[Int, Exception] =
       mode.wrap(handleInput[Data, Int] { in =>
-        dest.handleAppend[Data, Int](in pumpTo _)
+        dest.handleAppend[Data, Int](in.pumpTo)
       })
 
     /** Pumps the input for the specified resource to the destination output provided
@@ -374,7 +374,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
     * @return The number of items of data transferred */
   def readBlock(array: Array[Data], offset: Int = 0, length: Int = -1): Int = {
 
-    val end = if(length < 0) (array.length - offset) else (offset + length)
+    val end = if(length < 0) array.length - offset else offset + length
 
     read() match {
       case None => -1
@@ -459,7 +459,7 @@ trait Input[@specialized(Byte, Char) Data] extends Seq[Data] { thisInput =>
 
   override def foreach[U](fn: Data => U): Unit = {
     var next: Option[Data] = read()
-    while(next != None) {
+    while(next.isDefined) {
       fn(next.get)
       next = read()
     }
@@ -495,7 +495,7 @@ trait Output[@specialized(Byte, Char) Data] {
     * @return The number of data items written. */
   def writeBlock(array: Array[Data], offset: Int = 0, length: Int = -1): Int = {
     
-    val end = if(length < 0) (array.length - offset) else (offset + length)
+    val end = if(length < 0) array.length - offset else offset + length
     array.slice(offset, end).foreach(write)
 
     end - offset

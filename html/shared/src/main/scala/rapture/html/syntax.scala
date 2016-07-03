@@ -25,7 +25,7 @@ import rapture.uri._
 import rapture.js._
 import rapture.css._
 
-import language.dynamics
+import language.{dynamics, implicitConversions}
 
 object htmlSyntax {
 

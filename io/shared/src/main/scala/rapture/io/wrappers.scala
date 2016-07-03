@@ -51,7 +51,7 @@ class CharInput(in: java.io.Reader) extends Input[Char] {
   def close() = bin.close()
   
   override def readBlock(array: Array[Char], offset: Int = 0, length: Int = -1): Int =
-    bin.read(array, offset, if(length == -1) (array.length - offset) else length)
+    bin.read(array, offset, if(length == -1) array.length - offset else length)
 
   override def toString() = "<character input>"
 }
@@ -70,7 +70,7 @@ class ByteInput(in: InputStream) extends Input[Byte] {
   }
   
   override def readBlock(array: Array[Byte], offset: Int = 0, length: Int = -1): Int =
-    bin.read(array, offset, if(length == -1) (array.length - offset) else length)
+    bin.read(array, offset, if(length == -1) array.length - offset else length)
 
   def close() = in.close()
 
@@ -80,7 +80,7 @@ class ByteInput(in: InputStream) extends Input[Byte] {
 /** Wraps a `java.io.OutputStream` into an `Output[Byte]`
   *
   * @param out The `java.io.OutputStream` to be wrapped */
-class ByteOutput(out: OutputStream, closer: OutputStream => Unit = (_.close())) extends Output[Byte] {
+class ByteOutput(out: OutputStream, closer: OutputStream => Unit = _.close()) extends Output[Byte] {
   
   private val bout = alloc[BufferedOutputStream](out)
   
@@ -92,7 +92,7 @@ class ByteOutput(out: OutputStream, closer: OutputStream => Unit = (_.close())) 
   override def toString() = "<byte output>"
   
   override def writeBlock(array: Array[Byte], offset: Int = 0, length: Int = -1): Int = {
-    val len = if(length == -1) (array.length - offset) else length
+    val len = if(length == -1) array.length - offset else length
     bout.write(array, offset, len)
     bout.flush()
     len
@@ -113,7 +113,7 @@ class CharOutput(out: java.io.Writer) extends Output[Char] {
   override def toString() = "<character output>"
   
   override def writeBlock(array: Array[Char], offset: Int = 0, length: Int = -1): Int = {
-    val len = if(length == -1) (array.length - offset) else length
+    val len = if(length == -1) array.length - offset else length
     bout.write(array, offset, len)
     bout.flush()
     len
@@ -123,7 +123,7 @@ class CharOutput(out: java.io.Writer) extends Output[Char] {
 
 /** Wraps a `java.io.BufferedWriter` for providing line-by-line output of `String`s
   *
-  * @param out The `java.io.Writer` to be wrapped */
+  * @param writer The `java.io.Writer` to be wrapped */
 class LineOutput(writer: java.io.Writer) extends Output[String] {
   def this(os: OutputStream, encoding: Encoding) =
     this(new OutputStreamWriter(os, encoding.name))
@@ -174,12 +174,12 @@ object WriterBuilder extends OutputBuilder[java.io.Writer, Char] {
   def output(s: java.io.Writer): Output[Char] = alloc[CharOutput](s)
 }
 
-class JavaOutputStreamWriter[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = (_.close())) extends
+class JavaOutputStreamWriter[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = _.close()) extends
     Writer[T, Byte] {
   def output(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)), closer)
 }
 
-class JavaOutputAppender[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = (_.close())) extends Appender[T, Byte] {
+class JavaOutputAppender[T](val getOutputStream: T => OutputStream, val closer: OutputStream => Unit = _.close()) extends Appender[T, Byte] {
   def appendOutput(t: T): Output[Byte] = alloc[ByteOutput](alloc[BufferedOutputStream](getOutputStream(t)), closer)
 }
 

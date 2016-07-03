@@ -143,7 +143,7 @@ object Macros {
         """
       }
 
-      if(!implicitSearchFailures.isEmpty) {
+      if(implicitSearchFailures.nonEmpty) {
         val paramStrings = implicitSearchFailures map {
           case (t, p1 :: Nil) =>
             s"parameter `$p1' of type $t"

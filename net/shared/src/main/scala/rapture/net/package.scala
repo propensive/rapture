@@ -20,8 +20,9 @@ import rapture.io._
 import rapture.uri._
 import rapture.core._
 import rapture.codec._
-
 import java.io.{Reader => _, Writer => _, _}
+
+import scala.language.implicitConversions
 
 trait `NetUrl#httpGet` extends MethodConstraint
 trait `NetUrl#httpPost` extends MethodConstraint
