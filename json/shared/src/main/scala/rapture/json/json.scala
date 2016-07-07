@@ -92,7 +92,17 @@ object JsonBuffer extends JsonDataCompanion[JsonBuffer, JsonBufferAst] {
 /** Companion object to the `Json` type, providing factory and extractor methods, and a JSON
   * pretty printer. */
 object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
-  
+
+  implicit def stringParser(implicit parser: Parser[String, JsonAst], mode: Mode[_ <: ParseMethodConstraint]): StringParser[Json] =
+    new StringParser[Json] {
+      type Throws = rapture.data.ParseException
+      def parse(str: String, mode2: Mode[_ <: MethodConstraint]): mode2.Wrap[Json, rapture.data.ParseException] =
+        mode2.wrap {
+          mode.unwrap(Json.parse(str)(implicitly[StringSerializer[String]],
+              mode, parser))
+        }
+    }
+
   def construct(any: MutableCell, path: Vector[Either[Int, String]])(implicit ast:
       JsonAst): Json = new Json(any, path)
 
@@ -131,6 +141,8 @@ class Json(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vect
     new Json(MutableCell(any), path)
   
   def $deref(path: Vector[Either[Int, String]]): Json = new Json($root, path)
+  
+  def applyDynamic(key: String)(i: Int = 0): Json = $deref(Left(i) +: Right(key) +: $path)
 
   def $extract(sp: Vector[Either[Int, String]]): Json =
     if(sp.isEmpty) this else sp match {
@@ -150,6 +162,8 @@ class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] 
     (implicit val $ast: JsonBufferAst) extends
     JsonDataType[JsonBuffer, JsonBufferAst] with
     MutableDataType[JsonBuffer, JsonBufferAst] with DynamicData[JsonBuffer, JsonBufferAst] {
+
+  def applyDynamic(key: String)(i: Int = 0): JsonBuffer = $deref(Left(i) +: Right(key) +: $path)
 
   def $wrap(any: Any, path: Vector[Either[Int, String]]): JsonBuffer =
     new JsonBuffer(MutableCell(any), path)

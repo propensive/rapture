@@ -62,7 +62,9 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
 
   def getAttributes(obj: Any): Map[String, String] = obj match {
     case n: Node => n.attributes.asAttrMap
-    case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
+    case v =>
+      println(s"Found $v of type ${v.getClass}")
+      throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
 
   def setObjectValue(obj: Any, name: String, value: Any): Any =

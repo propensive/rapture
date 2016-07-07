@@ -164,7 +164,19 @@ object htmlSyntax {
   
   implicit def onclick = Attribute[Global, Js]("onclick")(_.content)
   def onclick_=[E <: ElementType](v: Js) = onclick.set[E](v)
+ 
+  implicit def onmouseover = Attribute[Global, Js]("onmouseover")(_.content)
+  def onmouseover_=[E <: ElementType](v: Js) = onmouseover.set(v)
   
+  implicit def onmouseout = Attribute[Global, Js]("onmouseout")(_.content)
+  def onmouseout_=[E <: ElementType](v: Js) = onmouseout.set(v)
+
+  implicit def onchange = Attribute[Input, Js]("onchange")(_.content)
+  def onchange_=[E <: ElementType](v: Js) = onchange.set(v)
+
+  implicit def onblur = Attribute[Input, Js]("onblur")(_.content)
+  def onblur_=[E <: ElementType](v: Js) = onblur.set(v)
+
   implicit def title = Attribute[Global, String]("title")(identity)
   def title_=[E <: ElementType](v: String) = title.set[E](v)
   

@@ -79,7 +79,7 @@ trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dy
   /** Assumes the Json object wraps a `Map`, and extracts the element `key`. */
   def selectDynamic(key: String): T = $deref(Right(key) +: $path)
 
-  def applyDynamic(key: String)(i: Int = 0): T = $deref(Left(i) +: Right(key) +: $path)
+  //def applyDynamic(key: String)(i: Int = 0): T = $deref(Left(i) +: Right(key) +: $path)
 
   def $deref($path: Vector[Either[Int, String]]): T
   def $path: Vector[Either[Int, String]]
