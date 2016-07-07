@@ -163,6 +163,8 @@ class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] 
     JsonDataType[JsonBuffer, JsonBufferAst] with
     MutableDataType[JsonBuffer, JsonBufferAst] with DynamicData[JsonBuffer, JsonBufferAst] {
 
+  def applyDynamic(key: String)(i: Int = 0): JsonBuffer = $deref(Left(i) +: Right(key) +: $path)
+
   def $wrap(any: Any, path: Vector[Either[Int, String]]): JsonBuffer =
     new JsonBuffer(MutableCell(any), path)
   
