@@ -20,9 +20,10 @@ import rapture.core._
 import rapture.io._
 import rapture.uri._
 
-import scala.collection.mutable.HashMap
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+import scala.collection.mutable
 
 case class Cookie[I, D](domain: String, name: String, value: String,
     path: RootedPath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
@@ -35,8 +36,8 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   val ts = ?[TimeSystem.ByInstant[I]]
 
-  val cookies: HashMap[(String, String, RootedPath), Cookie[I, _]] =
-    new HashMap[(String, String, RootedPath), Cookie[I, _]]
+  val cookies: mutable.HashMap[(String, String, RootedPath), Cookie[I, _]] =
+    new mutable.HashMap[(String, String, RootedPath), Cookie[I, _]]
 
   def parseCookie(s: String, domain: String): Cookie[I, _] = {
     val ps = s.split(";").map(_.trim.split("=")) map { a =>
@@ -44,8 +45,8 @@ class Browser[I: TimeSystem.ByInstant]() {
     }
     val details = ps.tail.toMap
 
-    Cookie(details.get("domain").getOrElse(domain), ps.head._1, ps.head._2,
-      RootedPath.parse(details.get("path").getOrElse("")).getOrElse(RootedPath(Vector())),
+    Cookie(details.getOrElse("domain", domain), ps.head._1, ps.head._2,
+      RootedPath.parse(details.getOrElse("path", "")).getOrElse(RootedPath(Vector())),
       details.get("expires") map { exp =>
         ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US).parse(exp).getTime)
       }, details.contains("secure"))
@@ -54,7 +55,7 @@ class Browser[I: TimeSystem.ByInstant]() {
   def domainCookies(domain: String, secure: Boolean, path: String): String = {
     val now = System.currentTimeMillis
     cookies foreach { c =>
-      if(c._2.expiry.map(e => ts.fromInstant(e) < now).getOrElse(false))
+      if(c._2.expiry.exists(e => ts.fromInstant(e) < now))
         cookies.remove((c._2.domain, c._2.name, c._2.path))
     }
 

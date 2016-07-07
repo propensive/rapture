@@ -19,6 +19,8 @@ package rapture.core
 
 import java.lang.{ClassLoader => JClassLoader, Thread => JThread}
 
+import scala.language.implicitConversions
+
 object ClasspathUrlItem {
   implicit def toClasspathUrlItem[T: ClasspathUrlable](t: T): ClasspathUrlItem =
     ?[ClasspathUrlable[T]].toClasspathUrlItem(t)

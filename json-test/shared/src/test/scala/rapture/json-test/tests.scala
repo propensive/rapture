@@ -19,7 +19,7 @@ package rapture.json.test
 
 import rapture.core._
 import rapture.json._
-import rapture.data.{Parser, DataTypes}
+import rapture.data.{DataTypes, Parser}
 import rapture.test._
 
 import scala.util
@@ -77,6 +77,7 @@ case class C(c: D)
 case class D(d: E)
 case class E(e: F)
 case class F(f: Int)
+case class FooDefaultOption(param1: Option[String] = None, param2: Option[Int] = None)
 
 abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends TestSuite {
 
@@ -197,6 +198,9 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     }
   } returns null
 
+  val `Extract long element` = test {
+    source1.int.as[Long]
+  } returns 42L
   // For some reason these two tests work fine in the REPL, but not here.
   /*
   val `Extract missing value with case class default` = test {
@@ -326,6 +330,15 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     j.foo.as[Long]
   } returns 1234567890123456789L
 
+  val `Extract case class with empty/default option` =  test {
+    import rapture.json.formatters.compact._
+    Json.format(Json(FooDefaultOption()))
+  } returns "{}"
+
+  val `Extract case class with default None param and one Some(..) param` =  test {
+    import rapture.json.formatters.compact._
+    Json.format(Json(FooDefaultOption(param2 = Some(10))))
+  } returns """{"param2":10}"""
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {

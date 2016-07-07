@@ -19,8 +19,9 @@ package rapture.json.jsonBackends.jackson
 import rapture.core._
 import rapture.json._
 import rapture.data.DataTypes
-
 import com.fasterxml.jackson.databind._
+import com.fasterxml.jackson.databind.node.NullNode
+
 import scala.collection.JavaConversions._
 
 /** A type class for Jackson parsing */
@@ -31,7 +32,7 @@ private[jackson] object JacksonAst extends JsonAst {
   private val mapper = new ObjectMapper()
     .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
     .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
-  
+
   def getArray(array: Any): List[Any] = array match {
     case list: JsonNode if list.isArray => list.elements.to[List]
     case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
@@ -99,7 +100,7 @@ private[jackson] object JacksonAst extends JsonAst {
   
   def setArrayValue(array: JsonNode, index: Int, value: JsonNode): Unit = ???
 
-  def nullValue = null
+  def nullValue = NullNode.instance
 
   def fromArray(array: Seq[Any]): Any = {
     val newArray = mapper.createArrayNode

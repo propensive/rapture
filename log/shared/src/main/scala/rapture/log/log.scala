@@ -176,8 +176,8 @@ case class Logger[Res](res: Res)(implicit appender: Appender[Res, String]) exten
     while(continue) { try {
       queue synchronized {
         queue.wait(maxDelay)
-        if(queue.size > 0) res handleAppend { out: Output[String] =>
-          while(queue.size > 0) out.write(queue.dequeue)
+        if(queue.nonEmpty) res handleAppend { out: Output[String] =>
+          while(queue.nonEmpty) out.write(queue.dequeue)
         }
       }
     } catch { case e: InterruptedException =>
@@ -186,7 +186,7 @@ case class Logger[Res](res: Res)(implicit appender: Appender[Res, String]) exten
   } }
   
   def log[L <: LogLevel](prefix: String, msg: Array[String]) = queue synchronized {
-    if(blankPrefix == null) blankPrefix = (" "*(prefix.length + 1))
+    if(blankPrefix == null) blankPrefix = " "*(prefix.length + 1)
     queue.enqueue(prefix+" "+msg(0))
     msg.tail foreach { m => queue.enqueue(blankPrefix+m) }
     if(queue.size >= queueThreshold) queue.notify()

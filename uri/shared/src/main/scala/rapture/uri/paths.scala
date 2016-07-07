@@ -99,7 +99,7 @@ trait Dereferenceable[-P1, -P2, +Return] {
 
 object Parentable {
   implicit def relativePathParent[RP <: RelativePath]: Parentable[RP, RelativePath] = new Parentable[RP, RelativePath] {
-    def parent(p: RP): RelativePath = RelativePath(if(p.elements.length == 0) p.ascent + 1 else p.ascent, p.elements.dropRight(1))
+    def parent(p: RP): RelativePath = RelativePath(if(p.elements.isEmpty) p.ascent + 1 else p.ascent, p.elements.dropRight(1))
   }
     
   implicit def rootRelativePathParent[RRP <: RootedPath]: Parentable[RRP, RootedPath] = new Parentable[RRP, RootedPath] {

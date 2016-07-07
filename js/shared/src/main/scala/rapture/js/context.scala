@@ -18,10 +18,9 @@
 package rapture.js
 
 import rapture.base._
-import rapture.core._
 import rapture.data._
 
-import language.experimental.macros
+import scala.language.experimental.macros
 
 private[js] object JsMacros {
   
@@ -39,44 +38,44 @@ private[js] object JsMacros {
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
-        val ys = rawParts.to[List]
-	val text = rawParts map { case lit@Literal(Constant(part:  String)) => part }
+        val ys = rawParts
+        val text = rawParts map { case lit@Literal(Constant(part: String)) => part }
 
-	val listExprs = c.Expr[List[ForcedConversion[Js]]](Apply(
-	  Select(reify(List).tree, termName(c, "apply")),
-	  exprs.map(_.tree).to[List]
-	))
+        val listExprs = c.Expr[List[ForcedConversion[Js]]](Apply(
+          Select(reify(List).tree, termName(c, "apply")),
+          exprs.map(_.tree).to[List]
+        ))
 
         val stringsUsed: List[Boolean] = listExprs.tree match {
           case Apply(_, bs) => bs.map {
             case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => nme.toString == "forceStringConversion"
-	  }
-	}
+          }
+        }
 
-	parseSource(text, stringsUsed) foreach { case (n, offset, msg) =>
-	  val oldPos = ys(n).asInstanceOf[Literal].pos
-	  val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
-	  c.error(newPos, msg)
-	}
+        parseSource(text, stringsUsed) foreach { case (n, offset, msg) =>
+          val oldPos = ys(n).asInstanceOf[Literal].pos
+          val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+          c.error(newPos, msg)
+        }
 
-	val listParts = c.Expr[List[String]](Apply(
-	  Select(reify(List).tree, termName(c, "apply")),
-	  rawParts
-	))
+        val listParts = c.Expr[List[String]](Apply(
+          Select(reify(List).tree, termName(c, "apply")),
+          rawParts
+        ))
 
-	reify {
+        reify {
           val sb = new StringBuilder
-	  val textParts = listParts.splice.iterator
+          val textParts = listParts.splice.iterator
           val expressions: Iterator[ForcedConversion[_]] = listExprs.splice.iterator
 
-	  sb.append(textParts.next())
+          sb.append(textParts.next())
 
-	  while(textParts.hasNext) {
-	    sb.append(expressions.next.value)
-	    sb.append(textParts.next)
-	  }
-	  Js(sb.toString)
-	}
+          while(textParts.hasNext) {
+            sb.append(expressions.next.value)
+            sb.append(textParts.next)
+          }
+          Js(sb.toString)
+        }
     }
   }
 

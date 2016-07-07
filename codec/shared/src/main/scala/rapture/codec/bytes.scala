@@ -124,7 +124,7 @@ case class Bytes(bytes: Array[Byte]) {
 
   /** Sets all values in the underlying byte array to zeroes. This is useful if the `Bytes`
     * instance was storing sensitive data, such as a private key. */
-  def zero() = (0 until bytes.length) foreach { bytes(_) = 0 }
+  def zero() = bytes.indices foreach { bytes(_) = 0 }
 
   def as[T: FromBytes](implicit mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DecodeException] = mode.wrap {
     try ?[FromBytes[T]].build(bytes) catch {

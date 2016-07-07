@@ -50,7 +50,7 @@ private[xml] object XmlValidator {
         case '!' => takeSpecial()
         case _ => takeStartTag(i)
       }
-      if(!stack.isEmpty) takeText()
+      if(stack.nonEmpty) takeText()
     }
 
     def takePi(): Unit = {

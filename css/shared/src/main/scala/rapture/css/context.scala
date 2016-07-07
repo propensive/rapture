@@ -24,7 +24,7 @@ import rapture.data._
 import language.experimental.macros
 
 private[css] object CssMacros {
-  
+
   def parseSource(s: List[String], stringsUsed: List[Boolean], stylesheet: Boolean): Option[(Int, Int, String)] = try {
     CssValidator.validate(s, stylesheet)
     None
@@ -40,7 +40,7 @@ private[css] object CssMacros {
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
-        val ys = rawParts.to[List]
+        val ys = rawParts
 	val text = rawParts map { case lit@Literal(Constant(part:  String)) => part }
 
 	val listExprs = c.Expr[List[ForcedConversion[CssStylesheet]]](Apply(
@@ -87,7 +87,7 @@ private[css] object CssMacros {
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
-        val ys = rawParts.to[List]
+        val ys = rawParts
 	val text = rawParts map { case lit@Literal(Constant(part:  String)) => part }
 
 	val listExprs = c.Expr[List[ForcedConversion[Css]]](Apply(

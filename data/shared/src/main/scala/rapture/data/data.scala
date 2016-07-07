@@ -161,24 +161,25 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
     }
 
   protected def doNormalize(orEmpty: Boolean): Any = {
-    yCombinator[(Any, Vector[Either[Int, String]]), Any] { fn => _ match {
+    yCombinator[(Any, Vector[Either[Int, String]]), Any] { fn => {
       case (j, Vector()) => j: Any
       case (j, t :+ e) =>
         fn(({
           if(e.bimap(x => $ast.isArray(j), x => $ast.isObject(j))) {
             try e.bimap($ast.dereferenceArray(j, _), $ast.dereferenceObject(j, _)) catch {
               case TypeMismatchException(exp, fnd) => throw TypeMismatchException(exp, fnd)
-              case ex: Exception =>
+              case e: Exception =>
                 if(orEmpty) DataCompanion.Empty
-                else throw MissingValueException(e.bimap(i => s"index $i", k => s"key $k"))
+                else throw MissingValueException()
             }
           } else throw TypeMismatchException(
             if($ast.isArray(j)) DataTypes.Array else DataTypes.Object,
-                e.bimap(l => DataTypes.Array, r => DataTypes.Object)
+            e.bimap(l => DataTypes.Array, r => DataTypes.Object)
           )
         }, t))
     } } ($root.value -> $path)
   }
+
 
   /** Assumes the Json object is wrapping a `T`, and casts (intelligently) to that type. */
   def as[S](implicit ext: Extractor[S, T], mode: Mode[`Data#as`]):

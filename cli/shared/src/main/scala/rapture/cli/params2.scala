@@ -31,7 +31,7 @@ object New {
 
   case class ParamMap(args: String*) {
    
-    def ++(pm2: ParamMap) = ParamMap((pm2.args ++ args): _*)
+    def ++(pm2: ParamMap) = ParamMap(pm2.args ++ args: _*)
     
     case class Part(no: Int, start: Int, end: Int) {
       def apply() = args(no).substring(start, end)
@@ -268,7 +268,7 @@ object New {
     def suggestion(value: T): Vector[String]
   }
 
-  case class SimpleParam[T: Param.Extractor](val keys: Vector[String]) extends Params {
+  case class SimpleParam[T: Param.Extractor](keys: Vector[String]) extends Params {
       simpleParam =>
 
     type Result = T

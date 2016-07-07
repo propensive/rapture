@@ -24,13 +24,11 @@ import rapture.fs._
 import rapture.core._
 import rapture.uri._
 import rapture.log._
-
 import encodings.system._
 import logLevels.trace._
 
-import language.higherKinds
+import language.{higherKinds, implicitConversions}
 import language.experimental.macros
-
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -52,10 +50,9 @@ object ShParam {
   implicit def genSeqSerializer[T: StringSerializer, Coll[E] <: TraversableOnce[E]](ts: Coll[T]): ShParam =
     ShParam(ts.map(?[StringSerializer[T]].serialize(_)).to[Vector])
 
-  implicit def processToShParam(process: Process) =
-    ShParam(process.params)
+  implicit def processToShParam(process: Process): ShParam = ShParam(process.params)
 
-  implicit def fsUrlToShParam(fsUrl: FsUrl) = ShParam(Vector(fsUrl.elements.mkString("/", "/", "")))
+  implicit def fsUrlToShParam(fsUrl: FsUrl): ShParam = ShParam(Vector(fsUrl.elements.mkString("/", "/", "")))
 }
 
 case class ShParam(elems: Vector[String]) {
@@ -207,7 +204,7 @@ trait Zsh extends Shell {
   }
 
   def zshCompleter(suggestions: Suggestions, colWidth: Int): Nothing = {
-    suggestions.groups.map { g =>
+    suggestions.groups.foreach { g =>
       val cmds = Compadd(g.title, g.suggestions.keys.to[Vector], true,
           v => g.suggestions(v), colWidth, g.hidden)
       cmds foreach System.out.println
