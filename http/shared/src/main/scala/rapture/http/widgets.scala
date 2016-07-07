@@ -13,19 +13,21 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.http
 
 trait Widgets {
   trait Widget
-  
-  case class Dropdown[T](options: List[T])(val id: T => String = (t: Any) =>
-    t.toString, val description: T => String = (t: Any) => t.toString) extends Widget
-  
+
+  case class Dropdown[T](options: List[T])(val id: T => String = (t: Any) => t.toString,
+                                           val description: T => String = (t: Any) => t.toString)
+      extends Widget
+
   case class RadioList[T](options: List[T])(val id: T => String = (t: Any) => t.toString,
-                                            val description: T => String = (t: Any) => t.toString) extends Widget
-  
+                                            val description: T => String = (t: Any) => t.toString)
+      extends Widget
+
   case class TextArea(width: Int = 8, height: Int = 80, maxLength: Option[Int] = None) extends Widget
   case class HtmlEditor() extends Widget
   case class StringInput() extends Widget
@@ -34,4 +36,3 @@ trait Widgets {
   case class Checkbox() extends Widget
   case class Hidden() extends Widget
 }
-

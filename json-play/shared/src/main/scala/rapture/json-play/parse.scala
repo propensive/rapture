@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json.jsonBackends.play
 
@@ -26,7 +26,8 @@ import play.api.libs.json.{Json => PJson}
 private[play] object PlayParser extends Parser[String, JsonBufferAst] {
   val ast = PlayAst
   def parse(s: String): Option[Any] =
-    try Some(PJson.parse(s)) catch { case e: Exception => None }
+    try Some(PJson.parse(s))
+    catch { case e: Exception => None }
 
   override def toString = "<PlayParser>"
 }

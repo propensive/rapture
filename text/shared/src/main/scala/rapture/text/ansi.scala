@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.text
 
@@ -23,13 +23,14 @@ object ansi {
 
   def apply[T](fn: Tty => T) = {
     val tty = new Tty()
-    try fn(tty) catch {
+    try fn(tty)
+    catch {
       case e: Throwable =>
         print(normal(tty))
         throw e
     } finally print(normal(tty))
   }
-  
+
   def esc(implicit tty: Tty) = 27.toChar
   def normal(implicit tty: Tty) = s"$esc[0m"
   def bold(implicit tty: Tty) = s"$esc[1m"
@@ -54,11 +55,11 @@ object ansi {
   def boldCyan(implicit tty: Tty) = s"$esc[1;36m"
   def boldWhite(implicit tty: Tty) = s"$esc[1;37m"
 
-  def cursor(row : Int, col : Int)(implicit tty: Tty) = s"$esc[${row};${col}H"
-  def up(n : Int = 1)(implicit tty: Tty) = s"$esc[${n}A"
-  def down(n : Int = 1)(implicit tty: Tty) = s"$esc[${n}B"
-  def right(n : Int = 1)(implicit tty: Tty) = s"$esc[${n}C"
-  def left(n : Int = 1)(implicit tty: Tty) = s"$esc[${n}D"
+  def cursor(row: Int, col: Int)(implicit tty: Tty) = s"$esc[${row};${col}H"
+  def up(n: Int = 1)(implicit tty: Tty) = s"$esc[${n}A"
+  def down(n: Int = 1)(implicit tty: Tty) = s"$esc[${n}B"
+  def right(n: Int = 1)(implicit tty: Tty) = s"$esc[${n}C"
+  def left(n: Int = 1)(implicit tty: Tty) = s"$esc[${n}D"
 
   def readPassword(prompt: String)(implicit tty: Tty): String = {
     print(s"${prompt}$nondisplayed")
@@ -67,6 +68,5 @@ object ansi {
     res
   }
 
-  class Tty private[text]()
+  class Tty private[text] ()
 }
-

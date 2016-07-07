@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.crypto
 import rapture.core._
@@ -38,13 +38,13 @@ package ciphers {
     implicit def desDecryption = Des.decryption
     implicit def desEncryption = Des.encryption
   }
-  
+
   object blowfish {
     implicit def blowfishGenerator: KeyGenerator[Blowfish] = Blowfish.keyGenerator
     implicit def blowfishDecryption = Blowfish.decryption
     implicit def blowfishEncryption = Blowfish.encryption
   }
-  
+
   object aes {
     implicit def aesGenerator: KeyGenerator[Aes] = Aes.keyGenerator
     implicit def aesDecryption = Aes.decryption
@@ -60,7 +60,6 @@ object Hash {
     new Digest[D](?[Digester[D]].digest(msg.bytes))
 }
 
-
 object Digester {
   implicit val sha1: Digester[Sha1] = digests.sha1
   implicit val sha256: Digester[Sha256] = digests.sha256
@@ -70,6 +69,7 @@ object Digester {
   implicit val md2: Digester[Md2] = digests.md2
 }
 abstract class Digester[D <: DigestType] {
+
   /** Digests the array of bytes. */
   def digest(msg: Array[Byte]): Array[Byte]
 }
@@ -99,6 +99,7 @@ object digests {
 
   /** SHA-256 digester, with additional methods for secure password encoding. */
   implicit val sha256: Digester[Sha256] = new Digester[Sha256] {
+
     /** Digests the given bytes. */
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("SHA-256").digest(msg)
@@ -109,7 +110,7 @@ object digests {
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("SHA-512").digest(msg)
   }
-  
+
   /** SHA-384 digester, with additional methods for secure password encoding. */
   implicit val sha384: Digester[Sha384] = new Digester[Sha384] {
     def digest(msg: Array[Byte]): Array[Byte] =
@@ -122,7 +123,7 @@ object digests {
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("MD5").digest(msg)
   }
-  
+
   implicit val md2: Digester[Md2] = new Digester[Md2] {
     def digest(msg: Array[Byte]): Array[Byte] =
       MessageDigest.getInstance("MD2").digest(msg)
@@ -140,7 +141,7 @@ class JavaxCryptoImplementations[Codec <: CipherType](codec: String) {
       cipher.doFinal(message.bytes)
     }
   }
-  
+
   implicit def decryption = new Decryption[Codec] {
     def decrypt(key: Array[Byte], message: Array[Byte]) = {
       val cipher = javax.crypto.Cipher.getInstance(codec)
@@ -148,7 +149,7 @@ class JavaxCryptoImplementations[Codec <: CipherType](codec: String) {
       cipher.doFinal(message)
     }
   }
-  
+
   implicit def keyGenerator: KeyGenerator[Codec] = new KeyGenerator[Codec] {
     def generate(): Array[Byte] = {
       val keyGen = javax.crypto.KeyGenerator.getInstance(codec)
@@ -156,7 +157,6 @@ class JavaxCryptoImplementations[Codec <: CipherType](codec: String) {
     }
   }
 }
-
 
 trait Aes extends CipherType
 object Aes extends JavaxCryptoImplementations[Aes]("AES")
@@ -193,12 +193,14 @@ class Key[C <: CipherType](bytes: Array[Byte]) extends Bytes(bytes) {
   def encrypt[Msg](message: Msg)(implicit encryption: Encryption[C, Msg]): EncryptedData[C] =
     new EncryptedData[C](encryption.encrypt(bytes, message))
 
-  def decrypt(message: EncryptedData[C])
-      (implicit mode: Mode[`Key#decrypt`], decryption: Decryption[C]): mode.Wrap[Bytes, DecryptionException] = mode wrap {
-    try Bytes(decryption.decrypt(bytes, message.bytes)) catch {
-      case e: Exception => mode.exception(DecryptionException())
+  def decrypt(message: EncryptedData[C])(implicit mode: Mode[`Key#decrypt`],
+                                         decryption: Decryption[C]): mode.Wrap[Bytes, DecryptionException] =
+    mode wrap {
+      try Bytes(decryption.decrypt(bytes, message.bytes))
+      catch {
+        case e: Exception => mode.exception(DecryptionException())
+      }
     }
-  }
 }
 
 case class HmacSigner(key: Bytes) {

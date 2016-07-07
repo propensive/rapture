@@ -13,15 +13,16 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.data
 
 import rapture.core._
 import scala.annotation._
 
-@implicitNotFound("Cannot serialize type ${T} to ${D}. Please provide an implicit Serializer "+
-    "of type ${T}.")
+@implicitNotFound(
+    "Cannot serialize type ${T} to ${D}. Please provide an implicit Serializer " +
+      "of type ${T}.")
 trait Serializer[T, -D] { ser =>
   def serialize(t: T): Any
 
@@ -30,4 +31,3 @@ trait Serializer[T, -D] { ser =>
   }
 
 }
-

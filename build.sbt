@@ -10,6 +10,7 @@ lazy val buildSettings = Seq(
 )
 
 lazy val commonSettings = Seq(
+  scalafmtConfig in ThisBuild := Some(file(".scalafmt")),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding", "UTF-8",

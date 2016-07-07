@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.http
 
@@ -35,7 +35,7 @@ case class PortListenException(port: Int)
 
 object HttpServer {
   def listen(port: Int = 80)(handler: HttpRequest => Response)(implicit backend: HttpBackend,
-      mode: Mode[`HttpServer.listen`]): HttpServer = {
+                                                               mode: Mode[`HttpServer.listen`]): HttpServer = {
     val httpServer = new HttpServer(port) {
       protected def handle(r: HttpRequest) = handler(r)
     }

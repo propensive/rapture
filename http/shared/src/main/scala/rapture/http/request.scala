@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.http
 
@@ -29,7 +29,9 @@ import scala.collection.mutable.ListBuffer
 object HttpRequest {
   sealed trait QueryParam { def name: String }
   case class StringQueryParam(name: String, value: String) extends QueryParam
-  case class FileQueryParam(name: String, localFile: File)(val clientFilename: String, val contentType: MimeTypes.MimeType) extends QueryParam
+  case class FileQueryParam(name: String, localFile: File)(val clientFilename: String,
+                                                           val contentType: MimeTypes.MimeType)
+      extends QueryParam
 
 }
 
@@ -46,33 +48,33 @@ abstract class HttpRequest {
   def requestMethod: HttpMethods.Method
 
   /** The virtual path, i.e. the part of the URL following the hostname, not
-   *  including any query parameters. Always starts with a slash. */
+    *  including any query parameters. Always starts with a slash. */
   def scriptName: String
 
   /** If true, indicates that this is a secure connection. */
   def https: Boolean
 
   /** The name the web server thinks this (virtual) server is called, e.g.
-   *  www.example.com. */
+    *  www.example.com. */
   def serverName: String
 
   /** The port the web server says the request was made to. */
   def serverPort: Int
 
   /** The requested URL, without any query parameters, e.g.
-   *  http://www.example.com:8080/basePath/servicePath/remainder. */
+    *  http://www.example.com:8080/basePath/servicePath/remainder. */
   def url: String
 
   /** The application base path used in this request, relative to the domain
-   * root. Conventionally has a leading slash only, unless it's empty. */
+    * root. Conventionally has a leading slash only, unless it's empty. */
   def basePathString: String
 
   /** The service path requested, relative to the base path. Conventionally
-   *  has a leading slash only, unless it's empty. */
+    *  has a leading slash only, unless it's empty. */
   def servicePathString: String
 
   /** The remainder of the URL following the service path, without any query
-   *  parameters. Conventionally has a leading slash only, unless it's empty. */
+    *  parameters. Conventionally has a leading slash only, unless it's empty. */
   def remainderString: String
 
   /** Array of all query and POST parameters in order. */
@@ -90,7 +92,7 @@ abstract class HttpRequest {
   val time: Long = System.currentTimeMillis
 
   /** The path of the script */
-  lazy val path: RootedPath = RootedPath.parse(servicePathString+remainderString).get
+  lazy val path: RootedPath = RootedPath.parse(servicePathString + remainderString).get
 
   protected var streamRead = false
 
@@ -106,7 +108,7 @@ abstract class HttpRequest {
   /** Gets a named request param (which must exist). */
   def apply(k: String): String = parameters.get(k) match {
     case Some(v) => v
-    case None => throw new Exception("Missing parameter: "+k)
+    case None => throw new Exception("Missing parameter: " + k)
   }
 
   /** Gets a named request param or returns the default. */
@@ -125,11 +127,11 @@ abstract class HttpRequest {
     var cs = scala.collection.immutable.Map[String, String]()
     headers.get("cookie") match {
       case Some(Seq(v)) =>
-      val vs = v.split("; ?")
-      for(v <- vs) {
-        val kv = v.split("=", 2) 
-        if(kv.length == 2) cs = cs + (kv(0).urlDecode -> kv(1).urlDecode)
-      }
+        val vs = v.split("; ?")
+        for (v <- vs) {
+          val kv = v.split("=", 2)
+          if (kv.length == 2) cs = cs + (kv(0).urlDecode -> kv(1).urlDecode)
+        }
       case _ => ()
     }
     cs
@@ -138,6 +140,11 @@ abstract class HttpRequest {
   val responseCookies: ListBuffer[(String, String, String, String, Option[Long], Boolean)] =
     new ListBuffer[(String, String, String, String, Option[Long], Boolean)]
 
-  def setCookie(name: Symbol, value: String, domain: String = serverName, path: RootedPath = ^, expiry: Option[DateTime] = None, secure: Boolean = false) = 
+  def setCookie(name: Symbol,
+                value: String,
+                domain: String = serverName,
+                path: RootedPath = ^,
+                expiry: Option[DateTime] = None,
+                secure: Boolean = false) =
     responseCookies += ((name.name, value, domain, path.toString, expiry.map(_.toLong), secure))
 }

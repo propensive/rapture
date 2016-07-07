@@ -13,8 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
-
+ */
 
 package rapture.cli
 
@@ -63,12 +62,12 @@ object `package` {
   implicit class ProcessStringContext(sc: StringContext) {
     def sh(content: ShParam*): Process = macro CliMacros.shImplementation
   }
-  
+
   object cliLogging {
     import rapture.log.parts._
-    
+
     implicit val logger = Logger(uri"file:///tmp/rapture-cli/access.log")
-    
+
     implicit def implicitSpec(implicit severity: Severity, date: Date, time: Time, thread: Thread): Spec =
       log"""$date $time $severity ${sourceFile(width = 12, Right)}:${lineNo(4)} ${thread(14)}"""
   }
@@ -94,7 +93,7 @@ abstract class BackgroundCliApp(implicit debugMode: DebugModeConfig) extends Cli
     val fifo = File.parse(s"file:///tmp/rapture-cli/${appName}.sock")
     var continue = true
     var invocation = 0
-    while(continue) {
+    while (continue) {
       val msg = fifo.slurp[Char].trim
       msg.split(",").to[List].map(_.urlDecode) match {
         case "shutdown" :: Nil =>
@@ -103,7 +102,7 @@ abstract class BackgroundCliApp(implicit debugMode: DebugModeConfig) extends Cli
           fifo.delete()
           sys.exit(0)
         case "sigint" :: file :: Nil =>
-          log.info("Received SIGINT for file "+file)
+          log.info("Received SIGINT for file " + file)
         case "winch" :: file :: lines :: cols :: Nil =>
           log.info(s"Received SIGWINCH for file $file $lines x $cols")
         case "exec" :: file :: pwd :: rest =>
@@ -113,12 +112,13 @@ abstract class BackgroundCliApp(implicit debugMode: DebugModeConfig) extends Cli
           Future {
             try {
               System.setOut(ps)
-              try super.run(File.parse(s"file://$pwd"), rest.to[Array]) catch {
-                case e: Throwable => if(debugMode.on) e.printStackTrace()
+              try super.run(File.parse(s"file://$pwd"), rest.to[Array])
+              catch {
+                case e: Throwable => if (debugMode.on) e.printStackTrace()
               }
             } catch {
               case e: Throwable =>
-                if(debugMode.on) e.printStackTrace()
+                if (debugMode.on) e.printStackTrace()
             } finally ps.close()
             val ps2 = new java.io.PrintStream(new java.io.FileOutputStream(new java.io.File(s"$file.exit")))
             try {
@@ -145,20 +145,20 @@ abstract class CliApp(implicit debugMode: DebugModeConfig) {
   def exec(block: => Unit): Exec = Exec((out: java.io.PrintStream) => block)
   def exec(block: java.io.PrintStream => Unit): Exec = Exec(block)
   val sysOut = System.out
-  
+
   def doExit(code: Int): Unit = sys.exit(code)
 
   def main(args: Array[String]): Unit = run(File.parse(s"file://${System.getenv("PWD")}"), args)
 
   def run(pwd: FsUrl, args: Array[String]): Unit = {
-    
+
     val exitStatus: Exit = try {
       Console.withOut(NoOutput) {
         try {
           val cmdLine: CmdLine = makeCmdLine(pwd, args.to[Vector])
           val execution = handle(cmdLine)
-          
-          if(cmdLine.completer.isEmpty) {
+
+          if (cmdLine.completer.isEmpty) {
             execution.exec(System.out)
             Exit(0)
           } else Exit(0)
@@ -168,19 +168,21 @@ abstract class CliApp(implicit debugMode: DebugModeConfig) {
           case err: Throwable =>
             Console.withOut(sysOut) {
               println("Unexpected error")
-              if(debugMode.on) err.printStackTrace()
+              if (debugMode.on) err.printStackTrace()
             }
             throw Exit(1)
         }
       }
-    } catch { case err@Exit(_) => err }
+    } catch { case err @ Exit(_) => err }
 
     doExit(exitStatus.code)
   }
 
   def makeCmdLine(pwd: FsUrl, args: Vector[String]) =
-    CmdLine(pwd, args map { s => Arg(s, None, false) }, None)
-  
+    CmdLine(pwd, args map { s =>
+      Arg(s, None, false)
+    }, None)
+
   def handle(cmdLine: CmdLine): Exec
 }
 
@@ -194,10 +196,11 @@ trait Zsh extends Shell {
     case "---rapture-zsh" +: prefix +: cursor +: cols +: "--" +: rest =>
       val colWidth = cols.substring(10).toInt
       val cur = cursor.substring(9).toInt
-      val words = if(cur >= rest.length) rest.tail :+ "" else rest.tail
+      val words = if (cur >= rest.length) rest.tail :+ "" else rest.tail
       val completer = Completer(prefix.substring(9).urlDecode, zshCompleter(_, colWidth))
-      CmdLine(pwd, words.zipWithIndex map { case (s, idx) =>
-        Arg(s, Some(completer), cur - 2 == idx)
+      CmdLine(pwd, words.zipWithIndex map {
+        case (s, idx) =>
+          Arg(s, Some(completer), cur - 2 == idx)
       }, Some(completer))
     case _ =>
       super.makeCmdLine(pwd, cmdLine)
@@ -205,8 +208,7 @@ trait Zsh extends Shell {
 
   def zshCompleter(suggestions: Suggestions, colWidth: Int): Nothing = {
     suggestions.groups.foreach { g =>
-      val cmds = Compadd(g.title, g.suggestions.keys.to[Vector], true,
-          v => g.suggestions(v), colWidth, g.hidden)
+      val cmds = Compadd(g.title, g.suggestions.keys.to[Vector], true, v => g.suggestions(v), colWidth, g.hidden)
       cmds foreach System.out.println
     }
     throw ReturnEarly()
@@ -217,10 +219,11 @@ trait Bash extends Shell {
   override def makeCmdLine(pwd: FsUrl, cmdLine: Vector[String]): CmdLine = cmdLine match {
     case "---rapture-bash" +: prefix +: cursor +: cols +: "--" +: rest =>
       val colWidth = cols.substring(10).toInt
-      val words = if(cursor.toInt - 1 >= rest.length) rest.tail :+ "" else rest.tail
+      val words = if (cursor.toInt - 1 >= rest.length) rest.tail :+ "" else rest.tail
       val completer = new Completer(prefix.urlDecode, bashCompleter)
-      CmdLine(pwd, words.zipWithIndex map { case (s, idx) =>
-        Arg(s, Some(completer), cursor.toInt - 2 == idx)
+      CmdLine(pwd, words.zipWithIndex map {
+        case (s, idx) =>
+          Arg(s, Some(completer), cursor.toInt - 2 == idx)
       }, Some(completer))
     case _ =>
       super.makeCmdLine(pwd, cmdLine)
@@ -234,4 +237,3 @@ trait Bash extends Shell {
 
 case class Exit(code: Int) extends Exception
 case class Exec(exec: java.io.PrintStream => Unit)
-

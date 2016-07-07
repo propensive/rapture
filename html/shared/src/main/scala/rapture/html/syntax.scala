@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.html
 
@@ -31,12 +31,11 @@ object htmlSyntax {
 
   import Html5._
 
-  implicit def stringToTextNode(str: String):
-      TextNode[Nothing, Nothing, Html5.Text] =
+  implicit def stringToTextNode(str: String): TextNode[Nothing, Nothing, Html5.Text] =
     TextNode[Nothing, Nothing, Html5.Text](str)
 
   type HtmlRoot = Element[Top, ElementType, Html]
-  
+
   type HtmlElement[T <: ElementType] = Element[_ <: ElementType, _ <: T, _ <: AttributeType]
 
   // FIXME: These tag types are not currently working
@@ -47,7 +46,7 @@ object htmlSyntax {
   def Video[T <: Embedded with Interactive] = Tag[T, T, Video]()(new AssignedName("Video"))
   def Audio[T <: Embedded with Interactive] = Tag[T, T, Audio]()(new AssignedName("Audio"))
   def Canvas[T <: Embedded] = Tag[T, T, Canvas]()(new AssignedName("Canvas"))
- 
+
   val Html = Tag[Top, ElementType, Html]()
   val Head = Tag[Metadata, Top, Nothing]()
   val Title = Tag[Text, Metadata, Global]()
@@ -149,25 +148,25 @@ object htmlSyntax {
 
   implicit def id = Attribute[Global, Symbol]("id")(_.name)
   def id_=[E <: ElementType](v: Symbol) = id.set[E](v)
-  
+
   implicit def lang = Attribute[Global, Symbol]("lang")(_.name)
   def lang_=[E <: ElementType](v: Symbol) = lang.set[E](v)
-  
-  implicit def translate = Attribute[Global, Boolean]("translate")(v => if(v) "yes" else "no")
+
+  implicit def translate = Attribute[Global, Boolean]("translate")(v => if (v) "yes" else "no")
   def translate_=[E <: ElementType](v: Boolean) = translate.set[E](v)
-  
+
   implicit def classes = Attribute[Global, Seq[String]]("classes", "class")(_.mkString(" "))
   def classes_=[E <: ElementType](v: Seq[String]) = classes.set[E](v)
-  
+
   implicit def onload = Attribute[Body, Js]("onload")(_.content)
   def onload_=[E <: ElementType](v: Js) = onload.set[E](v)
-  
+
   implicit def onclick = Attribute[Global, Js]("onclick")(_.content)
   def onclick_=[E <: ElementType](v: Js) = onclick.set[E](v)
- 
+
   implicit def onmouseover = Attribute[Global, Js]("onmouseover")(_.content)
   def onmouseover_=[E <: ElementType](v: Js) = onmouseover.set(v)
-  
+
   implicit def onmouseout = Attribute[Global, Js]("onmouseout")(_.content)
   def onmouseout_=[E <: ElementType](v: Js) = onmouseout.set(v)
 
@@ -179,69 +178,77 @@ object htmlSyntax {
 
   implicit def title = Attribute[Global, String]("title")(identity)
   def title_=[E <: ElementType](v: String) = title.set[E](v)
-  
+
   implicit def alt = Attribute[Img with Area with Input, String]("alt")(identity)
   def alt_=[E <: ElementType](v: String) = alt.set[E](v)
-  
+
   implicit def href = Attribute[Base with Link with A with Area, PathLink]("href")(_.link)
   def href_=[E <: ElementType, L: Linkable](v: L) = href.set[E](implicitly[Linkable[L]].link(v))
-  
-  implicit def name = Attribute[Meta with Iframe with Object with Param with Map with Form with Fieldset
-      with Input with Button with Select with Textarea with Output, Symbol]("name")(_.name)
+
+  implicit def name =
+    Attribute[
+        Meta with Iframe with Object with Param with Map with Form with Fieldset with Input with Button with Select with Textarea with Output,
+        Symbol]("name")(_.name)
   def name_=[E <: ElementType](v: Symbol) = name.set[E](v)
 
-  implicit def selected = Attribute[Option, Boolean]("selected") { v => if(v) "selected" else null }
+  implicit def selected = Attribute[Option, Boolean]("selected") { v =>
+    if (v) "selected" else null
+  }
   def selected_=[E <: ElementType](v: Boolean) = selected.set[E](v)
-  
+
   implicit def cols = Attribute[Textarea, Int]("cols")(_.toString)
   def cols_=[E <: ElementType](v: Int) = cols.set[E](v)
-  
+
   implicit def rows = Attribute[Textarea, Int]("rows")(_.toString)
   def rows_=[E <: ElementType](v: Int) = rows.set[E](v)
-  
+
   implicit def colspan = Attribute[Td with Th, Int]("colspan")(_.toString)
   def colspan_=[E <: ElementType](v: Int) = colspan.set[E](v)
-  
+
   implicit def rowspan = Attribute[Td with Th, Int]("rowspan")(_.toString)
   def rowspan_=[E <: ElementType](v: Int) = rowspan.set[E](v)
-  
-  implicit def wrap = Attribute[Textarea, Boolean]("wrap") { v => if(v) "wrap" else null }
+
+  implicit def wrap = Attribute[Textarea, Boolean]("wrap") { v =>
+    if (v) "wrap" else null
+  }
   def wrap_=[E <: ElementType](v: Boolean) = wrap.set[E](v)
-  
-  implicit def open = Attribute[Details, Boolean]("open") { v => if(v) "open" else null }
+
+  implicit def open = Attribute[Details, Boolean]("open") { v =>
+    if (v) "open" else null
+  }
   def open_=[E <: ElementType](v: Boolean) = open.set[E](v)
-  
+
   implicit def max = Attribute[Progress with Meter with Input, Double]("max")(_.toString)
   def max_=[E <: ElementType](v: Double) = max.set[E](v)
-  
+
   implicit def min = Attribute[Meter with Input, Double]("min")(_.toString)
   def min_=[E <: ElementType](v: Double) = min.set[E](v)
-  
+
   implicit def low = Attribute[Meter, Double]("low")(_.toString)
   def low_=[E <: ElementType](v: Double) = low.set[E](v)
-  
+
   implicit def high = Attribute[Meter, Double]("high")(_.toString)
   def high_=[E <: ElementType](v: Double) = high.set[E](v)
-  
+
   implicit def optimum = Attribute[Meter, Double]("optimum")(_.toString)
   def optimum_=[E <: ElementType](v: Double) = optimum.set[E](v)
-  
+
   implicit def span = Attribute[Col, Int]("span")(_.toString)
   def span_=[E <: ElementType](v: Int) = span.set[E](v)
-  
+
   class HttpEquiv(val name: String)
   case object contentType extends HttpEquiv("content-type")
   case object defaultStyle extends HttpEquiv("default-style")
   case object refresh extends HttpEquiv("refresh")
   implicit def httpEquiv = Attribute[Meta, HttpEquiv]("httpEquiv", "http-equiv")(_.name)
   def httpEquiv_=[E <: ElementType](v: HttpEquiv) = httpEquiv.set[E](v)
-  
+
   implicit def charset = Attribute[Meta with Script, Encoding]("charset")(_.name)
   def charset_=[E <: ElementType](v: Encoding) = charset.set[E](v)
-  
+
   implicit def content = Attribute[Meta, String]("content")(identity)
   def content_=[E <: ElementType](v: String) = content.set[E](v)
- 
+
   implicit def manifest = Attribute[Html, HttpUrl]("manifest")(_.toString)
   def manifest_=[E <: ElementType](v: HttpUrl) = manifest.set[E](v)
 
@@ -265,7 +272,7 @@ object htmlSyntax {
   case object tag extends Rel("tag")
   implicit def rel = Attribute[Link with A with Area, Rel]("rel")(_.name)
   def rel_=[E <: ElementType](v: Rel) = rel.set[E](v)
- 
+
   // FIXME: Provide &, | and ! operators to write media expressions, and implement all values
   trait MediaExpr
   sealed class Media(val name: String) extends MediaExpr { override def toString = name }
@@ -285,48 +292,49 @@ object htmlSyntax {
   implicit def style = Attribute[Global, Css]("style")(_.content)
   def style_=[E <: ElementType](v: Css) = style.set[E](v)
 
-
-  implicit def src = Attribute[Script with Img with Iframe with Embed with Video with Audio with Source with Input,
-      PathLink]("src")(_.toString)
+  implicit def src =
+    Attribute[Script with Img with Iframe with Embed with Video with Audio with Source with Input, PathLink]("src")(
+        _.toString)
   def src_=[E <: ElementType, L: Linkable](v: L) = src.set[E](implicitly[Linkable[L]].link(v))
 
-  implicit def value = Attribute[Li with Progress with Meter with Param with Input with Button with Option, String](
-      "value")(identity)
+  implicit def value =
+    Attribute[Li with Progress with Meter with Param with Input with Button with Option, String]("value")(identity)
   def value_=[E <: ElementType](v: String) = value.set[E](v)
-  
-  
-  implicit def typ = Attribute[Link with Style with Script with A with Embed with Object with Source with Area with
-      Input with Button with Command with Bb with Menu, String]("typ", "type")(identity)
+
+  implicit def typ =
+    Attribute[
+        Link with Style with Script with A with Embed with Object with Source with Area with Input with Button with Command with Bb with Menu,
+        String]("typ", "type")(identity)
   def typ_=[E <: ElementType](v: String) = typ.set[E](v)
 
   implicit def action = Attribute[Form with Input with Button, PathLink]("action")(_.link)
   def action_=[E <: ElementType, L: Linkable](v: L) = action.set(implicitly[Linkable[L]].link(v))
-  
+
   implicit def method = Attribute[Form with Input with Button, String]("method")(identity)
   def method_=[E <: ElementType](v: String) = method.set(v)
-  
+
   implicit def enctype = Attribute[Form with Input with Button, String]("enctype")(identity)
   def enctype_=[E <: ElementType](v: String) = enctype.set(v)
-  
-  implicit def checked = Attribute[Input, Boolean]("checked")(v => if(v) "checked" else null)
+
+  implicit def checked = Attribute[Input, Boolean]("checked")(v => if (v) "checked" else null)
   def checked_=[E <: ElementType](v: Boolean) = checked.set(v)
-  
+
   implicit def maxlength = Attribute[Input with Textarea, Int]("maxlength")(_.toString)
   def maxlength_=[E <: ElementType](v: Int) = maxlength.set(v)
-  
+
   implicit def hreflang = Attribute[Link, Symbol]("hreflang")(_.name)
   def hreflang_=[E <: ElementType](v: Symbol) = hreflang.set(v)
 
   implicit def sizes = Attribute[Link, String]("sizes")(identity)
   def sizes_=[E <: ElementType](v: String) = sizes.set(v)
 
-  implicit def scoped = Attribute[Style, Boolean]("scoped")(v => if(v) "scoped" else null)
+  implicit def scoped = Attribute[Style, Boolean]("scoped")(v => if (v) "scoped" else null)
   def scoped_=[E <: ElementType](v: Boolean) = scoped.set(v)
 
-  implicit def async = Attribute[Script, Boolean]("async")(v => if(v) "async" else null)
+  implicit def async = Attribute[Script, Boolean]("async")(v => if (v) "async" else null)
   def async_=[E <: ElementType](v: Boolean) = async.set(v)
 
-  implicit def defer = Attribute[Script, Boolean]("defer")(v => if(v) "defer" else null)
+  implicit def defer = Attribute[Script, Boolean]("defer")(v => if (v) "defer" else null)
   def defer_=[E <: ElementType](v: Boolean) = defer.set(v)
 
   implicit def onbeforeunload = Attribute[Body, Js]("onbeforeunload")(_.content)
@@ -356,7 +364,7 @@ object htmlSyntax {
   implicit def onunload = Attribute[Body, Js]("onunload")(_.content)
   def onunload_=[E <: ElementType](v: Js) = onunload.set(v)
 
-  implicit def reversed = Attribute[Ol, Boolean]("reversed")(v => if(v) "reversed" else null)
+  implicit def reversed = Attribute[Ol, Boolean]("reversed")(v => if (v) "reversed" else null)
   def reversed_=[E <: ElementType](v: Boolean) = reversed.set(v)
 
   implicit def start = Attribute[Ol, Int]("start")(_.toString)
@@ -377,19 +385,21 @@ object htmlSyntax {
   implicit def usemap = Attribute[Img with Object, String]("usemap")(identity)
   def usemap_=[E <: ElementType](v: String) = usemap.set(v)
 
-  implicit def ismap = Attribute[Img, Boolean]("ismap")(v => if(v) "ismap" else null)
+  implicit def ismap = Attribute[Img, Boolean]("ismap")(v => if (v) "ismap" else null)
   def ismap_=[E <: ElementType](v: Boolean) = ismap.set(v)
 
-  implicit def width = Attribute[Img with Iframe with Embed with Object with Video with Canvas with Input, Int]("width")(_.toString)
+  implicit def width =
+    Attribute[Img with Iframe with Embed with Object with Video with Canvas with Input, Int]("width")(_.toString)
   def width_=[E <: ElementType](v: Int) = width.set(v)
 
-  implicit def height = Attribute[Img with Iframe with Embed with Object with Video with Canvas with Input, Int]("height")(_.toString)
+  implicit def height =
+    Attribute[Img with Iframe with Embed with Object with Video with Canvas with Input, Int]("height")(_.toString)
   def height_=[E <: ElementType](v: Int) = height.set(v)
 
-  implicit def sandbox = Attribute[Iframe, Boolean]("sandbox")(v => if(v) "sandbox" else null)
+  implicit def sandbox = Attribute[Iframe, Boolean]("sandbox")(v => if (v) "sandbox" else null)
   def sandbox_=[E <: ElementType](v: Boolean) = sandbox.set(v)
 
-  implicit def seamless = Attribute[Iframe, Boolean]("seamless")(v => if(v) "seamless" else null)
+  implicit def seamless = Attribute[Iframe, Boolean]("seamless")(v => if (v) "seamless" else null)
   def seamless_=[E <: ElementType](v: Boolean) = seamless.set(v)
 
   implicit def poster = Attribute[Video, PathLink]("poster")(_.link)
@@ -398,16 +408,16 @@ object htmlSyntax {
   implicit def data = Attribute[Object, String]("data")(identity)
   def data_=[E <: ElementType](v: String) = data.set(v)
 
-  implicit def autobuffer = Attribute[Video with Audio, Boolean]("autobuffer")(v => if(v) "autobuffer" else null)
+  implicit def autobuffer = Attribute[Video with Audio, Boolean]("autobuffer")(v => if (v) "autobuffer" else null)
   def autobuffer_=[E <: ElementType](v: Boolean) = autobuffer.set(v)
 
-  implicit def autoplay = Attribute[Video with Audio, Boolean]("autoplay")(v => if(v) "autoplay" else null)
+  implicit def autoplay = Attribute[Video with Audio, Boolean]("autoplay")(v => if (v) "autoplay" else null)
   def autoplay_=[E <: ElementType](v: Boolean) = autoplay.set(v)
 
-  implicit def loop = Attribute[Video with Audio, Boolean]("loop")(v => if(v) "loop" else null)
+  implicit def loop = Attribute[Video with Audio, Boolean]("loop")(v => if (v) "loop" else null)
   def loop_=[E <: ElementType](v: Boolean) = loop.set(v)
 
-  implicit def controls = Attribute[Video with Audio, Boolean]("controls")(v => if(v) "controls" else null)
+  implicit def controls = Attribute[Video with Audio, Boolean]("controls")(v => if (v) "controls" else null)
   def controls_=[E <: ElementType](v: Boolean) = controls.set(v)
 
   implicit def coords = Attribute[Area, String]("coords")(identity)
@@ -425,10 +435,11 @@ object htmlSyntax {
   implicit def acceptCharset = Attribute[Form, String]("accept-charset")(identity)
   def acceptCharset_=[E <: ElementType](v: String) = acceptCharset.set(v)
 
-  implicit def autocomplete = Attribute[Form with Input, Boolean]("autocomplete")(v => if(v) "on" else "off")
+  implicit def autocomplete = Attribute[Form with Input, Boolean]("autocomplete")(v => if (v) "on" else "off")
   def autocomplete_=[E <: ElementType](v: Boolean) = autocomplete.set(v)
 
-  implicit def novalidate = Attribute[Form with Input with Button, Boolean]("novalidate")(v => if(v) "novalidate" else null)
+  implicit def novalidate =
+    Attribute[Form with Input with Button, Boolean]("novalidate")(v => if (v) "novalidate" else null)
   def novalidate_=[E <: ElementType](v: Boolean) = novalidate.set(v)
 
   implicit def label = Attribute[Option with Command with Menu, String]("label")(identity)
@@ -443,13 +454,14 @@ object htmlSyntax {
   implicit def accept = Attribute[Input with Menu, String]("accept")(identity)
   def accept_=[E <: ElementType](v: String) = accept.set(v)
 
-  implicit def autofocus = Attribute[Input with Button with Select with Textarea, Boolean]("autofocus")(v => if(v) "autofocus" else null)
+  implicit def autofocus =
+    Attribute[Input with Button with Select with Textarea, Boolean]("autofocus")(v => if (v) "autofocus" else null)
   def autofocus_=[E <: ElementType](v: Boolean) = autofocus.set(v)
 
   implicit def list = Attribute[Input, Symbol]("list")(_.name)
   def list_=[E <: ElementType](v: Symbol) = list.set(v)
 
-  implicit def multiple = Attribute[Input with Select, Boolean]("multiple")(v => if(v) "multiple" else null)
+  implicit def multiple = Attribute[Input with Select, Boolean]("multiple")(v => if (v) "multiple" else null)
   def multiple_=[E <: ElementType](v: Boolean) = multiple.set(v)
 
   implicit def pattern = Attribute[Input, String]("pattern")(identity)
@@ -458,10 +470,10 @@ object htmlSyntax {
   implicit def placeholder = Attribute[Input, String]("placeholder")(identity)
   def placeholder_=[E <: ElementType](v: String) = placeholder.set(v)
 
-  implicit def readonly = Attribute[Input with Textarea, Boolean]("readonly")(v => if(v) "readonly" else null)
+  implicit def readonly = Attribute[Input with Textarea, Boolean]("readonly")(v => if (v) "readonly" else null)
   def readonly_=[E <: ElementType](v: Boolean) = readonly.set(v)
 
-  implicit def required = Attribute[Input with Textarea, Boolean]("required")(v => if(v) "required" else null)
+  implicit def required = Attribute[Input with Textarea, Boolean]("required")(v => if (v) "required" else null)
   def required_=[E <: ElementType](v: Boolean) = required.set(v)
 
   implicit def size = Attribute[Input with Select, Int]("size")(_.toString)

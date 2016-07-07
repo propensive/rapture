@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.net
 import rapture.core._
@@ -25,8 +25,12 @@ import java.util.Locale
 
 import scala.collection.mutable
 
-case class Cookie[I, D](domain: String, name: String, value: String,
-    path: RootedPath, expiry: Option[I], secure: Boolean)(implicit ts: TimeSystem[I, D]) {
+case class Cookie[I, D](domain: String,
+                        name: String,
+                        value: String,
+                        path: RootedPath,
+                        expiry: Option[I],
+                        secure: Boolean)(implicit ts: TimeSystem[I, D]) {
   lazy val pathString = path.toString
 }
 
@@ -41,27 +45,36 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   def parseCookie(s: String, domain: String): Cookie[I, _] = {
     val ps = s.split(";").map(_.trim.split("=")) map { a =>
-      a(0) -> (if(a.length > 1) a(1).urlDecode else "")
+      a(0) -> (if (a.length > 1) a(1).urlDecode else "")
     }
     val details = ps.tail.toMap
 
-    Cookie(details.getOrElse("domain", domain), ps.head._1, ps.head._2,
-      RootedPath.parse(details.getOrElse("path", "")).getOrElse(RootedPath(Vector())),
-      details.get("expires") map { exp =>
-        ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US).parse(exp).getTime)
-      }, details.contains("secure"))
+    Cookie(details.getOrElse("domain", domain),
+           ps.head._1,
+           ps.head._2,
+           RootedPath.parse(details.getOrElse("path", "")).getOrElse(RootedPath(Vector())),
+           details.get("expires") map { exp =>
+             ts.instant(new SimpleDateFormat(Rfc1036Pattern, Locale.US).parse(exp).getTime)
+           },
+           details.contains("secure"))
   }
 
   def domainCookies(domain: String, secure: Boolean, path: String): String = {
     val now = System.currentTimeMillis
     cookies foreach { c =>
-      if(c._2.expiry.exists(e => ts.fromInstant(e) < now))
+      if (c._2.expiry.exists(e => ts.fromInstant(e) < now))
         cookies.remove((c._2.domain, c._2.name, c._2.path))
     }
 
-    cookies.toList.filter(secure || !_._2.secure).filter(domain endsWith
-        _._2.domain).filter(path startsWith _._2.pathString).map(_._2).groupBy(_.name) map { c =>
-        c._1+"="+c._2.maxBy(_.pathString.length).value.urlEncode } mkString "; "
+    cookies.toList
+      .filter(secure || !_._2.secure)
+      .filter(domain endsWith
+            _._2.domain)
+      .filter(path startsWith _._2.pathString)
+      .map(_._2)
+      .groupBy(_.name) map { c =>
+      c._1 + "=" + c._2.maxBy(_.pathString.length).value.urlEncode
+    } mkString "; "
   }
 
   def accept[I2, D](c: Cookie[I2, D]): Boolean = c.domain.split("\\.").length > 1
@@ -109,4 +122,3 @@ class Browser[I: TimeSystem.ByInstant]() {
 
   def apply(url: HttpUrl): BrowserUrl = new BrowserUrl(url)*/
 }
-

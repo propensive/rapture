@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.js
 
@@ -23,23 +23,23 @@ import javax.script._
 
 private[js] object JsValidator {
 
-  case class ValidationException(strNo: Int, pos: Int, msg: String)
-      extends Exception
-  
+  case class ValidationException(strNo: Int, pos: Int, msg: String) extends Exception
+
   def validate(parts: List[String]): Unit = {
     val script = parts.mkString("null")
     val engine: Compilable = alloc[ScriptEngineManager]().getEngineByName("JavaScript") match {
       case e: Compilable => e
     }
-    
-    try engine.compile(script) catch {
+
+    try engine.compile(script)
+    catch {
       case e: ScriptException =>
         val pos = script.split("\n").take(e.getLineNumber - 1).map(_.length + 1).sum + e.getColumnNumber
-	val Regex = "<eval>:[0-9]+:[0-9]+ (.*)$".r
-	println("pos = "+pos)
-	val msg = e.getMessage.split("\n").head match { case Regex(m) => m }
+        val Regex = "<eval>:[0-9]+:[0-9]+ (.*)$".r
+        println("pos = " + pos)
+        val msg = e.getMessage.split("\n").head match { case Regex(m) => m }
 
-	throw ValidationException(0, pos, msg)
+        throw ValidationException(0, pos, msg)
     }
   }
 }
