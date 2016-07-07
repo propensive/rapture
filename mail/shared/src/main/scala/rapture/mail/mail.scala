@@ -1,7 +1,6 @@
 package rapture.mail
 
 import rapture.core._
-import rapture.io._
 import rapture.fs._
 import rapture.net._
 import rapture.uri._
@@ -35,6 +34,13 @@ object Mailto {
 
   def parse(s: String): MailtoUri = s match {
     case Regex(address, _, _, _) => new MailtoUri(address)
+  }
+}
+
+object MailtoUri {
+  implicit val mailtoUriLinkable: UriCapable[MailtoUri] = new UriCapable[MailtoUri] {
+    def uri(mu: MailtoUri): Uri =
+      Uri("mailto", mu.email)
   }
 }
 
