@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.net
 
@@ -45,35 +45,34 @@ object Ipv4 {
     val vs = s.split("\\.").map(_.toInt)
     Ipv4(vs(0), vs(1), vs(2), vs(3))
   }
-  
+
   def fromLong(lng: Long) =
-    Ipv4((lng>>24 & 255L).toInt, (lng>>16 & 255L).toInt, (lng>>8 & 255L).toInt,
-        (lng & 255L).toInt)
-  
-  lazy val privateSubnets = List(Ipv4(10, 0, 0, 0)/8, Ipv4(192, 168, 0, 0)/16,
-      Ipv4(172, 16, 0, 0)/12, Ipv4(127, 0, 0, 0)/8)
+    Ipv4((lng >> 24 & 255L).toInt, (lng >> 16 & 255L).toInt, (lng >> 8 & 255L).toInt, (lng & 255L).toInt)
+
+  lazy val privateSubnets =
+    List(Ipv4(10, 0, 0, 0) / 8, Ipv4(192, 168, 0, 0) / 16, Ipv4(172, 16, 0, 0) / 12, Ipv4(127, 0, 0, 0) / 8)
 }
 
 case class Ipv6(s1: Int, s2: Int, s3: Int, s4: Int, s5: Int, s6: Int, s7: Int, s8: Int) {
 
   def groups = Vector(s1, s2, s3, s4, s5, s6, s7, s8)
 
-  def expanded = groups map { s =>
-    Bytes(Array(((s >> 8) & 0xff).toByte, (s & 0xff).toByte)).encode[Hex]
-  } mkString ":"
+  def expanded =
+    groups map { s =>
+      Bytes(Array(((s >> 8) & 0xff).toByte, (s & 0xff).toByte)).encode[Hex]
+    } mkString ":"
 
   override def toString = expanded.replaceAll("^0+", "").replaceAll(":0+", ":").replaceAll("::+", "::")
 }
 case class Ipv4(b1: Int, b2: Int, b3: Int, b4: Int) {
-  
-  if(b1 > 255 || b2 > 255 || b3 > 255 || b4 > 255 || b1 < 0 || b2 < 0 || b3 < 0 || b4 < 0)
-    throw new InstantiationException(
-        "The components of the IP address must be in the range 0-255")
 
-  def asLong = (b1.toLong<<24) + (b2<<16) + (b3<<8) + b4
+  if (b1 > 255 || b2 > 255 || b3 > 255 || b4 > 255 || b1 < 0 || b2 < 0 || b3 < 0 || b4 < 0)
+    throw new InstantiationException("The components of the IP address must be in the range 0-255")
+
+  def asLong = (b1.toLong << 24) + (b2 << 16) + (b3 << 8) + b4
   def /(i: Int): Subnet = new Subnet(this, i)
   def in(subnet: Subnet) = subnet contains this
-  override def toString() = b1+"."+b2+"."+b3+"."+b4
+  override def toString() = b1 + "." + b2 + "." + b3 + "." + b4
   def isPrivate = Ipv4.privateSubnets.exists(in)
 
   override def equals(that: Any): Boolean = that match {
@@ -81,7 +80,7 @@ case class Ipv4(b1: Int, b2: Int, b3: Int, b4: Int) {
     case _ => false
   }
 
-  override def hashCode = b1<<24 | b2<<16 | b3<<8 | b4
+  override def hashCode = b1 << 24 | b2 << 16 | b3 << 8 | b4
 }
 
 object Subnet {
@@ -92,7 +91,7 @@ object Subnet {
 }
 
 class Subnet(baseIp: Ipv4, val bits: Int) extends Iterable[Ipv4] {
-  if(bits < 0 || bits > 32)
+  if (bits < 0 || bits > 32)
     throw new InstantiationException("The subnet size must be in the range 0-32")
 
   def iterator: Iterator[Ipv4] = new Iterator[Ipv4] {
@@ -104,11 +103,11 @@ class Subnet(baseIp: Ipv4, val bits: Int) extends Iterable[Ipv4] {
     }
   }
 
-  def maximum = Ipv4.fromLong((((baseIp.asLong>>(32 - bits)) + 1)<<(32 - bits)) - 1)
-  val ip = Ipv4.fromLong((baseIp.asLong>>(32 - bits))<<(32 - bits))
+  def maximum = Ipv4.fromLong((((baseIp.asLong >> (32 - bits)) + 1) << (32 - bits)) - 1)
+  val ip = Ipv4.fromLong((baseIp.asLong >> (32 - bits)) << (32 - bits))
   override def size = 1 << (32 - bits)
-  override def toString() = ip.toString+"/"+bits
-  def contains(ip2: Ipv4) = Ipv4.fromLong((ip2.asLong>>(32 - bits))<<(32 - bits)) == ip
+  override def toString() = ip.toString + "/" + bits
+  def contains(ip2: Ipv4) = Ipv4.fromLong((ip2.asLong >> (32 - bits)) << (32 - bits)) == ip
 
   override def equals(that: Any) = that match {
     case that: Subnet => ip == that.ip && bits == that.bits

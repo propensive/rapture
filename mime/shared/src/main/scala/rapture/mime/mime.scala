@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.mime
 
@@ -21,10 +21,10 @@ package rapture.mime
   * list was produced from the public domain list of MIME types at
   * http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types w*/
 object MimeTypes {
- 
+
   private var exts = Map[String, List[MimeType]]()
   private var types = Map[String, MimeType]()
-  
+
   def unapply(mt: String) = types.get(mt)
 
   /** Looks up the MIME type based on a file extension. */
@@ -34,13 +34,12 @@ object MimeTypes {
     * extensions which correspond to that type. */
   case class MimeType(name: String, extensions: String*) {
     override def toString = name
-    for(ext <- extensions) exts = exts.updated(ext, this :: exts.get(ext).getOrElse(Nil))
+    for (ext <- extensions) exts = exts.updated(ext, this :: exts.get(ext).getOrElse(Nil))
     types = types.updated(name, this)
   }
 
-  val `text/plain` = MimeType("text/plain", "asc", "conf", "def", "diff", "in", "list", "log",
-      "pot", "text", "txt")
-  
+  val `text/plain` = MimeType("text/plain", "asc", "conf", "def", "diff", "in", "list", "log", "pot", "text", "txt")
+
   val `application/x-www-form-urlencoded` = MimeType("application/x-www-form-urlencoded")
   val `application/activemessage` = MimeType("application/activemessage")
   val `application/andrew-inset` = MimeType("application/andrew-inset", "ez")
@@ -118,10 +117,10 @@ object MimeTypes {
   val `application/marc` = MimeType("application/marc", "mrc")
   val `application/mathematica` = MimeType("application/mathematica", "ma", "mb", "nb")
   val `application/mathml+xml` = MimeType("application/mathml+xml", "mathml")
-  
-  val `application/mbms-associated-procedure-description+xml` =
-    MimeType("application/mbms-associated-procedure-description+xml")
-  
+
+  val `application/mbms-associated-procedure-description+xml` = MimeType(
+      "application/mbms-associated-procedure-description+xml")
+
   val `application/mbms-deregister+xml` = MimeType("application/mbms-deregister+xml")
   val `application/mbms-envelope+xml` = MimeType("application/mbms-envelope+xml")
   val `application/mbms-msk+xml` = MimeType("application/mbms-msk+xml")
@@ -153,11 +152,24 @@ object MimeTypes {
   val `application/nss` = MimeType("application/nss")
   val `application/ocsp-request` = MimeType("application/ocsp-request")
   val `application/ocsp-response` = MimeType("application/ocsp-response")
-  
-  val `application/octet-stream` =
-    MimeType("application/octet-stream", "bin", "bpk", "deploy", "dist", "distz", "dmg", "dms",
-        "dump", "elc", "iso", "lha", "lrf", "lzh", "pkg", "so")
-  
+
+  val `application/octet-stream` = MimeType("application/octet-stream",
+                                            "bin",
+                                            "bpk",
+                                            "deploy",
+                                            "dist",
+                                            "distz",
+                                            "dmg",
+                                            "dms",
+                                            "dump",
+                                            "elc",
+                                            "iso",
+                                            "lha",
+                                            "lrf",
+                                            "lzh",
+                                            "pkg",
+                                            "so")
+
   val `application/oda` = MimeType("application/oda", "oda")
   val `application/oebps-package+xml` = MimeType("application/oebps-package+xml", "opf")
   val `application/ogg` = MimeType("application/ogg", "ogg", "ogx")
@@ -249,10 +261,10 @@ object MimeTypes {
   val `application/vnd.accpac.simply.imp` = MimeType("application/vnd.accpac.simply.imp", "imp")
   val `application/vnd.acucobol` = MimeType("application/vnd.acucobol", "acu")
   val `application/vnd.acucorp` = MimeType("application/vnd.acucorp", "acutc", "atc")
-  
+
   val `application/vnd.adobe.air-application-installer-package+zip` =
     MimeType("application/vnd.adobe.air-application-installer-package+zip", "air")
-  
+
   val `application/vnd.adobe.xdp+xml` = MimeType("application/vnd.adobe.xdp+xml", "xdp")
   val `application/vnd.adobe.xfdf` = MimeType("application/vnd.adobe.xfdf", "xfdf")
   val `application/vnd.aether.imp` = MimeType("application/vnd.aether.imp")
@@ -262,13 +274,13 @@ object MimeTypes {
   val `application/vnd.americandynamics.acc` = MimeType("application/vnd.americandynamics.acc", "acc")
   val `application/vnd.amiga.ami` = MimeType("application/vnd.amiga.ami", "ami")
   val `application/vnd.android.package-archive` = MimeType("application/vnd.android.package-archive", "apk")
-  
+
   val `application/vnd.anser-web-certificate-issue-initiation` =
     MimeType("application/vnd.anser-web-certificate-issue-initiation", "cii")
-  
+
   val `application/vnd.anser-web-funds-transfer-initiation` =
     MimeType("application/vnd.anser-web-funds-transfer-initiation", "fti")
-  
+
   val `application/vnd.antix.game-component` = MimeType("application/vnd.antix.game-component", "atx")
   val `application/vnd.apple.installer+xml` = MimeType("application/vnd.apple.installer+xml", "mpkg")
   val `application/vnd.arastra.swi` = MimeType("application/vnd.arastra.swi", "swi")
@@ -328,13 +340,13 @@ object MimeTypes {
   val `application/vnd.dvb.notif-container+xml` = MimeType("application/vnd.dvb.notif-container+xml")
   val `application/vnd.dvb.notif-generic+xml` = MimeType("application/vnd.dvb.notif-generic+xml")
   val `application/vnd.dvb.notif-ia-msglist+xml` = MimeType("application/vnd.dvb.notif-ia-msglist+xml")
-  
-  val `application/vnd.dvb.notif-ia-registration-request+xml` =
-    MimeType("application/vnd.dvb.notif-ia-registration-request+xml")
-  
-  val `application/vnd.dvb.notif-ia-registration-response+xml` =
-    MimeType("application/vnd.dvb.notif-ia-registration-response+xml")
-  
+
+  val `application/vnd.dvb.notif-ia-registration-request+xml` = MimeType(
+      "application/vnd.dvb.notif-ia-registration-request+xml")
+
+  val `application/vnd.dvb.notif-ia-registration-response+xml` = MimeType(
+      "application/vnd.dvb.notif-ia-registration-response+xml")
+
   val `application/vnd.dvb.notif-init+xml` = MimeType("application/vnd.dvb.notif-init+xml")
   val `application/vnd.dxr` = MimeType("application/vnd.dxr")
   val `application/vnd.dynageo` = MimeType("application/vnd.dynageo", "geo")
@@ -475,13 +487,13 @@ object MimeTypes {
   val `application/vnd.koan` = MimeType("application/vnd.koan", "skd", "skm", "skp", "skt")
   val `application/vnd.kodak-descriptor` = MimeType("application/vnd.kodak-descriptor", "sse")
   val `application/vnd.liberty-request+xml` = MimeType("application/vnd.liberty-request+xml")
-  
+
   val `application/vnd.llamagraphics.life-balance.desktop` =
     MimeType("application/vnd.llamagraphics.life-balance.desktop", "lbd")
-  
+
   val `application/vnd.llamagraphics.life-balance.exchange+xml` =
     MimeType("application/vnd.llamagraphics.life-balance.exchange+xml", "lbe")
-  
+
   val `application/vnd.lotus-1-2-3` = MimeType("application/vnd.lotus-1-2-3", "123")
   val `application/vnd.lotus-approach` = MimeType("application/vnd.lotus-approach", "apr")
   val `application/vnd.lotus-freelance` = MimeType("application/vnd.lotus-freelance", "pre")
@@ -504,10 +516,9 @@ object MimeTypes {
   val `application/vnd.micrografx.igx` = MimeType("application/vnd.micrografx.igx", "igx")
   val `application/vnd.mif` = MimeType("application/vnd.mif", "mif")
   val `application/vnd.minisoft-hp3000-save` = MimeType("application/vnd.minisoft-hp3000-save")
-  
-  val `application/vnd.mitsubishi.misty-guard.trustweb` =
-    MimeType("application/vnd.mitsubishi.misty-guard.trustweb")
-  
+
+  val `application/vnd.mitsubishi.misty-guard.trustweb` = MimeType("application/vnd.mitsubishi.misty-guard.trustweb")
+
   val `application/vnd.mobius.daf` = MimeType("application/vnd.mobius.daf", "daf")
   val `application/vnd.mobius.dis` = MimeType("application/vnd.mobius.dis", "dis")
   val `application/vnd.mobius.mbk` = MimeType("application/vnd.mobius.mbk", "mbk")
@@ -529,22 +540,22 @@ object MimeTypes {
   val `application/vnd.ms-artgalry` = MimeType("application/vnd.ms-artgalry", "cil")
   val `application/vnd.ms-asf` = MimeType("application/vnd.ms-asf")
   val `application/vnd.ms-cab-compressed` = MimeType("application/vnd.ms-cab-compressed", "cab")
-  
+
   val `application/vnd.ms-excel` =
     MimeType("application/vnd.ms-excel", "xla", "xlb", "xlc", "xlm", "xls", "xlt", "xlw")
-  
+
   val `application/vnd.ms-excel.addin.macroenabled.12` =
     MimeType("application/vnd.ms-excel.addin.macroenabled.12", "xlam")
-  
+
   val `application/vnd.ms-excel.sheet.binary.macroenabled.12` =
     MimeType("application/vnd.ms-excel.sheet.binary.macroenabled.12", "xlsb")
-  
+
   val `application/vnd.ms-excel.sheet.macroenabled.12` =
     MimeType("application/vnd.ms-excel.sheet.macroenabled.12", "xlsm")
-  
+
   val `application/vnd.ms-excel.template.macroenabled.12` =
     MimeType("application/vnd.ms-excel.template.macroenabled.12", "xltm")
-  
+
   val `application/vnd.ms-fontobject` = MimeType("application/vnd.ms-fontobject", "eot")
   val `application/vnd.ms-htmlhelp` = MimeType("application/vnd.ms-htmlhelp", "chm")
   val `application/vnd.ms-ims` = MimeType("application/vnd.ms-ims", "ims")
@@ -553,32 +564,32 @@ object MimeTypes {
   val `application/vnd.ms-pki.stl` = MimeType("application/vnd.ms-pki.stl", "stl")
   val `application/vnd.ms-playready.initiator+xml` = MimeType("application/vnd.ms-playready.initiator+xml")
   val `application/vnd.ms-powerpoint` = MimeType("application/vnd.ms-powerpoint", "pot", "pps", "ppt")
-  
+
   val `application/vnd.ms-powerpoint.addin.macroenabled.12` =
     MimeType("application/vnd.ms-powerpoint.addin.macroenabled.12", "ppam")
-  
+
   val `application/vnd.ms-powerpoint.presentation.macroenabled.12` =
     MimeType("application/vnd.ms-powerpoint.presentation.macroenabled.12", "pptm")
-  
+
   val `application/vnd.ms-powerpoint.slide.macroenabled.12` =
     MimeType("application/vnd.ms-powerpoint.slide.macroenabled.12", "sldm")
-  
+
   val `application/vnd.ms-powerpoint.slideshow.macroenabled.12` =
     MimeType("application/vnd.ms-powerpoint.slideshow.macroenabled.12", "ppsm")
-  
+
   val `application/vnd.ms-powerpoint.template.macroenabled.12` =
     MimeType("application/vnd.ms-powerpoint.template.macroenabled.12", "potm")
-  
+
   val `application/vnd.ms-project` = MimeType("application/vnd.ms-project", "mpp", "mpt")
   val `application/vnd.ms-tnef` = MimeType("application/vnd.ms-tnef")
   val `application/vnd.ms-wmdrm.lic-chlg-req` = MimeType("application/vnd.ms-wmdrm.lic-chlg-req")
   val `application/vnd.ms-wmdrm.lic-resp` = MimeType("application/vnd.ms-wmdrm.lic-resp")
   val `application/vnd.ms-wmdrm.meter-chlg-req` = MimeType("application/vnd.ms-wmdrm.meter-chlg-req")
   val `application/vnd.ms-wmdrm.meter-resp` = MimeType("application/vnd.ms-wmdrm.meter-resp")
-  
+
   val `application/vnd.ms-word.document.macroenabled.12` =
     MimeType("application/vnd.ms-word.document.macroenabled.12", "docm")
-  
+
   val `application/vnd.ms-word.template.macroenabled.12` =
     MimeType("application/vnd.ms-word.template.macroenabled.12", "dotm")
 
@@ -610,10 +621,10 @@ object MimeTypes {
   val `application/vnd.nokia.landmarkcollection+xml` = MimeType("application/vnd.nokia.landmarkcollection+xml")
   val `application/vnd.nokia.n-gage.ac+xml` = MimeType("application/vnd.nokia.n-gage.ac+xml")
   val `application/vnd.nokia.n-gage.data` = MimeType("application/vnd.nokia.n-gage.data", "ngdat")
-  
+
   val `application/vnd.nokia.n-gage.symbian.install` =
     MimeType("application/vnd.nokia.n-gage.symbian.install", "n", "-gage")
-  
+
   val `application/vnd.nokia.ncd` = MimeType("application/vnd.nokia.ncd")
   val `application/vnd.nokia.pcd+wbxml` = MimeType("application/vnd.nokia.pcd+wbxml")
   val `application/vnd.nokia.pcd+xml` = MimeType("application/vnd.nokia.pcd+xml")
@@ -623,46 +634,46 @@ object MimeTypes {
   val `application/vnd.novadigm.edx` = MimeType("application/vnd.novadigm.edx", "edx")
   val `application/vnd.novadigm.ext` = MimeType("application/vnd.novadigm.ext", "ext")
   val `application/vnd.oasis.opendocument.chart` = MimeType("application/vnd.oasis.opendocument.chart", "odc")
-  
+
   val `application/vnd.oasis.opendocument.chart-template` =
     MimeType("application/vnd.oasis.opendocument.chart-template", "otc")
-  
+
   val `application/vnd.oasis.opendocument.database` = MimeType("application/vnd.oasis.opendocument.database", "odb")
   val `application/vnd.oasis.opendocument.formula` = MimeType("application/vnd.oasis.opendocument.formula", "odf")
-  
+
   val `application/vnd.oasis.opendocument.formula-template` =
     MimeType("application/vnd.oasis.opendocument.formula-template", "odft")
-  
+
   val `application/vnd.oasis.opendocument.graphics` = MimeType("application/vnd.oasis.opendocument.graphics", "odg")
-  
+
   val `application/vnd.oasis.opendocument.graphics-template` =
     MimeType("application/vnd.oasis.opendocument.graphics-template", "otg")
-  
+
   val `application/vnd.oasis.opendocument.image` = MimeType("application/vnd.oasis.opendocument.image", "odi")
-  
+
   val `application/vnd.oasis.opendocument.image-template` =
     MimeType("application/vnd.oasis.opendocument.image-template", "oti")
-  
+
   val `application/vnd.oasis.opendocument.presentation` =
     MimeType("application/vnd.oasis.opendocument.presentation", "odp")
-  
+
   val `application/vnd.oasis.opendocument.presentation-template` =
     MimeType("application/vnd.oasis.opendocument.presentation-template", "otp")
-  
+
   val `application/vnd.oasis.opendocument.spreadsheet` =
     MimeType("application/vnd.oasis.opendocument.spreadsheet", "ods")
-  
+
   val `application/vnd.oasis.opendocument.spreadsheet-template` =
     MimeType("application/vnd.oasis.opendocument.spreadsheet-template", "ots")
-  
+
   val `application/vnd.oasis.opendocument.text` = MimeType("application/vnd.oasis.opendocument.text", "odt")
-  
+
   val `application/vnd.oasis.opendocument.text-master` =
     MimeType("application/vnd.oasis.opendocument.text-master", "odm", "otm")
-  
+
   val `application/vnd.oasis.opendocument.text-template` =
     MimeType("application/vnd.oasis.opendocument.text-template", "ott")
-  
+
   val `application/vnd.oasis.opendocument.text-web` = MimeType("application/vnd.oasis.opendocument.text-web", "oth")
   val `application/vnd.obn` = MimeType("application/vnd.obn")
   val `application/vnd.olpc-sugar` = MimeType("application/vnd.olpc-sugar", "xo")
@@ -670,24 +681,23 @@ object MimeTypes {
   val `application/vnd.oma-scws-http-request` = MimeType("application/vnd.oma-scws-http-request")
   val `application/vnd.oma-scws-http-response` = MimeType("application/vnd.oma-scws-http-response")
 
-  val `application/vnd.oma.bcast.associated-procedure-parameter+xml` =
-    MimeType("application/vnd.oma.bcast.associated-procedure-parameter+xml")
-  
-  val `application/vnd.oma.bcast.drm-trigger+xml` = MimeType("application/vnd.oma.bcast.drm-trigger+xml")  
+  val `application/vnd.oma.bcast.associated-procedure-parameter+xml` = MimeType(
+      "application/vnd.oma.bcast.associated-procedure-parameter+xml")
+
+  val `application/vnd.oma.bcast.drm-trigger+xml` = MimeType("application/vnd.oma.bcast.drm-trigger+xml")
   val `application/vnd.oma.bcast.imd+xml` = MimeType("application/vnd.oma.bcast.imd+xml")
-  val `application/vnd.oma.bcast.ltkm` = MimeType("application/vnd.oma.bcast.ltkm")  
+  val `application/vnd.oma.bcast.ltkm` = MimeType("application/vnd.oma.bcast.ltkm")
   val `application/vnd.oma.bcast.notification+xml` = MimeType("application/vnd.oma.bcast.notification+xml")
   val `application/vnd.oma.bcast.provisioningtrigger` = MimeType("application/vnd.oma.bcast.provisioningtrigger")
   val `application/vnd.oma.bcast.sgboot` = MimeType("application/vnd.oma.bcast.sgboot")
   val `application/vnd.oma.bcast.sgdd+xml` = MimeType("application/vnd.oma.bcast.sgdd+xml")
   val `application/vnd.oma.bcast.sgdu` = MimeType("application/vnd.oma.bcast.sgdu")
-  
-  val `application/vnd.oma.bcast.simple-symbol-container` =
-    MimeType("application/vnd.oma.bcast.simple-symbol-container")
-  
-  val `application/vnd.oma.bcast.smartcard-trigger+xml` =
-    MimeType("application/vnd.oma.bcast.smartcard-trigger+xml")
-  
+
+  val `application/vnd.oma.bcast.simple-symbol-container` = MimeType(
+      "application/vnd.oma.bcast.simple-symbol-container")
+
+  val `application/vnd.oma.bcast.smartcard-trigger+xml` = MimeType("application/vnd.oma.bcast.smartcard-trigger+xml")
+
   val `application/vnd.oma.bcast.sprov+xml` = MimeType("application/vnd.oma.bcast.sprov+xml")
   val `application/vnd.oma.bcast.stkm` = MimeType("application/vnd.oma.bcast.stkm")
   val `application/vnd.oma.dcd` = MimeType("application/vnd.oma.dcd")
@@ -695,50 +705,50 @@ object MimeTypes {
   val `application/vnd.oma.dd2+xml` = MimeType("application/vnd.oma.dd2+xml", "dd2")
   val `application/vnd.oma.drm.risd+xml` = MimeType("application/vnd.oma.drm.risd+xml")
   val `application/vnd.oma.group-usage-list+xml` = MimeType("application/vnd.oma.group-usage-list+xml")
-  
-  val `application/vnd.oma.poc.detailed-progress-report+xml` =
-    MimeType("application/vnd.oma.poc.detailed-progress-report+xml")
-  
+
+  val `application/vnd.oma.poc.detailed-progress-report+xml` = MimeType(
+      "application/vnd.oma.poc.detailed-progress-report+xml")
+
   val `application/vnd.oma.poc.final-report+xml` = MimeType("application/vnd.oma.poc.final-report+xml")
   val `application/vnd.oma.poc.groups+xml` = MimeType("application/vnd.oma.poc.groups+xml")
-  
-  val `application/vnd.oma.poc.invocation-descriptor+xml` =
-    MimeType("application/vnd.oma.poc.invocation-descriptor+xml")
-  
-  val `application/vnd.oma.poc.optimized-progress-report+xml` =
-    MimeType("application/vnd.oma.poc.optimized-progress-report+xml")
-  
+
+  val `application/vnd.oma.poc.invocation-descriptor+xml` = MimeType(
+      "application/vnd.oma.poc.invocation-descriptor+xml")
+
+  val `application/vnd.oma.poc.optimized-progress-report+xml` = MimeType(
+      "application/vnd.oma.poc.optimized-progress-report+xml")
+
   val `application/vnd.oma.xcap-directory+xml` = MimeType("application/vnd.oma.xcap-directory+xml")
   val `application/vnd.omads-email+xml` = MimeType("application/vnd.omads-email+xml")
   val `application/vnd.omads-file+xml` = MimeType("application/vnd.omads-file+xml")
   val `application/vnd.omads-folder+xml` = MimeType("application/vnd.omads-folder+xml")
   val `application/vnd.omaloc-supl-init` = MimeType("application/vnd.omaloc-supl-init")
   val `application/vnd.openofficeorg.extension` = MimeType("application/vnd.openofficeorg.extension", "oxt")
-  
+
   val `application/vnd.openxmlformats-officedocument.presentationml.presentation` =
     MimeType("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx")
-  
+
   val `application/vnd.openxmlformats-officedocument.presentationml.slide` =
     MimeType("application/vnd.openxmlformats-officedocument.presentationml.slide", "sldx")
-  
+
   val `application/vnd.openxmlformats-officedocument.presentationml.slideshow` =
     MimeType("application/vnd.openxmlformats-officedocument.presentationml.slideshow", "ppsx")
-  
+
   val `application/vnd.openxmlformats-officedocument.presentationml.template` =
     MimeType("application/vnd.openxmlformats-officedocument.presentationml.template", "potx")
-  
+
   val `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` =
     MimeType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx")
-  
+
   val `application/vnd.openxmlformats-officedocument.spreadsheetml.template` =
     MimeType("application/vnd.openxmlformats-officedocument.spreadsheetml.template", "xltx")
-  
+
   val `application/vnd.openxmlformats-officedocument.wordprocessingml.document` =
     MimeType("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx")
-  
+
   val `application/vnd.openxmlformats-officedocument.wordprocessingml.template` =
     MimeType("application/vnd.openxmlformats-officedocument.wordprocessingml.template", "dotx")
-  
+
   val `application/vnd.osa.netdeploy` = MimeType("application/vnd.osa.netdeploy")
   val `application/vnd.osgi.bundle` = MimeType("application/vnd.osgi.bundle")
   val `application/vnd.osgi.dp` = MimeType("application/vnd.osgi.dp", "dp")
@@ -765,10 +775,10 @@ object MimeTypes {
   val `application/vnd.pwg-multiplexed` = MimeType("application/vnd.pwg-multiplexed")
   val `application/vnd.pwg-xhtml-print+xml` = MimeType("application/vnd.pwg-xhtml-print+xml")
   val `application/vnd.qualcomm.brew-app-res` = MimeType("application/vnd.qualcomm.brew-app-res")
-  
+
   val `application/vnd.quark.quarkxpress` =
     MimeType("application/vnd.quark.quarkxpress", "qwd", "qwt", "qxb", "qxd", "qxl", "qxt")
-  
+
   val `application/vnd.rapid` = MimeType("application/vnd.rapid")
   val `application/vnd.recordare.musicxml` = MimeType("application/vnd.recordare.musicxml", "mxl")
   val `application/vnd.recordare.musicxml+xml` = MimeType("application/vnd.recordare.musicxml+xml", "musicxml")
@@ -804,10 +814,9 @@ object MimeTypes {
   val `application/vnd.smaf` = MimeType("application/vnd.smaf", "mmf")
   val `application/vnd.smart.teacher` = MimeType("application/vnd.smart.teacher", "teacher")
   val `application/vnd.software602.filler.form+xml` = MimeType("application/vnd.software602.filler.form+xml")
-  
-  val `application/vnd.software602.filler.form-xml-zip` =
-    MimeType("application/vnd.software602.filler.form-xml-zip")
-  
+
+  val `application/vnd.software602.filler.form-xml-zip` = MimeType("application/vnd.software602.filler.form-xml-zip")
+
   val `application/vnd.solent.sdkm+xml` = MimeType("application/vnd.solent.sdkm+xml", "sdkd", "sdkm")
   val `application/vnd.spotfire.dxp` = MimeType("application/vnd.spotfire.dxp", "dxp")
   val `application/vnd.spotfire.sfs` = MimeType("application/vnd.spotfire.sfs", "sfs")
@@ -902,10 +911,10 @@ object MimeTypes {
   val `application/vnd.yamaha.hv-script` = MimeType("application/vnd.yamaha.hv-script", "hvs")
   val `application/vnd.yamaha.hv-voice` = MimeType("application/vnd.yamaha.hv-voice", "hvp")
   val `application/vnd.yamaha.openscoreformat` = MimeType("application/vnd.yamaha.openscoreformat", "osf")
-  
+
   val `application/vnd.yamaha.openscoreformat.osfpvg+xml` =
     MimeType("application/vnd.yamaha.openscoreformat.osfpvg+xml", "osfpvg")
-  
+
   val `application/vnd.yamaha.smaf-audio` = MimeType("application/vnd.yamaha.smaf-audio", "saf")
   val `application/vnd.yamaha.smaf-phrase` = MimeType("application/vnd.yamaha.smaf-phrase", "spf")
   val `application/vnd.yellowriver-custom-menu` = MimeType("application/vnd.yellowriver-custom-menu", "cmp")
@@ -940,11 +949,10 @@ object MimeTypes {
   val `application/x-cpio` = MimeType("application/x-cpio", "cpio")
   val `application/x-csh` = MimeType("application/x-csh", "csh")
   val `application/x-debian-package` = MimeType("application/x-debian-package", "deb", "udeb")
-  
+
   val `application/x-director` =
-    MimeType("application/x-director", "cct", "cst", "cxt", "dcr", "dir", "dxr", "fgd", "swa",
-        "w3d")
-  
+    MimeType("application/x-director", "cct", "cst", "cxt", "dcr", "dir", "dxr", "fgd", "swa", "w3d")
+
   val `application/x-dms` = MimeType("application/x-dms", "dms")
   val `application/x-doom` = MimeType("application/x-doom", "wad")
   val `application/x-dtbncx+xml` = MimeType("application/x-dtbncx+xml", "ncx")
@@ -1533,10 +1541,9 @@ object MimeTypes {
   val `x-conference/x-cooltalk` = MimeType("x-conference/x-cooltalk", "ice")
   val `x-world/x-vrml` = MimeType("x-world/x-vrml", "vrm", "vrml", "wrl")
 
-  
   val mimeTypesMap = new javax.activation.MimetypesFileTypeMap()
-  
+
   types.values foreach { t =>
-    mimeTypesMap.addMimeTypes(t.name+" "+t.extensions.mkString(" "))
+    mimeTypesMap.addMimeTypes(t.name + " " + t.extensions.mkString(" "))
   }
 }

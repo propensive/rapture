@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json
 
@@ -24,45 +24,46 @@ import rapture.data._
 import language.experimental.macros
 
 private[json] object JsonDataMacros extends DataContextMacros[Json, JsonAst] {
-  
+
   def companion(c: BlackboxContext): c.Expr[DataCompanion[Json, JsonAst]] = c.universe.reify(Json)
 
-  def parseSource(s: List[String], stringsUsed: List[Boolean]) = try {
-    JsonValidator.validate(s, stringsUsed)
-    None
-  } catch {
-    case JsonValidator.ValidationException(strNo, pos, expected, found) =>
-      val f = if(found == '\u0000') "end of input" else s"'$found'"
-      Some((strNo, pos, s"failed to parse Json literal: expected $expected, but found $f"))
-    case JsonValidator.DuplicateKeyException(strNo, pos, key) =>
-      Some((strNo, pos, s"""duplicate key found in Json literal: "$key""""))
-    case JsonValidator.NonStringKeyException(strNo, pos) =>
-      Some((strNo, pos, s"""only Strings may be used as JSON object keys"""))
-  }
-  
-  override def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Json]]*)
-      (parser: c.Expr[Parser[String, JsonAst]]): c.Expr[Json] =
+  def parseSource(s: List[String], stringsUsed: List[Boolean]) =
+    try {
+      JsonValidator.validate(s, stringsUsed)
+      None
+    } catch {
+      case JsonValidator.ValidationException(strNo, pos, expected, found) =>
+        val f = if (found == '\u0000') "end of input" else s"'$found'"
+        Some((strNo, pos, s"failed to parse Json literal: expected $expected, but found $f"))
+      case JsonValidator.DuplicateKeyException(strNo, pos, key) =>
+        Some((strNo, pos, s"""duplicate key found in Json literal: "$key""""))
+      case JsonValidator.NonStringKeyException(strNo, pos) =>
+        Some((strNo, pos, s"""only Strings may be used as JSON object keys"""))
+    }
+
+  override def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Json]]*)(
+      parser: c.Expr[Parser[String, JsonAst]]): c.Expr[Json] =
     super.contextMacro(c)(exprs: _*)(parser)
 
 }
 
 private[json] object JsonBufferDataMacros extends DataContextMacros[JsonBuffer, JsonBufferAst] {
-  
+
   def companion(c: BlackboxContext): c.Expr[DataCompanion[JsonBuffer, JsonBufferAst]] =
     c.universe.reify(JsonBuffer)
 
-  def parseSource(s: List[String], stringsUsed: List[Boolean]) = try {
-    JsonValidator.validate(s, stringsUsed)
-    None
-  } catch {
-    case JsonValidator.ValidationException(strNo, pos, expected, found) =>
-      val f = if(found == '\u0000') "end of input" else s"'$found'"
-      Some((strNo, pos,
-          s"Failed to parse JsonBuffer literal: Expected $expected, but found $f."))
-  }
-  
-  override def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[JsonBuffer]]*)
-      (parser: c.Expr[Parser[String, JsonBufferAst]]): c.Expr[JsonBuffer] =
+  def parseSource(s: List[String], stringsUsed: List[Boolean]) =
+    try {
+      JsonValidator.validate(s, stringsUsed)
+      None
+    } catch {
+      case JsonValidator.ValidationException(strNo, pos, expected, found) =>
+        val f = if (found == '\u0000') "end of input" else s"'$found'"
+        Some((strNo, pos, s"Failed to parse JsonBuffer literal: Expected $expected, but found $f."))
+    }
+
+  override def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[JsonBuffer]]*)(
+      parser: c.Expr[Parser[String, JsonBufferAst]]): c.Expr[JsonBuffer] =
     super.contextMacro(c)(exprs: _*)(parser)
 }
 
@@ -71,17 +72,14 @@ private[json] object JsonBufferDataMacros extends DataContextMacros[JsonBuffer, 
   * from a JSON string. */
 private[json] class JsonStrings(sc: StringContext) {
   class JsonContext() extends DataContext(Json, sc) {
-    def apply(exprs: ForcedConversion[Json]*)(implicit parser: Parser[String, JsonAst]): Json =
-      macro JsonDataMacros.contextMacro
+    def apply(exprs: ForcedConversion[Json]*)(implicit parser: Parser[String, JsonAst]): Json = macro JsonDataMacros.contextMacro
   }
   val json = new JsonContext()
 }
 
 private[json] class JsonBufferStrings(sc: StringContext) {
   class JsonBufferContext() extends DataContext(JsonBuffer, sc) {
-    def apply(exprs: ForcedConversion[JsonBuffer]*)(implicit parser: Parser[String,
-        JsonBufferAst]): JsonBuffer =
-      macro JsonBufferDataMacros.contextMacro
+    def apply(exprs: ForcedConversion[JsonBuffer]*)(implicit parser: Parser[String, JsonBufferAst]): JsonBuffer = macro JsonBufferDataMacros.contextMacro
   }
   val jsonBuffer = new JsonBufferContext()
 }

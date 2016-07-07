@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core
 
@@ -24,36 +24,41 @@ import scala.reflect.ClassTag
 import scala.annotation.unchecked._
 
 object Result {
-  private[core] def apply[T, E <: Exception](result: => T, errors: Seq[(ClassTag[_], (String, Exception))]) = try {
-    if(errors.isEmpty) Answer[T, E](result) else Errata[T, E](errors)
-  } catch { case e: Throwable => if(errors.isEmpty) Unforeseen[T, E](e) else Errata[T, E](errors) }
+  private[core] def apply[T, E <: Exception](result: => T, errors: Seq[(ClassTag[_], (String, Exception))]) =
+    try {
+      if (errors.isEmpty) Answer[T, E](result) else Errata[T, E](errors)
+    } catch { case e: Throwable => if (errors.isEmpty) Unforeseen[T, E](e) else Errata[T, E](errors) }
 
   def apply[T](result: => T): Result[T, Nothing] =
-    try Answer[T, Nothing](result) catch { case e: Throwable => Unforeseen[T, Nothing](e) }
+    try Answer[T, Nothing](result)
+    catch { case e: Throwable => Unforeseen[T, Nothing](e) }
 
   def catching[E <: Exception]: Catching[E] = new Catching[E]()
 
   /** Construct an answer. */
-  def answer[T, E <: Exception](a : T): Result[T, E] = Answer[T, E](a)
+  def answer[T, E <: Exception](a: T): Result[T, E] = Answer[T, E](a)
 
   /** Construct an errata. */
-  def errata[T, E <: Exception](e : E)(implicit cte : ClassTag[E]) = Errata[T, E](e)
+  def errata[T, E <: Exception](e: E)(implicit cte: ClassTag[E]) = Errata[T, E](e)
 
 }
 
 class Catching[E <: Exception]() {
-  def apply[T](blk: => T)(implicit classTag: ClassTag[E]): Result[T, E] = try Answer(blk) catch {
-    case e: E => Errata(Vector((?[ClassTag[E]], ("", e))))
-    case e: Throwable => Unforeseen(e)
-  }
+  def apply[T](blk: => T)(implicit classTag: ClassTag[E]): Result[T, E] =
+    try Answer(blk)
+    catch {
+      case e: E => Errata(Vector((?[ClassTag[E]], ("", e))))
+      case e: Throwable => Unforeseen(e)
+    }
 }
 
-sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[(ClassTag[_], (String, Exception))],
-    val unforeseen: Option[Throwable] = None) {
- 
+sealed abstract class Result[+T, E <: Exception](val answer: T,
+                                                 val errors: Seq[(ClassTag[_], (String, Exception))],
+                                                 val unforeseen: Option[Throwable] = None) {
+
   def errata[E2 >: E: ClassTag]: Seq[E2] =
     errors.filter(_._1 == ?[ClassTag[E2]]).map(_._2.asInstanceOf[E2])
- 
+
   def exceptions: Seq[Exception] = errors.map(_._2._2)
 
   def get: T = {
@@ -132,14 +137,15 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     }
 
   /** Return a collection containing -- if the result was successful -- the answer. */
-  def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, T, Col[T @uncheckedVariance]]): Col[T @uncheckedVariance] = this match {
-    case Answer(ans) =>
-      val builder = cbf()
-      builder += ans
-      builder.result
-    case _ =>
-      cbf().result
-  }
+  def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, T, Col[T @uncheckedVariance]]): Col[T @uncheckedVariance] =
+    this match {
+      case Answer(ans) =>
+        val builder = cbf()
+        builder += ans
+        builder.result
+      case _ =>
+        cbf().result
+    }
 
   /** Return `None` or a `Some` of the answer. Useful to sweep errors under the carpet. */
   def toOption: Option[T] =
@@ -180,10 +186,11 @@ sealed abstract class Result[+T, E <: Exception](val answer: T, val errors: Seq[
     this match {
       case Answer(b) =>
         val t = this.get
-        if(p(b))
+        if (p(b))
           Answer(t)
         else
-          Errata[T, E with NotMatchingFilter](Seq((implicitly[ClassTag[NotMatchingFilter]], ("", NotMatchingFilter(t)))))
+          Errata[T, E with NotMatchingFilter](
+              Seq((implicitly[ClassTag[NotMatchingFilter]], ("", NotMatchingFilter(t)))))
       case Errata(e) => Errata[T, E with NotMatchingFilter](e)
       case Unforeseen(e) => Unforeseen[T, E with NotMatchingFilter](e)
     }
@@ -197,7 +204,8 @@ object Resolved {
   def unapply[T, E <: Exception](res: Result[T, E]): Option[(T, Option[Throwable])] =
     Some(res.answer -> res.unforeseen)
 
-  def apply[T, E <: Exception](answer: T, unforeseen: Option[E]) = if(unforeseen.isEmpty) Answer(answer) else Unforeseen(unforeseen.get)
+  def apply[T, E <: Exception](answer: T, unforeseen: Option[E]) =
+    if (unforeseen.isEmpty) Answer(answer) else Unforeseen(unforeseen.get)
 }
 sealed abstract class Resolved[+T, E <: Exception](answer: T, unforeseen: Option[Throwable])
     extends Result[T, E](answer, Seq(), unforeseen) {
@@ -213,15 +221,16 @@ sealed abstract class Resolved[+T, E <: Exception](answer: T, unforeseen: Option
 
 case class Answer[T, E <: Exception](override val answer: T) extends Resolved[T, E](answer, None)
 
-case class Errata[T, E <: Exception](override val errors: Seq[(ClassTag[_], (String, Exception))]) extends
-    Result[T, E](null.asInstanceOf[T], errors) {
-  override def toString = "Errata(\n  "+ errors.map { case (t, (p, e)) => s"$t: ${e.getMessage} [$p]" }.mkString(",\n  ") +"\n)"
+case class Errata[T, E <: Exception](override val errors: Seq[(ClassTag[_], (String, Exception))])
+    extends Result[T, E](null.asInstanceOf[T], errors) {
+  override def toString =
+    "Errata(\n  " + errors.map { case (t, (p, e)) => s"$t: ${e.getMessage} [$p]" }.mkString(",\n  ") + "\n)"
 }
 
 object Errata {
 
-  def apply[T, E <: Exception](e: => E)
-      (implicit classTag: ClassTag[E]): Result[T, E] = Errata(Vector((?[ClassTag[E]], ("", e))))
+  def apply[T, E <: Exception](e: => E)(implicit classTag: ClassTag[E]): Result[T, E] =
+    Errata(Vector((?[ClassTag[E]], ("", e))))
 }
 
 case class Unforeseen[T, E <: Exception](e: Throwable) extends Resolved[T, E](null.asInstanceOf[T], Some(e))
@@ -230,7 +239,7 @@ case class AbortException() extends Exception
 
 private[core] class ReturnResultMode[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+R, E <: Exception] = Result[R, E]
-  
+
   def wrap[R, E <: Exception](blk: => R): Result[R, E] = {
     try {
       val res = blk
@@ -239,7 +248,7 @@ private[core] class ReturnResultMode[+Group <: MethodConstraint] extends Mode[Gr
       case AbortException() =>
         Result[R, E](null.asInstanceOf[R], accumulated)
       case e: Throwable =>
-        if(accumulated.isEmpty) Unforeseen[R, E](e)
+        if (accumulated.isEmpty) Unforeseen[R, E](e)
         else Errata(accumulated)
     }
   }
@@ -247,25 +256,27 @@ private[core] class ReturnResultMode[+Group <: MethodConstraint] extends Mode[Gr
   private var accumulated: Vector[(ClassTag[_], (String, Exception))] = Vector()
   override def exception[T, E <: Exception: ClassTag](e: E, continue: Boolean = true): T = {
     accumulated :+= ((?[ClassTag[E]], (callPath, e)))
-    if(continue) null.asInstanceOf[T] else throw AbortException()
+    if (continue) null.asInstanceOf[T] else throw AbortException()
   }
 
-  override def catching[E <: Exception: ClassTag, T](blk: => T) = try blk catch {
-    case e: E => 
-      exception(e)
-    case e: Exception => 
-      throw e
-  }  
+  override def catching[E <: Exception: ClassTag, T](blk: => T) =
+    try blk
+    catch {
+      case e: E =>
+        exception(e)
+      case e: Exception =>
+        throw e
+    }
 
   override def flatWrap[R, E <: Exception: ClassTag](blk: => Wrap[R, E]): Wrap[R, E] = blk
-  
+
   def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value match {
     case Answer(a) => a
     case Errata(xs) => null.asInstanceOf[Return]
     case Unforeseen(e) => throw e
     case _ => ???
   }
-  
+
   override def toString = "[modes.returnResult]"
 }
 
@@ -274,6 +285,4 @@ case class EachUnapplied[E]() {
   def apply[R](fn: E => R)(implicit classTag: ClassTag[E]): Each[E, R] = Each(fn, classTag)
 }
 
-case class NotMatchingFilter(value : Any) extends Exception(s"value '$value' did not match filter")
-
-
+case class NotMatchingFilter(value: Any) extends Exception(s"value '$value' did not match filter")

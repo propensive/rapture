@@ -13,8 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
-
+ */
 
 package rapture.uri
 
@@ -33,7 +32,7 @@ object `package` {
 
   implicit class EnrichedUriContext(uc: UriContext.type) {
     def classpath(constants: List[String])(variables: List[String]) =
-      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a+b }.mkString.split("/").to[Vector])
+      new ClasspathUrl(constants.zip(variables :+ "").map { case (a, b) => a + b }.mkString.split("/").to[Vector])
   }
 
   val $ : String = ""

@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.latex
 
@@ -46,9 +46,10 @@ package latexBackends {
       def process(latex: Latex, data: Seq[(String, Bytes)], mode: Mode[_], tmp: TemporaryStorage): PdfFile = {
         val dir = tmp.file / Guid.generate()()
         dir.mkdir()
-        data.foreach { case (name, bytes) =>
-          val f = dir / name
-          bytes.copyTo(f)
+        data.foreach {
+          case (name, bytes) =>
+            val f = dir / name
+            bytes.copyTo(f)
         }
         val file = dir / "document.tex"
         implicit val env: Environment = new Environment {
@@ -60,14 +61,14 @@ package latexBackends {
         val cmd = sh"/usr/bin/xelatex -interaction nonstopmode ${file}"
         val output = cmd.exec[Iterator[String]]
 
-        while(output.hasNext) {
+        while (output.hasNext) {
           var next = output.next()
-          if(next startsWith "! ") {
-            val msg = next.drop(if(next.startsWith("! LaTeX Error: ")) 15 else 2)
+          if (next startsWith "! ") {
+            val msg = next.drop(if (next.startsWith("! LaTeX Error: ")) 15 else 2)
             val content = new StringBuilder()
-            while(output.hasNext && !next.startsWith("l.")) {
+            while (output.hasNext && !next.startsWith("l.")) {
               next = output.next()
-              if(!next.startsWith("l.")) content.append(s"$next\n")
+              if (!next.startsWith("l.")) content.append(s"$next\n")
               else {
                 val line = next.drop(2).takeWhile(_ != ' ').toInt
                 mode.exception(LatexException(msg, line, content.toString.trim))
@@ -84,7 +85,7 @@ package latexBackends {
 
 object Latex {
   def escape(string: String): String = string.flatMap {
-    case c@('#' | '$' | '%' | '&' | '_' | '{' | '}') => s"\\$c"
+    case c @ ('#' | '$' | '%' | '&' | '_' | '{' | '}') => s"\\$c"
     case '\\' => "\\textbackslash{}"
     case '\n' => " \\\\\n"
     case '^' => "\\textasciicircum{}"
@@ -101,8 +102,9 @@ case class LatexException(msg: String, line: Int, content: String) extends Excep
 
 case class Latex(content: String) {
 
-  def generate(data: (String, Bytes)*)(implicit backend: LatexBackend, mode: Mode[`Latex#generate`],
-      tmp: TemporaryStorage): mode.Wrap[PdfFile, LatexException] =
+  def generate(data: (String, Bytes)*)(implicit backend: LatexBackend,
+                                       mode: Mode[`Latex#generate`],
+                                       tmp: TemporaryStorage): mode.Wrap[PdfFile, LatexException] =
     mode.wrap { backend.process(this, data, mode, tmp) }
 }
 
@@ -112,11 +114,11 @@ object Latexable {
   implicit val stringLatexable: Latexable[String] = new Latexable[String] {
     def toLatex(s: String) = Latex.escape(s)
   }
-  
+
   implicit val latexLatexable: Latexable[Latex] = new Latexable[Latex] {
     def toLatex(latex: Latex) = latex.content
   }
-  
+
   implicit def seqLatexable[T: Latexable]: Latexable[Seq[T]] = new Latexable[Seq[T]] {
     def toLatex(seq: Seq[T]) = seq.map(?[Latexable[T]].toLatex(_)).mkString
   }
@@ -126,7 +128,7 @@ trait Latexable[-T] { def toLatex(t: T): String }
 
 case class LatexStringContext(sc: StringContext) {
   def latex(variables: Annex[Latexable]*)(implicit process: TextProcess) =
-    Latex(process(sc.parts.zip(variables.map(_(_.toLatex))).map { case (a, b) => a+b }.mkString + sc.parts.last))
+    Latex(process(sc.parts.zip(variables.map(_ (_.toLatex))).map { case (a, b) => a + b }.mkString + sc.parts.last))
 }
 
 object `package` {

@@ -13,24 +13,25 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.net
 import rapture.core._
-  
+
 /** Provides a typesafe list of network services mapping from port number to service name.  This
   * is based on [http://www.iana.org/assignments/port-numbers] and
   * [http://www.freebsd.org/cgi/cvsweb.cgi/src/etc/services] */
 object services {
   object tcp {
 
-    private lazy val serviceNames: Map[String, Port] =
-      enumerateMembers[Port](this).map { p => p.name -> p }.toMap
+    private lazy val serviceNames: Map[String, Port] = enumerateMembers[Port](this).map { p =>
+      p.name -> p
+    }.toMap
 
     def apply(name: String) = serviceNames(name)
 
     case class Port(portNo: Int)(implicit assigned: AssignedName) { def name = assigned.name }
-    
+
     val tcpmux = Port(1)
     val compressnet = Port(2)
     val compressnet2 = Port(3)

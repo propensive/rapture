@@ -13,32 +13,33 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json
 
 private[json] object JsonValidator {
 
-  case class ValidationException(strNo: Int, pos: Int, expected: String, found: Char)
-      extends Exception
-  
+  case class ValidationException(strNo: Int, pos: Int, expected: String, found: Char) extends Exception
+
   case class DuplicateKeyException(strNo: Int, pos: Int, key: String) extends Exception
-  
+
   case class NonStringKeyException(strNo: Int, pos: Int) extends Exception
 
   def validate(parts: List[String], stringsUsed: List[Boolean]) = {
     var i = 0
     var n = 0
     def s = parts(n)
-    def cur = if(i >= s.length) '\u0000' else s(i)
+    def cur = if (i >= s.length) '\u0000' else s(i)
 
     def fail(expected: String) = throw ValidationException(n, i, expected, cur)
     def failPosition(expected: String) = throw ValidationException(n, i, expected, cur)
     def duplicateKey(start: Int, key: String) = throw DuplicateKeyException(n, start, key)
-    
-    def takeWhitespace(): Unit = while(cur.isWhitespace) next()
 
-    def consume(cs: Char*): Unit = cs foreach { c => if(cur == c) next() else fail(s"'$c'") }
+    def takeWhitespace(): Unit = while (cur.isWhitespace) next()
+
+    def consume(cs: Char*): Unit = cs foreach { c =>
+      if (cur == c) next() else fail(s"'$c'")
+    }
 
     def next() = i += 1
 
@@ -51,7 +52,7 @@ private[json] object JsonValidator {
       case 'f' => takeFalse()
       case 'n' => takeNull()
       case '\u0000' =>
-        if(n + 1 < parts.length) {
+        if (n + 1 < parts.length) {
           n += 1
           i = 0
         } else fail("new token or interpolated value")
@@ -63,23 +64,23 @@ private[json] object JsonValidator {
     def takeNull() = consume('n', 'u', 'l', 'l')
 
     def takeNumber() = {
-      if(cur == '-') next()
-      
-      if(cur == '0') next()
-      else if(cur.isDigit) while(cur.isDigit) next()
+      if (cur == '-') next()
+
+      if (cur == '0') next()
+      else if (cur.isDigit) while (cur.isDigit) next()
       else fail("digit")
-      
-      if(cur == '.') {
+
+      if (cur == '.') {
         next()
-        if(cur.isDigit) next() else fail("digit")
-        while(cur.isDigit) next()
+        if (cur.isDigit) next() else fail("digit")
+        while (cur.isDigit) next()
       }
-      
-      if(cur == 'e' || cur == 'E') {
+
+      if (cur == 'e' || cur == 'E') {
         next()
-        if(cur == '+' || cur == '-') next()
-        if(cur.isDigit) next() else fail("digit")
-        while(cur.isDigit) next()
+        if (cur == '+' || cur == '-') next()
+        if (cur.isDigit) next() else fail("digit")
+        while (cur.isDigit) next()
       }
     }
 
@@ -89,15 +90,15 @@ private[json] object JsonValidator {
         val start = i
         cur match {
           case '\u0000' =>
-            if(n + 1 < parts.length) {
-              if(!stringsUsed(n)) throw new NonStringKeyException(n, i)
+            if (n + 1 < parts.length) {
+              if (!stringsUsed(n)) throw new NonStringKeyException(n, i)
               n += 1
               i = 0
             } else fail("new token or interpolated value")
           case '"' =>
             takeString()
             val key = s.substring(start + 1, i - 1)
-            if(seen contains key) duplicateKey(start, key) else seen += key
+            if (seen contains key) duplicateKey(start, key) else seen += key
         }
         takeWhitespace()
         cur match {
@@ -150,7 +151,7 @@ private[json] object JsonValidator {
 
     def takeString(): Unit = {
       consume('"')
-      while(cur != '"') cur match {
+      while (cur != '"') cur match {
         case '\\' =>
           consume('\\')
           cur match {
@@ -158,7 +159,7 @@ private[json] object JsonValidator {
             case 'u' =>
               consume('u')
               1 to 4 foreach { j =>
-                if(cur.isDigit || cur >= 'a' && cur <= 'f' || cur >= 'A' && cur <= 'F') next()
+                if (cur.isDigit || cur >= 'a' && cur <= 'f' || cur >= 'A' && cur <= 'F') next()
                 else fail("hexadecimal digit")
               }
           }
@@ -171,6 +172,6 @@ private[json] object JsonValidator {
     takeWhitespace()
     takeValue()
     takeWhitespace()
-    if(i != s.length) fail("end of data")
+    if (i != s.length) fail("end of data")
   }
 }

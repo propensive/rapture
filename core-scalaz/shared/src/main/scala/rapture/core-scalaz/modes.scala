@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core.scalazInterop
 
@@ -32,13 +32,17 @@ class ReturnTasks[+Group <: MethodConstraint](implicit pool: ExecutorService) ex
 
 class ReturnValidation[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+T, E <: Exception] = Validation[E, T]
-  def wrap[T, E <: Exception](t: => T): Validation[E, T] = try Success(t) catch { case e: E => Failure(e) }
+  def wrap[T, E <: Exception](t: => T): Validation[E, T] =
+    try Success(t)
+    catch { case e: E => Failure(e) }
   def unwrap[T](t: => Validation[_ <: Exception, T]): T = t.valueOr { throw _ }
 }
 
 class ReturnDisjunction[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+T, E <: Exception] = \/[E, T]
-  def wrap[T, E <: Exception](t: => T): \/[E, T] = try \/-(t) catch { case e: E => -\/(e) }
+  def wrap[T, E <: Exception](t: => T): \/[E, T] =
+    try \/-(t)
+    catch { case e: E => -\/(e) }
   def unwrap[T](t: => \/[_ <: Exception, T]): T = t.valueOr { throw _ }
 }
 
@@ -46,7 +50,6 @@ class ScalazExplicits[+T, E <: Exception](explicit: modes.Explicitly[T, E]) {
   def task(implicit pool: ExecutorService): Task[T] = returnTasks.wrap(explicit.get)
   def validation: Validation[E, T] = returnValidations.wrap(explicit.get)
 }
-
 
 object `package` {
 

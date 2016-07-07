@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core
 
@@ -56,8 +56,7 @@ class ClassLoader(val javaClassLoader: JClassLoader) {
 }
 
 object Thread {
-  def fork(threadName: String, daemon: Boolean = false)(blk: => Unit)
-      (implicit cl: ClassLoader): Thread =
+  def fork(threadName: String, daemon: Boolean = false)(blk: => Unit)(implicit cl: ClassLoader): Thread =
     ThreadSpec(threadName, daemon)(blk).spawn()
 
   def sleep[D: TimeSystem.ByDuration](duration: D) =
@@ -65,8 +64,7 @@ object Thread {
 
 }
 
-case class ThreadSpec(name: String, daemon: Boolean = false)(blk: => Unit)
-    (implicit cl: ClassLoader) {
+case class ThreadSpec(name: String, daemon: Boolean = false)(blk: => Unit)(implicit cl: ClassLoader) {
 
   def spawn(): Thread = {
     val parentThread = JThread.currentThread
@@ -79,7 +77,7 @@ case class ThreadSpec(name: String, daemon: Boolean = false)(blk: => Unit)
     javaThread.setDaemon(daemon)
     javaThread.setContextClassLoader(cl.javaClassLoader)
     javaThread.start()
-    
+
     new Thread(this, javaThread) {
       def parentAlive = javaThread.isAlive
     }

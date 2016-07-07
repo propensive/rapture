@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json.jsonBackends.lift
 
@@ -24,21 +24,15 @@ import net.liftweb.json._
 import JsonAST._
 
 private[lift] trait Extractors {
-  implicit val liftJValueExtractor: JsonCastExtractor[JValue] =
-    JsonCastExtractor(LiftAst, DataTypes.Any)
-  
-  implicit val liftJStringExtractor: JsonCastExtractor[JString] =
-    JsonCastExtractor(LiftAst, DataTypes.String)
-  
-  implicit val liftJIntExtractor: JsonCastExtractor[JInt] =
-    JsonCastExtractor(LiftAst, DataTypes.Number)
-  
-  implicit val liftJDoubleExtractor: JsonCastExtractor[JDouble] =
-    JsonCastExtractor(LiftAst, DataTypes.Number)
-  
-  implicit val liftJArrayExtractor: JsonCastExtractor[JArray] =
-    JsonCastExtractor(LiftAst, DataTypes.Array)
-  
-  implicit val liftJObjectExtractor: JsonCastExtractor[JObject] =
-    JsonCastExtractor(LiftAst, DataTypes.Object)
+  implicit val liftJValueExtractor: JsonCastExtractor[JValue] = JsonCastExtractor(LiftAst, DataTypes.Any)
+
+  implicit val liftJStringExtractor: JsonCastExtractor[JString] = JsonCastExtractor(LiftAst, DataTypes.String)
+
+  implicit val liftJIntExtractor: JsonCastExtractor[JInt] = JsonCastExtractor(LiftAst, DataTypes.Number)
+
+  implicit val liftJDoubleExtractor: JsonCastExtractor[JDouble] = JsonCastExtractor(LiftAst, DataTypes.Number)
+
+  implicit val liftJArrayExtractor: JsonCastExtractor[JArray] = JsonCastExtractor(LiftAst, DataTypes.Array)
+
+  implicit val liftJObjectExtractor: JsonCastExtractor[JObject] = JsonCastExtractor(LiftAst, DataTypes.Object)
 }

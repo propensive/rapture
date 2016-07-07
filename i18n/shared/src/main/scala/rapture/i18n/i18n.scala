@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.i18n
 
@@ -58,8 +58,8 @@ class LocaleParser[L <: Language](val locales: Map[String, Locale[_ >: L <: Lang
 
 object I18n {
 
-  implicit def upcast[ToLang <: Language, FromLang <: Language](from: I18n[String, FromLang]): I18n[String, ToLang] =
-    macro Macros.missingTranslationsMacro[ToLang, FromLang]
+  implicit def upcast[ToLang <: Language, FromLang <: Language](from: I18n[String, FromLang]): I18n[String, ToLang] = macro Macros
+    .missingTranslationsMacro[ToLang, FromLang]
 
   implicit def convertToType[T, L <: Language, L2 >: L <: Language: DefaultLanguage](i18n: I18n[T, L]): T =
     i18n.map(implicitly[DefaultLanguage[L2]].tag)
@@ -78,8 +78,9 @@ private[i18n] object RequireLanguage { implicit def requireLanguage: RequireLang
 class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
   def apply[Lang >: Languages](implicit ct: ClassTag[Lang]): T = map(ct)
 
-  final def &[L >: Languages <: Language, Lang2 <: L](s2: I18n[T, Lang2])(implicit ev: RequireLanguage[L]):
-      I18n[T, Languages with Lang2] = new I18n[T, Languages with Lang2](map ++ s2.map)
+  final def &[L >: Languages <: Language, Lang2 <: L](s2: I18n[T, Lang2])(
+      implicit ev: RequireLanguage[L]): I18n[T, Languages with Lang2] =
+    new I18n[T, Languages with Lang2](map ++ s2.map)
 
   override def toString = {
     val langs = map.keys.map(_.runtimeClass.getName.takeRight(2).toLowerCase).mkString("&")

@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.text
 
@@ -30,7 +30,9 @@ object unindent {
     def apply(s: String): String = {
       val lines = s.split("\n").dropWhile(_.isEmpty)
       val indent = lines.headOption.getOrElse("").indexWhere(_ != ' ')
-      lines.map { ln => if(ln.take(indent).forall(_ == ' ')) ln.drop(indent) else ln.dropWhile(_ == ' ') }.mkString("\n")
+      lines.map { ln =>
+        if (ln.take(indent).forall(_ == ' ')) ln.drop(indent) else ln.dropWhile(_ == ' ')
+      }.mkString("\n")
     }
   }
 }

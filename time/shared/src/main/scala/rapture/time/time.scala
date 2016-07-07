@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.time
 
@@ -25,7 +25,7 @@ import java.text.SimpleDateFormat
 object dateFormats {
   object shortUs { implicit val implicitDateFormat = DateFormat("MM/dd/yy") }
   object shortEuropean { implicit val implicitDateFormat = DateFormat("dd/MM/yy") }
-  object longUs { implicit val implicitDateFormat =  DateFormat("MMMM d, yyyy") }
+  object longUs { implicit val implicitDateFormat = DateFormat("MMMM d, yyyy") }
   object longEuropean { implicit val implicitDateFormat = DateFormat("d MMMM yyyy") }
 }
 
@@ -41,7 +41,7 @@ case class DateFormat(pattern: String) {
     c.setTimeInMillis(d.toLong)
     new SimpleDateFormat(pattern).format(c.getTime)
   }
-    
+
   def format(dt: DateTime): String = {
     val c = Calendar.getInstance
     c.setTimeInMillis(dt.toLong)
@@ -57,7 +57,6 @@ case class TimeFormat(pattern: String) {
   }
 }
 
-
 object Date {
   def unapply(n: Long) = {
     val c = Calendar.getInstance
@@ -68,25 +67,24 @@ object Date {
 
 object DateTime {
   def unapply(n: Long) = {
-   val Date(date) = n
+    val Date(date) = n
     val c = Calendar.getInstance
     c.setTimeInMillis(n)
-    
-    Some(DateTime(date, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE),
-        c.get(Calendar.SECOND)))
+
+    Some(DateTime(date, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND)))
   }
 }
-  
+
 object Time {
   def apply(hours: Int): Time = Time(hours, 0, 0)
   def apply(hours: Int, minutes: Int): Time = Time(hours, minutes, 0)
 }
 
 object `package` {
-  
-  def monthString(n: Int) = List("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-      "Oct", "Nov", "Dec")(n - 1)
-  
+
+  def monthString(n: Int) =
+    List("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")(n - 1)
+
   val Jan = Month(1)
   val Feb = Month(2)
   val Mar = Month(3)
@@ -110,18 +108,18 @@ object `package` {
   }
 
   implicit val dateOrder = new Ordering[Date] {
-    def compare(d1: Date, d2: Date) = if(d1 < d2) -1 else if(d2 == d1) 0 else 1
+    def compare(d1: Date, d2: Date) = if (d1 < d2) -1 else if (d2 == d1) 0 else 1
   }
 
   implicit val dateTimeOrder = new Ordering[DateTime] {
-    def compare(d1: DateTime, d2: DateTime) = if(d1 < d2) -1 else if(d2 == d1) 0 else 1
+    def compare(d1: DateTime, d2: DateTime) = if (d1 < d2) -1 else if (d2 == d1) 0 else 1
   }
 
   def now() = DateTime.unapply(System.currentTimeMillis).get
 
   implicit class IntoMonth(d: Int) {
     def -(m: Month) = new IntoDay(m)
-    
+
     class IntoDay(m: Month) {
       def -(y: Int) = Date(y, m.no, d)
     }
@@ -132,7 +130,7 @@ case class Time(hours: Int, minutes: Int, seconds: Int)
 case class Date(year: Int, month: Int, day: Int) { date =>
 
   override def toString() =
-    day+"-"+monthString(month)+"-"+year
+    day + "-" + monthString(month) + "-" + year
 
   def +(n: Int) = Date.unapply(n + toLong).get
   def -(n: Int) = Date.unapply(toLong - n).get
@@ -150,7 +148,7 @@ case class Date(year: Int, month: Int, day: Int) { date =>
     c.set(Calendar.DATE, day)
     c.getTimeInMillis
   }
-   
+
   def at(time: Time) = DateTime(date, time.hours, time.minutes, time.seconds)
 
   def at(hours: Int) = new {
@@ -158,7 +156,7 @@ case class Date(year: Int, month: Int, day: Int) { date =>
       def m(seconds: Int) = DateTime(date, hours, minutes, seconds)
     }
   }
-    
+
   def >(that: Date): Boolean = toLong > that.toLong
   def <(that: Date): Boolean = toLong < that.toLong
   def >=(that: Date): Boolean = toLong >= that.toLong
@@ -168,15 +166,15 @@ case class Date(year: Int, month: Int, day: Int) { date =>
 }
 
 case class DateTime(date: Date, hour: Int, minute: Int, second: Int) {
-    
-  def pad(n: Int) = if(n < 10) "0"+n else n
+
+  def pad(n: Int) = if (n < 10) "0" + n else n
 
   def +(n: Int) = DateTime.unapply(n + toLong).get
   def -(n: Int) = DateTime.unapply(toLong - n).get
   def -(d: DateTime): Long = toLong - d.toLong
 
   override def toString() =
-    date.toString+" "+pad(hour)+":"+pad(minute)+":"+pad(second)
+    date.toString + " " + pad(hour) + ":" + pad(minute) + ":" + pad(second)
 
   override def equals(that: Any): Boolean = that match {
     case that: Date => toLong == that.toLong
@@ -200,10 +198,9 @@ case class DateTime(date: Date, hour: Int, minute: Int, second: Int) {
     c.set(Calendar.SECOND, second)
     c.getTimeInMillis
   }
-    
+
   def format(implicit dateFormat: DateFormat, timeFormat: TimeFormat) =
-    dateFormat.format(this)+" "+timeFormat.format(this)
+    dateFormat.format(this) + " " + timeFormat.format(this)
 }
 
 case class Month(no: Int)
-

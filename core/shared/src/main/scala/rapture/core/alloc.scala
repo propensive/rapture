@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.core
 
@@ -26,8 +26,10 @@ class AllocApply[T](val unit: Int) extends AnyVal {
   def apply()(implicit inst: Alloc0.Invariant[T]): T = inst.instantiate()
   def apply[P1](p1: P1)(implicit inst: Alloc1.Invariant[T, P1]): T = inst.instantiate(p1)
   def apply[P1, P2](p1: P1, p2: P2)(implicit inst: Alloc2.Invariant[T, P1, P2]): T = inst.instantiate(p1, p2)
-  def apply[P1, P2, P3](p1: P1, p2: P2, p3: P3)(implicit inst: Alloc3.Invariant[T, P1, P2, P3]): T = inst.instantiate(p1, p2, p3)
-  def apply[P1, P2, P3, P4](p1: P1, p2: P2, p3: P3, p4: P4)(implicit inst: Alloc4.Invariant[T, P1, P2, P3, P4]): T = inst.instantiate(p1, p2, p3, p4)
+  def apply[P1, P2, P3](p1: P1, p2: P2, p3: P3)(implicit inst: Alloc3.Invariant[T, P1, P2, P3]): T =
+    inst.instantiate(p1, p2, p3)
+  def apply[P1, P2, P3, P4](p1: P1, p2: P2, p3: P3, p4: P4)(implicit inst: Alloc4.Invariant[T, P1, P2, P3, P4]): T =
+    inst.instantiate(p1, p2, p3, p4)
 }
 
 object Alloc0 {

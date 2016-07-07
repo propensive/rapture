@@ -13,7 +13,7 @@
   Unless required by applicable law or agreed to in writing, software distributed under the License is
   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package rapture.json
 
@@ -24,13 +24,13 @@ import language.higherKinds
 
 private[json] case class DirectJsonSerializer[T](ast: JsonAst)
 
-private[json] case class BasicJsonSerializer[T](serialization: T => Any)
-    extends Serializer[T, Json] { def serialize(t: T): Any = serialization(t) }
+private[json] case class BasicJsonSerializer[T](serialization: T => Any) extends Serializer[T, Json] {
+  def serialize(t: T): Any = serialization(t)
+}
 
 private[json] trait Serializers extends Serializers_1 {
 
-  implicit def jsonBufferSerializer[T](implicit ser: Serializer[T, Json]):
-      Serializer[T, JsonBuffer] =
+  implicit def jsonBufferSerializer[T](implicit ser: Serializer[T, Json]): Serializer[T, JsonBuffer] =
     new Serializer[T, JsonBuffer] { def serialize(t: T): Any = ser.serialize(t) }
 
   implicit def intSerializer(implicit ast: JsonAst): Serializer[Int, Json] =
@@ -66,35 +66,37 @@ private[json] trait Serializers extends Serializers_1 {
   implicit def nilSerializer(implicit ast: JsonAst): Serializer[Nil.type, Json] =
     BasicJsonSerializer(v => ast fromArray Nil)
 
-  implicit def traversableSerializer[Type, Coll[T] <: Traversable[T]]
-      (implicit ast: JsonAst, ser: Serializer[Type, Json]): Serializer[Coll[Type], Json] =
+  implicit def traversableSerializer[Type, Coll[T] <: Traversable[T]](
+      implicit ast: JsonAst,
+      ser: Serializer[Type, Json]): Serializer[Coll[Type], Json] =
     BasicJsonSerializer(ast fromArray _.map(ser.serialize).to[List])
 
-  implicit def optionSerializer[Type]
-      (implicit ast: JsonAst, ser: Serializer[Type, Json]): Serializer[Option[Type], Json] =
+  implicit def optionSerializer[Type](implicit ast: JsonAst,
+                                      ser: Serializer[Type, Json]): Serializer[Option[Type], Json] =
     BasicJsonSerializer(_ map ser.serialize getOrElse ast.nullValue)
 
-  implicit def mapSerializer[K, Type, Ast <: JsonAst]
-      (implicit ast: Ast, ser: Serializer[Type, Json], ser2: StringSerializer[K]): Serializer[Map[K, Type], Json] =
+  implicit def mapSerializer[K, Type, Ast <: JsonAst](implicit ast: Ast,
+                                                      ser: Serializer[Type, Json],
+                                                      ser2: StringSerializer[K]): Serializer[Map[K, Type], Json] =
     new Serializer[Map[K, Type], Json] {
       def serialize(m: Map[K, Type]) =
-        ast.fromObject(m.map { case (k, v) =>
-	  ser2.serialize(k) -> ser.serialize(v)
-	})
+        ast.fromObject(m.map {
+          case (k, v) =>
+            ser2.serialize(k) -> ser.serialize(v)
+        })
     }
 
-  implicit def directJsonSerializer[T: DirectJsonSerializer](implicit ast: JsonAst):
-      Serializer[T, Json] =
-    BasicJsonSerializer(obj => jsonSerializer.serialize(Json.construct(MutableCell(obj),
-        Vector())(?[DirectJsonSerializer[T]].ast)))
+  implicit def directJsonSerializer[T: DirectJsonSerializer](implicit ast: JsonAst): Serializer[T, Json] =
+    BasicJsonSerializer(
+        obj => jsonSerializer.serialize(Json.construct(MutableCell(obj), Vector())(?[DirectJsonSerializer[T]].ast)))
 
-  implicit def jsonSerializer[JsonType <: JsonDataType[JsonType, _ <: JsonAst]]
-      (implicit ast: JsonAst): Serializer[JsonType, Json] =
+  implicit def jsonSerializer[JsonType <: JsonDataType[JsonType, _ <: JsonAst]](
+      implicit ast: JsonAst): Serializer[JsonType, Json] =
     BasicJsonSerializer[JsonType]({ j =>
-      if(j.$ast == ast) j.$normalize else ast.convert(j.$normalize, j.$ast)
+      if (j.$ast == ast) j.$normalize else ast.convert(j.$normalize, j.$ast)
     })
 }
-  
+
 trait Serializers_1 {
   implicit def generalStringSerializer[S](implicit ast: JsonAst, ss: StringSerializer[S]): Serializer[S, Json] =
     BasicJsonSerializer(s => ast fromString ss.serialize(s))
