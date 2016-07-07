@@ -131,6 +131,8 @@ class Json(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vect
     new Json(MutableCell(any), path)
   
   def $deref(path: Vector[Either[Int, String]]): Json = new Json($root, path)
+  
+  def applyDynamic(key: String)(i: Int = 0): Json = $deref(Left(i) +: Right(key) +: $path)
 
   def $extract(sp: Vector[Either[Int, String]]): Json =
     if(sp.isEmpty) this else sp match {

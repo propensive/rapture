@@ -1,5 +1,6 @@
 package rapture.mail
 
+import rapture.base._
 import rapture.core._
 import rapture.io._
 import rapture.fs._
@@ -16,7 +17,7 @@ import java.net.URL
 
 object Macros {
 
-  def mailtoMacro(c: whitebox.Context)(constants: c.Expr[List[String]])(variables: c.Expr[List[String]]): c.Expr[MailtoUri] = {
+  def mailtoMacro(c: WhiteboxContext)(constants: c.Expr[List[String]])(variables: c.Expr[List[String]]): c.Expr[MailtoUri] = {
     import c.universe._
     
     reify {

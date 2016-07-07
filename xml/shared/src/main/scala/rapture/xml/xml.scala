@@ -63,7 +63,33 @@ object XmlBuffer extends XmlDataCompanion[XmlBuffer, XmlBufferAst] {
 /** Companion object to the `Xml` type, providing factory and extractor methods, and a XML
   * pretty printer. */
 object Xml extends XmlDataCompanion[Xml, XmlAst] with Xml_1 {
-  
+
+  object DynamicApplied {
+    implicit def auto[L](k: L)(implicit dynApp: DynamicApply[L]): DynamicApplied[L, dynApp.Result] =
+      new DynamicApplied[L, dynApp.Result](dynApp, k) {
+        def apply(v: Xml): dynApp.Result = dynApp(v, k)
+      }
+  }
+
+  abstract class DynamicApplied[L, R](val dynApp: DynamicApply[L] { type Result = R }, key: L) {
+    def apply(v: Xml): R
+  }
+
+  abstract class DynamicApply[L] {
+    type Result
+    def apply(v: Xml, k: L): Result
+  }
+
+  implicit val applyInt: DynamicApply[Int] { type Result = Xml } = new DynamicApply[Int] {
+    type Result = Xml
+    def apply(v: Xml, k: Int): Xml = v.$deref(Left(k) +: v.$path)
+  }
+
+  implicit val applySymbol: DynamicApply[Symbol] { type Result = XmlAttribute } = new DynamicApply[Symbol] {
+    type Result = XmlAttribute
+    def apply(v: Xml, k: Symbol): XmlAttribute = v.$attribute(k)
+  }
+
   def construct(any: MutableCell, path: Vector[Either[Int, String]])(implicit ast:
       XmlAst): Xml = new Xml(any, path)
 
@@ -94,10 +120,24 @@ object Xml extends XmlDataCompanion[Xml, XmlAst] with Xml_1 {
 
 }
 
+case class XmlAttribute(key: String, value: String) {
+  def as[T: StringParser]: T = implicitly[StringParser[T]].parse(value, modes.throwExceptions())
+  def is[T: StringParser]: Boolean = try {
+    as[T]
+    true
+  } catch { case e: Exception => false }
+
+  override def toString = s"""$key="$value""""
+}
+
 /** Represents some parsed XML. */
 class Xml(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vector())(implicit
     val $ast: XmlAst) extends XmlDataType[Xml, XmlAst] with DynamicData[Xml, XmlAst] {
-  
+
+  def apply(attribute: Symbol): XmlAttribute = $attribute(attribute)
+  def $attribute(attribute: Symbol): XmlAttribute = XmlAttribute(attribute.name, $ast.getAttributes($normalize)(attribute.name))
+  def applyDynamic[L, R](field: String)(dynApp: Xml.DynamicApplied[L, R] = 0): R = dynApp($deref(Right(field) +: $path))
+
   def $wrap(any: Any, path: Vector[Either[Int, String]]): Xml =
     new Xml(MutableCell(any), path)
   
