@@ -17,10 +17,13 @@
 
 package rapture.time
 
+import rapture.base._
 import rapture.core._
 
 import java.util.Calendar
 import java.text.SimpleDateFormat
+
+import language.experimental.macros
 
 object dateFormats {
   object shortUs { implicit val implicitDateFormat = DateFormat("MM/dd/yy") }
@@ -83,7 +86,11 @@ object Time {
 }
 
 object `package` {
-  
+ 
+  implicit class TzStringContext(sc: StringContext) {
+    def tz(variables: Nothing*): Timezone = macro Macros.timezoneMacro
+  }
+
   def monthString(n: Int) = List("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
       "Oct", "Nov", "Dec")(n - 1)
   
@@ -205,5 +212,44 @@ case class DateTime(date: Date, hour: Int, minute: Int, second: Int) {
     dateFormat.format(this)+" "+timeFormat.format(this)
 }
 
+object Month {
+  def parse(s: String): Option[Month] = s match {
+    case "Jan" => Some(Jan)
+    case "Feb" => Some(Feb)
+    case "Mar" => Some(Mar)
+    case "Apr" => Some(Apr)
+    case "May" => Some(May)
+    case "Jun" => Some(Jun)
+    case "Jul" => Some(Jul)
+    case "Aug" => Some(Aug)
+    case "Sep" => Some(Sep)
+    case "Oct" => Some(Oct)
+    case "Nov" => Some(Nov)
+    case "Dec" => Some(Dec)
+    case _ => None
+  }
+}
+
 case class Month(no: Int)
 
+
+case class Timezone(name: String) {
+  override def toString = s"""tz"$name""""
+
+  def javaTimezone = java.util.TimeZone.getTimeZone(name)
+}
+
+object Macros {
+
+  def timezoneMacro(c: BlackboxContext)(variables: c.Expr[Nothing]*): c.Expr[Timezone] = {
+    import c.universe._
+    c.prefix.tree match {
+      case Apply(_, List(Apply(_, rawParts))) => rawParts.head match {
+        case tz@Literal(Constant(part: String)) =>
+          val timezones = java.util.TimeZone.getAvailableIDs.to[Set]
+          if(timezones contains part) c.Expr[Timezone](q"""_root_.rapture.time.Timezone($tz)""")
+          else c.abort(c.enclosingPosition, "this is not a valid timezone")
+      }
+    }
+  }
+}
