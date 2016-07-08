@@ -1,5 +1,6 @@
 package rapture.time
 
+import rapture.core._
 import rapture.io._
 import rapture.fs._
 import rapture.uri._
@@ -7,10 +8,10 @@ import rapture.codec._, encodings.`UTF-8`._
 
 object TimezoneData {
 
-  case class TzDb(rules: Vector[Rule], zones: Vector[Zone], links: Vector[Link])
+  case class TzDb(rules: Map[String, Vector[Rule]], zones: Vector[Zone], links: Vector[Link])
 
   object Integer {
-    def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case e: Exception => None }
+    def unapply(s: String): Option[Int] = try Some(s.as[Int]) catch { case e: Exception => None }
   }
 
   object Time {
@@ -18,29 +19,44 @@ object TimezoneData {
     val Hm = "^(-?[0-2]?[0-9]):([0-9][0-9])(s|u)?$".r
     val Hms = "^(-?[0-2]?[0-9]):([0-9][0-9]):([0-9][0-9])(s|u)?$".r
 
-    def unapply(s: String): Option[Option[Time]] = if(s == null) Some(None) else Some(Some(s.trim match {
-      case Integer(i) => Time(i, 0, 0, None)
-      case Hm(Integer(h), Integer(m), x) => Time(h, m, 0, Option(x).map(_.head))
-      case Hms(Integer(h), Integer(m), Integer(s), x) => Time(h, m, s, Option(x).map(_.head))
+    def unapply(s: String): Option[Option[TzTime]] = if(s == null) Some(None) else Some(Some(s.trim match {
+      case Integer(i) => TzTime(i, 0, 0, None)
+      case Hm(Integer(h), Integer(m), x) => TzTime(h, m, 0, Option(x).map(_.head))
+      case Hms(Integer(h), Integer(m), Integer(s), x) => TzTime(h, m, s, Option(x).map(_.head))
     }))
 
   }
 
-  case class Time(hour: Int, minute: Int, second: Int, s: Option[Char])
+  case class TzTime(hour: Int, minute: Int, second: Int, s: Option[Char]) {
+    override def toString = List(hour, minute, second).map { i =>
+      if(i < 10) s"0$i" else i.toString
+    }.mkString("", ":", s.map(_.toString).getOrElse(""))
+  }
 
   object ToYear {
     def unapply(s: String): Option[ToYear] = s match {
       case "only" => Some(OnlyYear)
       case "max" => Some(MaxYear)
-      case other => Some(YearOf(other.toInt))
+      case other => Some(YearOf(other.as[Int]))
     }
   }
   sealed trait ToYear
-  case class YearOf(n: Int) extends ToYear
+  case class YearOf(year: Int) extends ToYear
   case object OnlyYear extends ToYear
   case object MaxYear extends ToYear
 
   object DayOfWeek {
+
+    private val days = Array(Sun, Mon, Tue, Wed, Thu, Fri, Sat)
+
+    def fromDate(day: Int, month: Month, year: Int): DayOfWeek = {
+      val Y = if(month.no < 3) year - 1 else year
+      val c = Y/100
+      val y = Y%100
+      val m = (month.no + 9)%12 + 1
+      days((day + (2.6*m - 0.2).toInt + y + y/4 + c/4 - 2*c + 700)%7)
+    }
+
     def unapply(s: String): Option[DayOfWeek] = s match {
       case "Mon" => Some(Mon)
       case "Tue" => Some(Tue)
@@ -69,9 +85,18 @@ object TimezoneData {
 
     def unapply(s: String): Option[Option[Day]] = Some(Option(s).map(_.trim).map {
       case LastDay(DayOfWeek(d)) => Last(d)
-      case AfterDay(DayOfWeek(d), n) => After(d, n.toInt)
-      case s => DayNumber(s.toInt)
+      case AfterDay(DayOfWeek(d), n) => After(d, n.as[Int])
+      case s => DayNumber(s.as[Int])
     })
+    
+    def exactDate(d: Day, month: Month, year: Int) = d match {
+      case DayNumber(n) => n
+      case After(wd, start) => (start to (start + 6)).find { d => DayOfWeek.fromDate(d, month, year) == wd }.get
+      case Last(wd) =>
+        val end = Month.daysInMonth(month, year)
+        ((end - 6) to end).find { d => DayOfWeek.fromDate(d, month, year) == wd }.get
+
+    }
   }
 
   sealed trait Day
@@ -80,10 +105,16 @@ object TimezoneData {
   case class Last(dayOfWeek: DayOfWeek) extends Day
 
   sealed trait TzData
-  case class Rule(area: String, from: YearOf, to: ToYear, month: Month, day: Day, time: Time, time2: Time, letter: Char) extends TzData
+  case class Rule(area: String, from: YearOf, to: ToYear, month: Month, day: Day, transition: TzTime, save: TzTime, letter: Option[Char]) extends TzData
 
-  case class Zone(name: String, rules: Vector[ZoneRule]) extends TzData
-  case class ZoneRule(gmtOffset: Time, area: Option[String], zone: String, year: Option[Int], month: Option[Month], day: Option[Day], time: Option[Time]) extends TzData
+  case class Zone(name: String, rules: Vector[Schedule]) extends TzData {
+    /*def byYear(year: Int): Option[Schedule] = rules.filter { r => r.to match {
+      case OnlyYear => year == r.from.year
+      case MaxYear => r.from.year <= year
+      case YearOf(y) => r.from.year <= year && y >= year
+    } }*/
+  }
+  case class Schedule(gmtOffset: TzTime, area: Option[String], zone: String, year: Option[Int], month: Option[Month], day: Option[Day], time: Option[TzTime]) extends TzData
   case class Link(zone1: String, zone2: String) extends TzData
   val dataDir = uri"file:///home/jpretty/tzdata"
 
@@ -91,33 +122,37 @@ object TimezoneData {
 
   def readFiles() = files.flatMap { f =>
     (dataDir / f).input[String].flatMap(parse(_))
-  }.foldLeft(TzDb(Vector(), Vector(), Vector())) {
-    case (TzDb(rules, zones, links), rule: Rule) => TzDb(rules :+ rule, zones, links)
-    case (TzDb(rules, zones, links), zone: Zone) => TzDb(rules, zones :+ zone, links)
-    case (TzDb(rules, zones :+ zone, links), zr: ZoneRule) => TzDb(rules, zones :+ zone.copy(rules = zone.rules :+ zr), links)
-    case (TzDb(rules, zones, links), lnk: Link) => TzDb(rules, zones, links :+ lnk)
+  }.foldLeft(TzDb(Map(), Vector(), Vector())) {
+    case (TzDb(rules, zones, links), rule: Rule) =>
+      TzDb(rules.updated(rule.area, rules.get(rule.area).getOrElse(Vector()) :+ rule), zones, links)
+    case (TzDb(rules, zones, links), zone: Zone) =>
+      TzDb(rules, zones :+ zone, links)
+    case (TzDb(rules, zones :+ zone, links), zr: Schedule) =>
+      TzDb(rules, zones :+ zone.copy(rules = zone.rules :+ zr), links)
+    case (TzDb(rules, zones, links), lnk: Link) =>
+      TzDb(rules, zones, links :+ lnk)
   }
 
   val Comment = """^#.*$""".r
   val BlankLine = """^\s*(#.*)?$""".r
   val RuleMatch = """Rule\s+([^#\s]+)\s+([^#\s]+)\s+([^#\s]+)\s+-\s+([^#\s]+)\s+([^#\s]+)\s+([^#\s]+)\s+([^#\s]+)\s+([^#\s]+).*$""".r
   val ZoneMatch = """Zone\s+([^#\s]+)(.*)$""".r
-  val ZoneRuleMatch = """\s+([^#\s]+)\s+([^#\s]+)\s+([^#\s]+)(\s+[^#\s]+)?(\s+[^#\s]+)?(\s+[^#\s]+)?(\s+[^#\s]+)?.*$""".r
+  val ScheduleMatch = """\s+([^#\s]+)\s+([^#\s]+)\s+([^#\s]+)(\s+[^#\s]+)?(\s+[^#\s]+)?(\s+[^#\s]+)?(\s+[^#\s]+)?.*$""".r
   val LinkMatch = """Link\s+([^#\s]+)\s+([^#\s]+).*$""".r
 
   def parse(line: String): List[TzData] = line match {
     case Comment() | BlankLine(_) => Nil
     
     case RuleMatch(area, fromYear, ToYear(toYear), month, Day(day), Time(time), Time(time2), s) =>
-      List(Rule(area, YearOf(fromYear.toInt), toYear, Month.parse(month).get, day.get, time.get, time2.get, s.head))
+      List(Rule(area, YearOf(fromYear.as[Int]), toYear, month.as[Month], day.get, time.get, time2.get, if(s == "-") None else s.headOption))
     
-    case ZoneRuleMatch(Time(offset), area, zone, y, m, Day(day), Time(time)) =>
+    case ScheduleMatch(Time(offset), area, zone, y, m, Day(day), Time(time)) =>
       val List(year, month) = List(y, m).map(Option(_).map(_.trim))
-      List(ZoneRule(offset.get, if(area == "-") None else Some(area), zone, year.map(_.toInt), month.flatMap(Month.parse(_)), day, time))
+      List(Schedule(offset.get, if(area == "-") None else Some(area), zone, year.map(_.as[Int]), month.flatMap(_.as[Option[Month]]), day, time))
     
-    case ZoneMatch(name, ZoneRuleMatch(Time(offset), area, zone, y, m, Day(day), Time(time))) =>
+    case ZoneMatch(name, ScheduleMatch(Time(offset), area, zone, y, m, Day(day), Time(time))) =>
       val List(year, month) = List(y, m).map(Option(_).map(_.trim))
-      List(Zone(name, Vector(ZoneRule(offset.get, if(area == "-") None else Some(area), zone, year.map(_.toInt), month.flatMap(Month.parse(_)), day, time))))
+      List(Zone(name, Vector(Schedule(offset.get, if(area == "-") None else Some(area), zone, year.map(_.as[Int]), month.flatMap(_.as[Option[Month]]), day, time))))
     
     case LinkMatch(zone1, zone2) =>
       List(Link(zone1, zone2))

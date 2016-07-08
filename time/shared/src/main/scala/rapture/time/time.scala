@@ -212,22 +212,35 @@ case class DateTime(date: Date, hour: Int, minute: Int, second: Int) {
     dateFormat.format(this)+" "+timeFormat.format(this)
 }
 
+case class InvalidMonth(month: String) extends Exception(s"the value '$month' is not a valid month")
+
 object Month {
-  def parse(s: String): Option[Month] = s match {
-    case "Jan" => Some(Jan)
-    case "Feb" => Some(Feb)
-    case "Mar" => Some(Mar)
-    case "Apr" => Some(Apr)
-    case "May" => Some(May)
-    case "Jun" => Some(Jun)
-    case "Jul" => Some(Jul)
-    case "Aug" => Some(Aug)
-    case "Sep" => Some(Sep)
-    case "Oct" => Some(Oct)
-    case "Nov" => Some(Nov)
-    case "Dec" => Some(Dec)
-    case _ => None
+
+  implicit val monthParser: StringParser[Month] = new StringParser[Month] {
+    type Throws = InvalidMonth
+    def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[Month, Throws] = mode.wrap { s match {
+      case "Jan" => Jan
+      case "Feb" => Feb
+      case "Mar" => Mar
+      case "Apr" => Apr
+      case "May" => May
+      case "Jun" => Jun
+      case "Jul" => Jul
+      case "Aug" => Aug
+      case "Sep" => Sep
+      case "Oct" => Oct
+      case "Nov" => Nov
+      case "Dec" => Dec
+      case other => throw InvalidMonth(other)
+    } }
   }
+
+  def daysInMonth(month: Month, year: Int): Int = month match {
+    case Jan | Mar | May | Jul | Aug | Oct | Dec => 31
+    case Apr | Jun | Sep | Nov => 30
+    case Feb => if(year%4 == 0 && (year%100 != 0 || year%400 == 0)) 29 else 28
+  }
+
 }
 
 case class Month(no: Int)
