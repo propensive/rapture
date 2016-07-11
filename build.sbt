@@ -129,7 +129,7 @@ lazy val netJVM = net.jvm
 lazy val netJS = net.js
 
 // rapture-time
-lazy val time = crossProject.dependsOn(core)
+lazy val time = crossProject.dependsOn(core, test)
   .settings(moduleName := "rapture-time")
   .settings(raptureSettings:_*)
  

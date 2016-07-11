@@ -28,10 +28,10 @@ trait Calendar {
     def normalize(implicit timeSpec: TimeSpec, mode: Mode[_]): mode.Wrap[Event[B], Exception] = mode.wrap {
 
       def doNormalize(acc: Vector[(TimeUnit[_ <: TimeValue], Int)], next: Vector[(TimeUnit[_ <: TimeValue], Int)]): Vector[(TimeUnit[_ <: TimeValue], Int)] = if(next.isEmpty) acc else {
-	val (u, n) +: xs = next
-	val max = timeSpec.maxValue(u, acc.toMap)
-	if(max < n + acc.toMap.get(u).getOrElse(0)) doNormalize(acc.init :+ ((acc.last._1, acc.last._2 + 1)), (u, n - max) +: xs)
-	else doNormalize(acc :+ ((u, acc.toMap.get(u).getOrElse(0) + n)), xs)
+        val (u, n) +: xs = next
+        val max = timeSpec.maxValue(u, acc.toMap)
+        if(max < n + acc.toMap.get(u).getOrElse(0)) doNormalize(acc.init :+ ((acc.last._1, acc.last._2 + 1)), (u, n - max) +: xs)
+        else doNormalize(acc :+ ((u, acc.toMap.get(u).getOrElse(0) + n)), xs)
       }
       
       val newBase = doNormalize(base.map.to[Vector], offset.map.to[Vector].sortBy(-_._1.magnitude))
@@ -89,15 +89,15 @@ object calendars {
     implicit val timeSpec: TimeSpec = new TimeSpec {
       def maxValue(timeUnit: TimeUnit[_ <: TimeValue], current: Map[TimeUnit[_ <: TimeValue], Int]): Int = timeUnit match {
         case Year => Int.MaxValue
-	case Month => if(!current.contains(Year)) Int.MaxValue else 12
-	case Day => current.get(Month) match {
+	      case Month => if(!current.contains(Year)) Int.MaxValue else 12
+	      case Day => current.get(Month) match {
           case None => Int.MaxValue
-	  case Some(m) => m match {
+          case Some(m) => m match {
             case 0 => 31
             case 1 => current.get(Year) match {
               case Some(y) => if(y%4 == 0 && y%100 != 0 || y%400 == 0) 29 else 28
-	      case None => 28
-	    }
+              case None => 28
+            }
             case 2 => 31
             case 3 => 30
             case 4 => 31
@@ -108,12 +108,12 @@ object calendars {
             case 9 => 31
             case 10 => 30
             case 11 => 31
-	  }
-	}
-	case Hour => if(!current.contains(Day)) Int.MaxValue else 24
-	case Minute => if(!current.contains(Hour)) Int.MaxValue else 60
-	case Second => if(!current.contains(Minute)) Int.MaxValue else 60
-	case Millisecond => if(!current.contains(Second)) Int.MaxValue else 1000
+          }
+	      }
+        case Hour => if(!current.contains(Day)) Int.MaxValue else 24
+        case Minute => if(!current.contains(Hour)) Int.MaxValue else 60
+        case Second => if(!current.contains(Minute)) Int.MaxValue else 60
+        case Millisecond => if(!current.contains(Second)) Int.MaxValue else 1000
       }
     }
 
