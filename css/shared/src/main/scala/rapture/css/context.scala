@@ -125,12 +125,12 @@ private[css] object CssMacros {
         reify {
           val sb = new StringBuilder
           val textParts = listParts.splice.iterator
-          val expressions: Iterator[ForcedConversion[_]] = listExprs.splice.iterator
+          val expressions: Iterator[ForcedConversion[Css]] = listExprs.splice.iterator
 
           sb.append(textParts.next())
 
           while (textParts.hasNext) {
-            sb.append(expressions.next.value)
+            sb.append(expressions.next.value.asInstanceOf[Css].content)
             sb.append(textParts.next)
           }
           Css(sb.toString)
