@@ -50,9 +50,6 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
                 Vector())(parser.ast)
     }
 
-  def apply[T](t: T)(implicit ast: AstType, ser: Serializer[T, Type]): Type =
-    construct(MutableCell(ser.serialize(t)), Vector())
-
   def raw(value: Any)(implicit ast: AstType): Type =
     construct(MutableCell(value), Vector())
 

@@ -97,6 +97,9 @@ object JsonBuffer extends JsonDataCompanion[JsonBuffer, JsonBufferAst] {
 /** Companion object to the `Json` type, providing factory and extractor methods, and a JSON
   * pretty printer. */
 object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
+  
+  def apply[T](t: T)(implicit ast: JsonAst, ser: Serializer[T, Json]): Json =
+    construct(MutableCell(if(t == null) ast.nullValue else ser.serialize(t)), Vector())
 
   implicit def stringParser(implicit parser: Parser[String, JsonAst],
                             mode: Mode[_ <: ParseMethodConstraint]): StringParser[Json] =

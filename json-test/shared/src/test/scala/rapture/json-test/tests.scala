@@ -339,6 +339,9 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     import rapture.json.formatters.compact._
     Json.format(Json(FooDefaultOption(param2 = Some(10))))
   } returns """{"param2":10}"""
+  
+  val `Serialize null` = test { Json(null) } returns json"""{"x":null}""".x
+
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {
