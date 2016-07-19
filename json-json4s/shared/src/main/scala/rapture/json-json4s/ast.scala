@@ -127,7 +127,7 @@ private[json4s] object Json4sAst extends JsonBufferAst {
 
   override def dereferenceObject(obj: Any, element: String): Any =
     obj match {
-      case JObject(obj) => obj.find(_._1 == element).get._2
+      case obj: JObject => obj \ element
       case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
     }
 
