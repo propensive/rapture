@@ -17,6 +17,13 @@
 
 package rapture.css
 
+import rapture.data._
+
+object Css {
+  implicit def cssSerializer: Serializer[String, Css] =
+    new Serializer[String, Css] { def serialize(s: String) = Css(s) }
+}
+
 case class Css(content: String) {
   override def toString = s"""css${"\"" * 3}$content${"\"" * 3}"""
 }

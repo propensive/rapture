@@ -342,6 +342,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   
   val `Serialize null` = test { Json(null) } returns json"""{"nullValue":null}""".nullValue
 
+  val `Parse basic JSON null value` = test { json"null" } returns json"null"
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {
