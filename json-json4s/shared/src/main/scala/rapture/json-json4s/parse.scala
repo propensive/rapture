@@ -27,7 +27,7 @@ private[json4s] object Json4sParser extends Parser[String, JsonBufferAst] {
   val ast = Json4sAst
 
   def parse(s: String): Option[Any] =
-    try Some(native.JsonParser.parse(s, useBigDecimalForDouble = true))
+    try Some(native.JsonParser.parse(s"""{"x":$s}""", useBigDecimalForDouble = true) \ "x")
     catch {
       case e: Exception => None
     }
