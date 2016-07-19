@@ -61,6 +61,9 @@ object XmlBuffer extends XmlDataCompanion[XmlBuffer, XmlBufferAst] {
 /** Companion object to the `Xml` type, providing factory and extractor methods, and a XML
   * pretty printer. */
 object Xml extends XmlDataCompanion[Xml, XmlAst] with Xml_1 {
+  
+  def apply[T](t: T)(implicit ast: XmlAst, ser: Serializer[T, Xml]): Xml =
+    construct(MutableCell(if(t == null) ast.nullValue else ser.serialize(t)), Vector())
 
   object DynamicApplied {
     implicit def auto[L](k: L)(implicit dynApp: DynamicApply[L]): DynamicApplied[L, dynApp.Result] =
