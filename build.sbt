@@ -64,8 +64,8 @@ lazy val raptureJS = project.in(file(".raptureJS"))
   .enablePlugins(ScalaJSPlugin)
 
 lazy val raptureExtras = crossProject
-  .aggregate(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`)
-  .dependsOn(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`)
+  .aggregate(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`, `net-test`)
+  .dependsOn(`core-test`, `http-jetty`, `json-circe`, `xml-stdlib`, `json-jawn`, `json-play`, `json-json4s`, `json-spray`, `json-argonaut`, `json-jackson`, `json-test`, `xml-test`, `json-lift`, `net-test`)
   .settings(moduleName := "rapture-extras")
   .settings(raptureSettings:_*)
   .settings(crossVersionSharedSources():_*)
@@ -146,6 +146,20 @@ lazy val net = crossProject.dependsOn(io)
  
 lazy val netJVM = net.jvm
 lazy val netJS = net.js
+
+// rapture-net-test
+lazy val `net-test` = crossProject.dependsOn(net, test, json, `json-circe`)
+  .settings(moduleName := "rapture-net-test")
+  .settings(raptureSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.spotify" % "docker-client" % "5.0.2",
+      "org.scalatest" %% "scalatest" % "2.2.6"
+    )
+  )
+
+lazy val netTestJVM = `net-test`.jvm
+lazy val netTestJS = `net-test`.js
 
 // rapture-time
 lazy val time = crossProject.dependsOn(core)

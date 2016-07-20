@@ -1,4 +1,6 @@
 language: scala
+services:
+  - docker
 git:
   depth: 50
 scala:
