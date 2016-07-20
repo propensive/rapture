@@ -59,36 +59,8 @@ object Macros {
       val inferredExtractor =
         c.inferImplicitValue(appliedType(extractor, List(paramType, weakTypeOf[Data])), false, false)
 
-      val newName = termName(c, freshName(c)("param$"))
+      c.Expr(q"$inferredExtractor.map { new ${weakTypeOf[T]}(_) }")
 
-      c.Expr(
-          Apply(
-              Select(
-                  inferredExtractor,
-                  termName(c, "map")
-              ),
-              List(
-                  Function(
-                      List(
-                          ValDef(
-                              Modifiers(Flag.PARAM),
-                              newName,
-                              TypeTree(),
-                              EmptyTree
-                          )
-                      ),
-                      Apply(
-                          Select(
-                              New(TypeTree(weakTypeOf[T])),
-                              constructor(c)
-                          ),
-                          List(
-                              Ident(newName)
-                          )
-                      )
-                  )
-              )
-          ))
     } else {
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
 
@@ -145,12 +117,9 @@ object Macros {
           }
 
           if (defaults.contains(idx + 1)) q"""
-          mode.unwrap(if($deref.is($imp)) $deref.as($imp, mode.generic) else mode.wrap(${companionRef(weakTypeOf[T])}.${termName(
-              c,
-              "apply$default$" + (idx + 1))}.asInstanceOf[${p.returnType}]), ${Literal(
-              Constant("." + p.name.decodedName))})
-        """
-          else q"""
+          mode.unwrap(try $deref.as($imp, mode.generic) catch { case e => mode.wrap(${companionRef(weakTypeOf[T])}.${termName(
+              c, "apply$default$" + (idx + 1))}.asInstanceOf[${p.returnType}]) }, ${Literal(Constant("." + p.name.decodedName))})
+          """ else q"""
           mode.unwrap($deref.as($imp, mode.generic), ${Literal(Constant("." + p.name.decodedName))})
         """
       }
@@ -187,17 +156,7 @@ object Macros {
 
       require(implicitSearchFailures.isEmpty)
 
-      val construction = c.Expr[T](
-          Apply(
-              Select(
-                  New(
-                      TypeTree(weakTypeOf[T])
-                  ),
-                  constructor(c)
-              ),
-              params.to[List]
-          )
-      )
+      val construction = c.Expr[T](q"""new ${weakTypeOf[T]}(..$params)""")
 
       c.Expr(q"""
         (new _root_.rapture.data.Extractor[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
