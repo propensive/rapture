@@ -19,10 +19,12 @@ package rapture.net
 import rapture.io._
 import rapture.uri._
 import rapture.core._
+import rapture.base._
 import rapture.codec._
 import java.io.{Reader => _, Writer => _, _}
 
 import scala.language.implicitConversions
+import scala.language.experimental.macros
 
 trait `NetUrl#httpGet` extends MethodConstraint
 trait `NetUrl#httpPost` extends MethodConstraint
@@ -37,11 +39,8 @@ trait `Ipv6.parse` extends MethodConstraint
 object `package` {
 
   implicit class EnrichedHttpUriContext(uc: UriContext.type) {
-    def http(constants: List[String])(variables: List[String]) =
-      HttpQuery.parse("http:" + constants.zip(variables :+ "").map { case (a, b) => a + b }.mkString)
-
-    def https(constants: List[String])(variables: List[String]) =
-      HttpQuery.parse("https:" + constants.zip(variables :+ "").map { case (a, b) => a + b }.mkString)
+    def http(constants: List[String])(variables: List[String]) = macro NetMacros.httpUrlMacro
+    def https(constants: List[String])(variables: List[String]) = macro NetMacros.httpsUrlMacro
   }
 
   implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout, toUri: UriCapable[HttpUrl]): Sizable[HttpUrl, Byte] =
@@ -83,4 +82,29 @@ object `package` {
 
   implicit val socketStreamByteAppender: JavaOutputAppender[SocketUri] =
     new JavaOutputAppender[SocketUri](_.javaSocket.getOutputStream)
+}
+
+object NetMacros {
+
+  def httpUrlMacro(c: WhiteboxContext)(constants: c.Expr[List[String]])(variables: c.Expr[List[String]]): c.Expr[Any] = {
+    import c.universe._
+
+    constants.tree match {
+      case Apply(_, List(rawParts@_*)) =>
+        val httpQuery = q"""_root_.rapture.net.HttpQuery.parse("http:" + $constants.zip($variables :+ "").map { case (a, b) => a + b }.mkString)"""
+        if(rawParts.mkString contains "?") c.Expr(httpQuery)
+        else c.Expr(q"$httpQuery.httpUrl")
+    }
+  }
+  
+  def httpsUrlMacro(c: WhiteboxContext)(constants: c.Expr[List[String]])(variables: c.Expr[List[String]]): c.Expr[Any] = {
+    import c.universe._
+
+    constants.tree match {
+      case Apply(_, List(rawParts@_*)) =>
+        val httpQuery = q"""_root_.rapture.net.HttpQuery.parse("https:" + $constants.zip($variables :+ "").map { case (a, b) => a + b }.mkString)"""
+        if(rawParts.mkString contains "?") c.Expr(httpQuery)
+        else c.Expr(q"$httpQuery.httpUrl")
+    }
+  }
 }
