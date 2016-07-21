@@ -185,72 +185,18 @@ object Macros {
 
       val newName = termName(c, freshName(c)("param$"))
 
-      c.Expr(
-          Apply(
-              Select(
-                  inferredSerializer,
-                  termName(c, "contramap")
-              ),
-              List(
-                  Function(
-                      List(
-                          ValDef(
-                              Modifiers(Flag.PARAM),
-                              newName,
-                              TypeTree(weakTypeOf[T]),
-                              EmptyTree
-                          )
-                      ),
-                      Select(
-                          Ident(newName),
-                          termName(c, paramName)
-                      )
-                  )
-              )
-          ))
+      c.Expr(q"$inferredSerializer.contramap[${weakTypeOf[T]}](_.${termName(c, paramName)})")
     } else {
       val construction = if (tpe.isCaseClass) {
 
         val params = declarations(c)(weakTypeOf[T]) collect {
           case m: MethodSymbol if m.isCaseAccessor => m.asMethod
         } map { p =>
-          Apply(
-              Select(
-                  Ident("scala"),
-                  termName(c, "Tuple2")
-              ),
-              List(
-                  Literal(Constant(p.name.decodedName.toString)),
-                  Apply(
-                      Select(
-                          c.inferImplicitValue(appliedType(serializer, List(p.returnType, weakTypeOf[Data])),
-                                               false,
-                                               false),
-                          termName(c, "serialize")
-                      ),
-                      List(
-                          Select(
-                              Ident(termName(c, "t")),
-                              p.name
-                          )
-                      )
-                  )
-              )
-          )
+          val imp = c.inferImplicitValue(appliedType(serializer, List(p.returnType, weakTypeOf[Data])), false, false)
+          q"""(${Literal(Constant(p.name.decodedName.toString))}, $imp.serialize(${termName(c, "t")}.${p.name}))"""
         }
 
-        c.Expr[Map[String, Any]](
-            Apply(
-                Select(
-                    Select(
-                        Ident(definitions.PredefModule),
-                        termName(c, "Map")
-                    ),
-                    termName(c, "apply")
-                ),
-                params.to[List]
-            )
-        )
+        c.Expr[Map[String, Any]](q"""_root_.scala.collection.immutable.Map(..$params)""")
       } else if (tpe.isSealed) {
         c.Expr[Map[String, Any]](
             Match(
