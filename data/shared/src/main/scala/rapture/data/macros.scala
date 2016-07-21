@@ -64,13 +64,8 @@ object Macros {
     } else {
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
 
-      val defaults = weakTypeOf[T].typeSymbol.companionSymbol.typeSignature.declarations
-        .to[List]
-        .map(_.name.decodedName.toString)
-        .filter(_ startsWith "apply$default$")
-        .map(_.substring(14).toInt)
-        .to[Set]
-
+      val defaults = weakTypeOf[T].typeSymbol.companionSymbol.typeSignature.declaration(termName(c, "apply")).asMethod.paramss.flatten.map(_.asTerm.isParamWithDefault).zipWithIndex.filter(_._1).map(_._2 + 1).to[Set]
+      
       // FIXME integrate these into a fold
       var throwsTypes: Set[Type] = Set(typeOf[DataGetException])
 
