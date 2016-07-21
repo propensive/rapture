@@ -193,7 +193,7 @@ object Macros {
           case m: MethodSymbol if m.isCaseAccessor => m.asMethod
         } map { p =>
           val imp = c.inferImplicitValue(appliedType(serializer, List(p.returnType, weakTypeOf[Data])), false, false)
-          q"""(${Literal(Constant(p.name.decodedName.toString))}, $imp.serialize(${termName(c, "t")}.${p.name}))"""
+          q"""(${Literal(Constant(p.name.decodedName.toString))}, $imp.serialize(${termName(c, "t")}.${p}))"""
         }
 
         c.Expr[Map[String, Any]](q"""_root_.scala.collection.immutable.Map(..$params)""")
