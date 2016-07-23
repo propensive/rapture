@@ -34,7 +34,21 @@ private[css] object CssMacros {
         Some((strNo, pos, s"failed to parse Css literal: $msg"))
     }
 
-  // FIXME: Unify these two implementations
+  // FIXME: Unify these three implementations, and use quasiquotes
+  def cssClassContextMacro(c: BlackboxContext)(
+      exprs: c.Expr[ForcedConversion[CssClass]]*): c.Tree = {
+    import c.universe._
+    import compatibility._
+
+    c.prefix.tree match {
+      case Select(Apply(_, List(Apply(_, rawPart :: Nil))), _) =>
+        val Literal(Constant(className: String)) = rawPart
+        if(!className.matches("-?[_a-zA-Z]+[_a-zA-Z0-9-]*"))
+          c.abort(c.enclosingPosition, "this is not a valid CSS class identifier")
+
+        q"_root_.rapture.css.CssClass(_root_.scala.collection.immutable.Set($rawPart))"
+    }
+  }
   def stylesheetContextMacro(c: BlackboxContext)(
       exprs: c.Expr[ForcedConversion[CssStylesheet]]*): c.Expr[CssStylesheet] = {
     import c.universe._
@@ -144,9 +158,15 @@ private[css] class CssStrings(sc: StringContext) {
   class CssContext() {
     def apply(exprs: ForcedConversion[Css]*): Css = macro CssMacros.contextMacro
   }
+  
+  class CssClassContext() {
+    def apply(exprs: Nothing*): CssClass = macro CssMacros.cssClassContextMacro
+  }
+  
   class StylesheetContext() {
     def apply(exprs: ForcedConversion[CssStylesheet]*): CssStylesheet = macro CssMacros.stylesheetContextMacro
   }
   val css = new CssContext()
+  val cls = new CssClassContext()
   val cssStylesheet = new StylesheetContext()
 }

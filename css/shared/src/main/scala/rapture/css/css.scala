@@ -31,3 +31,9 @@ case class Css(content: String) {
 case class CssStylesheet(content: String) {
   override def toString = s"""cssStylesheet${"\"" * 3}$content${"\"" * 3}"""
 }
+
+case class CssClass(names: Set[String]) {
+  def +(cssClass: CssClass): CssClass = CssClass(names ++ cssClass.names)
+
+  def asString = names.mkString(" ")
+}
