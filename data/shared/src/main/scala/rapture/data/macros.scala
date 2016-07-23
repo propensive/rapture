@@ -98,7 +98,7 @@ object Macros {
               List()
           }
 
-          throwsTypes ++= t
+          if(!defaults.contains(idx + 1)) throwsTypes ++= t
 
           // Borrowed from Shapeless
           def companionRef(tpe: Type): Tree = {
