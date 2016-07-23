@@ -35,7 +35,7 @@ package domFormatters {
 
             val as = elem.tagName +: elem.attributes.to[List].filter(_._2 != null).map {
               case (k, v) =>
-                k.name + "=\"" + k.serialize(v.asInstanceOf[k.Value]) + "\""
+                k.attributeName + "=\"" + k.serialize(v.asInstanceOf[k.Value]) + "\""
             }
 
             if (xs.isEmpty && !elem.forceClosingTag) s"<${as.mkString(" ")}/>"
@@ -47,7 +47,7 @@ package domFormatters {
 
           val as = elem.tagName +: elem.attributes.to[List].filter(_._2 != null).map {
             case (k, v) =>
-              k.name + "=\"" + k.serialize(v.asInstanceOf[k.Value]) + "\""
+              k.attributeName + "=\"" + k.serialize(v.asInstanceOf[k.Value]) + "\""
           }
 
           if (xs.isEmpty && !elem.forceClosingTag) s"<${as.mkString(" ")}/>"
@@ -92,7 +92,7 @@ object DomFormatter {
 
         val as = elem.tagName +: elem.attributes.to[List].filter(_._2 != null).map {
           case (k, v) =>
-            k.name + "=\"" + k.serialize(v.asInstanceOf[k.Value]) + "\""
+            k.attributeName + "=\"" + k.serialize(v.asInstanceOf[k.Value]) + "\""
         }
 
         if (xs.isEmpty && !elem.forceClosingTag) Vector(indent -> s"<${as.mkString(" ")}/>")

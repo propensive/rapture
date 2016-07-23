@@ -134,7 +134,7 @@ sealed abstract class Element[ChildType <: ElementType, ThisType <: ElementType,
     mode.wrap {
       val ar2 = ar.asInstanceOf[AttributeKey[String, AttributeType]]
       if (attributes.contains(ar2)) attributes(ar2).asInstanceOf[ar.Value]
-      else mode.exception(MissingAttributeException(ar2.name))
+      else mode.exception(MissingAttributeException(ar2.attributeName))
     }
 
   def \[Child <: ElementType, This <: ElementType, Att <: AttributeType](
@@ -201,17 +201,17 @@ case class AppliedElement[ChildType <: ElementType, ThisType <: ElementType, Att
 ) extends Element[ChildType, ThisType, AttType]
 
 @implicitNotFound("Cannot access the attribute ${Name} on ${AttType} DOM nodes")
-abstract class AttributeKey[+Name <: String, AttType <: AttributeType](val name: String, actualName: String = null) {
+abstract class AttributeKey[+Name <: String, AttType <: AttributeType](val attributeName: String, actualName: String = null) {
   type Value
-  override def toString = if (actualName == null) name else actualName
+  override def toString = if (actualName == null) attributeName else actualName
   def serialize(t: Value): String
 
   def set[Elem <: ElementType](v: Value) =
     new Attribute[Elem, AttType, Value](this.asInstanceOf[AttributeKey[String, AttributeType]], v)
 
-  override def hashCode = name.hashCode
+  override def hashCode = attributeName.hashCode
   override def equals(that: Any) = that match {
-    case ar: AttributeKey[typ, attType] => ar.name == name
+    case ar: AttributeKey[typ, attType] => ar.attributeName == attributeName
     case _ => false
   }
 }
@@ -229,7 +229,7 @@ class Attribute[Elem <: ElementType, AttType <: AttributeType, Value](val id: At
                                                                       val value: Value)
     extends Applicable[Elem, AttType, EmptyElement] {
 
-  def name = id.name
+  def name = id.attributeName
 
   def application[Child <: ElementType, This <: ElementType, Att <: AttributeType](
       element: Element[Child, This, Att],
