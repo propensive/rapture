@@ -155,8 +155,26 @@ object htmlSyntax {
   implicit def translate = Attribute[Global, Boolean]("translate")(v => if (v) "yes" else "no")
   def translate_=[E <: ElementType](v: Boolean) = translate.set[E](v)
 
-  implicit def classes = Attribute[Global, Seq[String]]("classes", "class")(_.mkString(" "))
-  def classes_=[E <: ElementType](v: Seq[String]) = classes.set[E](v)
+  object CssClassable {
+    
+    implicit val stringCssClassable: CssClassable[String] =
+      new CssClassable[String] { def cssClass(string: String) = List(string) }
+    
+    implicit val symbolCssClassable: CssClassable[Symbol] =
+      new CssClassable[Symbol] { def cssClass(symbol: Symbol) = List(symbol.name) }
+    
+    implicit val stringListCssClassable: CssClassable[List[String]] =
+      new CssClassable[List[String]] { def cssClass(list: List[String]) = list }
+    
+    implicit val symbolListCssClassable: CssClassable[List[Symbol]] =
+      new CssClassable[List[Symbol]] { def cssClass(list: List[Symbol]) = list.map(_.name) }
+  }
+
+  trait CssClassable[Value] { def cssClass(value: Value): List[String] }
+
+  implicit def cls = Attribute[Global, Seq[String]]("cls", "class")(_.mkString(" "))
+  def cls_=[E <: ElementType, Value: CssClassable](value: Value) =
+    cls.set(implicitly[CssClassable[Value]].cssClass(value))
 
   implicit def onload = Attribute[Body, Js]("onload")(_.content)
   def onload_=[E <: ElementType](v: Js) = onload.set[E](v)
