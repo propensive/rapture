@@ -18,6 +18,7 @@
 package rapture.css
 
 import rapture.data._
+import rapture.core._
 
 object Css {
   implicit def cssSerializer: Serializer[String, Css] =
@@ -32,8 +33,12 @@ case class CssStylesheet(content: String) {
   override def toString = s"""cssStylesheet${"\"" * 3}$content${"\"" * 3}"""
 }
 
-case class CssClass(names: Set[String]) {
-  def +(cssClass: CssClass): CssClass = CssClass(names ++ cssClass.names)
+object CssClass {
+  def auto(implicit assignedName: AssignedName) = CssClass(Set(assignedName.name))
+}
 
-  def asString = names.mkString(" ")
+case class CssClass(classes: Set[String]) {
+  def +(cssClass: CssClass): CssClass = CssClass(classes ++ cssClass.classes)
+
+  def asString = classes.mkString(" ")
 }

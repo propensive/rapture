@@ -163,6 +163,9 @@ object htmlSyntax {
 
   object CssClassable {
     
+    implicit val cssClassable: CssClassable[CssClass] =
+      new CssClassable[CssClass] { def cssClass(cssClass: CssClass) = cssClass.classes.to[List] }
+    
     implicit val stringCssClassable: CssClassable[String] =
       new CssClassable[String] { def cssClass(string: String) = List(string) }
     
