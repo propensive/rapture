@@ -37,7 +37,7 @@ private[css] object CssMacros {
 
   // FIXME: Unify these three implementations, and use quasiquotes
   def cssClassContextMacro(c: BlackboxContext)(
-      exprs: c.Expr[ForcedConversion[CssClass]]*): c.Tree = {
+      exprs: c.Expr[ForcedConversion[CssClass]]*): c.Expr[CssClass] = {
     import c.universe._
     import compatibility._
 
@@ -47,7 +47,7 @@ private[css] object CssMacros {
         if(!className.matches("-?[_a-zA-Z]+[_a-zA-Z0-9-]*"))
           c.abort(c.enclosingPosition, "this is not a valid CSS class identifier")
 
-        q"_root_.rapture.css.CssClass(_root_.scala.collection.immutable.Set($rawPart))"
+        c.Expr(q"_root_.rapture.css.CssClass(_root_.scala.collection.immutable.Set($rawPart))")
     }
   }
   def stylesheetContextMacro(c: BlackboxContext)(
