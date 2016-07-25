@@ -306,7 +306,7 @@ lazy val jsJVM = js.jvm
 lazy val jsJS = js.js
 
 // rapture-css
-lazy val css = crossProject.dependsOn(data)
+lazy val css = crossProject.dependsOn(data, dom)
   .settings(moduleName := "rapture-css")
   .settings(raptureSettings:_*)
   .settings(libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18")
@@ -428,6 +428,14 @@ lazy val `json-test` = crossProject.dependsOn(`json-jawn`, `json-lift`, `json-sp
  
 lazy val jsonTestJVM = `json-test`.jvm
 lazy val jsonTestJS = `json-test`.js
+
+// rapture-css-test
+lazy val `css-test` = crossProject.dependsOn(css, html, test)
+  .settings(moduleName := "rapture-css-test")
+  .settings(raptureSettings:_*)
+ 
+lazy val cssTestJVM = `css-test`.jvm
+lazy val cssTestJS = `css-test`.js
 
 // rapture-xml-test
 lazy val `xml-test` = crossProject.dependsOn(`xml-stdlib`, test)

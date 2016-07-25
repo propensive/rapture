@@ -27,6 +27,7 @@ private[css] object CssMacros {
 
   def parseSource(s: List[String], stringsUsed: List[Boolean], stylesheet: Boolean): Option[(Int, Int, String)] =
     try {
+      println("Parsing: "+s)
       CssValidator.validate(s, stylesheet)
       None
     } catch {
@@ -50,7 +51,7 @@ private[css] object CssMacros {
     }
   }
   def stylesheetContextMacro(c: BlackboxContext)(
-      exprs: c.Expr[ForcedConversion[CssStylesheet]]*): c.Expr[CssStylesheet] = {
+      exprs: c.Expr[Embed[CssStylesheet]]*): c.Expr[CssStylesheet] = {
     import c.universe._
     import compatibility._
 
@@ -59,7 +60,7 @@ private[css] object CssMacros {
         val ys = rawParts
         val text = rawParts map { case lit @ Literal(Constant(part: String)) => part }
 
-        val listExprs = c.Expr[List[ForcedConversion[CssStylesheet]]](
+        val listExprs = c.Expr[List[Embed[CssStylesheet]]](
             Apply(
                 Select(reify(List).tree, termName(c, "apply")),
                 exprs.map(_.tree).to[List]
@@ -69,6 +70,7 @@ private[css] object CssMacros {
           case Apply(_, bs) =>
             bs.map {
               case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => nme.toString == "forceStringConversion"
+              case other => println(showRaw(other)); ???
             }
         }
 
@@ -88,12 +90,12 @@ private[css] object CssMacros {
         reify {
           val sb = new StringBuilder
           val textParts = listParts.splice.iterator
-          val expressions: Iterator[ForcedConversion[_]] = listExprs.splice.iterator
+          val expressions: Iterator[Embed[CssStylesheet]] = listExprs.splice.iterator
 
           sb.append(textParts.next())
 
           while (textParts.hasNext) {
-            sb.append(expressions.next.value)
+            sb.append(expressions.next.content)
             sb.append(textParts.next)
           }
           CssStylesheet(sb.toString)
@@ -164,7 +166,7 @@ private[css] class CssStrings(sc: StringContext) {
   }
   
   class StylesheetContext() {
-    def apply(exprs: ForcedConversion[CssStylesheet]*): CssStylesheet = macro CssMacros.stylesheetContextMacro
+    def apply(exprs: Embed[CssStylesheet]*): CssStylesheet = macro CssMacros.stylesheetContextMacro
   }
   val css = new CssContext()
   val cls = new CssClassContext()

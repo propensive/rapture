@@ -18,6 +18,7 @@
 package rapture.css
 
 import rapture.data._
+import rapture.dom._
 import rapture.core._
 
 object Css {
@@ -33,8 +34,14 @@ case class CssStylesheet(content: String) {
   override def toString = s"""cssStylesheet${"\"" * 3}$content${"\"" * 3}"""
 }
 
+object DomId {
+  def auto(implicit assignedName: AssignedName) = DomId(assignedName.name)
+}
+case class DomId(id: String)
+
 object CssClass {
   def auto(implicit assignedName: AssignedName) = CssClass(Set(assignedName.name))
+  val empty = CssClass(Set())
 }
 
 case class CssClass(classes: Set[String]) {
@@ -42,3 +49,34 @@ case class CssClass(classes: Set[String]) {
 
   def asString = classes.mkString(" ")
 }
+
+object CssEmbed {
+  implicit def embedCssClass(cssClass: CssClass): CssEmbed = CssEmbed(cssClass.classes.mkString(".", ".", ""))
+  implicit def embedDomId(domId: DomId): CssEmbed = CssEmbed(s"#${domId.id}")
+}
+case class CssEmbed(content: String)
+
+
+object Embeddable {
+  implicit val domId: Embeddable[DomId, CssStylesheet] = new Embeddable[DomId, CssStylesheet] { def embed(value: DomId): String = s"#${value.id}" }
+  
+  implicit val cssClass: Embeddable[CssClass, CssStylesheet] = new Embeddable[CssClass, CssStylesheet] {
+    def embed(value: CssClass): String = value.classes.mkString(".", ".", "")
+  }
+  
+  implicit val domTag: Embeddable[Tag[_, _, _], CssStylesheet] = new Embeddable[Tag[_, _, _], CssStylesheet] {
+    def embed(value: Tag[_, _, _]): String = value.tagName.toLowerCase
+  }
+  
+  implicit val css: Embeddable[Css, CssStylesheet] = new Embeddable[Css, CssStylesheet] {
+    def embed(value: Css): String = value.content
+  }
+}
+
+trait Embeddable[-From, +To] { def embed(value: From): String }
+
+object Embed {
+  implicit def embed[From, To](value: From)(implicit embeddable: Embeddable[From, To]): Embed[To] = Embed(embeddable.embed(value))
+}
+
+case class Embed[To](content: String)
