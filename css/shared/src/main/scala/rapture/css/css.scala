@@ -99,6 +99,22 @@ object Embeddable {
   implicit val double: Embeddable[Double, CssStylesheet] = new Embeddable[Double, CssStylesheet] {
     def embed(value: Double): String = value.toString
   }
+  
+  implicit val cssString: Embeddable[String, Css] = new Embeddable[String, Css] {
+    def embed(value: String): String = value
+  }
+  
+  implicit val cssInt: Embeddable[Int, Css] = new Embeddable[Int, Css] {
+    def embed(value: Int): String = value.toString
+  }
+  
+  implicit val cssDouble: Embeddable[Double, Css] = new Embeddable[Double, Css] {
+    def embed(value: Double): String = value.toString
+  }
+  
+  implicit val cssCss: Embeddable[Css, Css] = new Embeddable[Css, Css] {
+    def embed(value: Css): String = value.content
+  }
 }
 
 trait Embeddable[-From, +To] { def embed(value: From): String }
