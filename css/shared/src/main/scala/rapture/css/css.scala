@@ -21,17 +21,28 @@ import rapture.data._
 import rapture.dom._
 import rapture.core._
 
+import scala.collection.immutable.ListMap
+
 object Css {
-  implicit def cssSerializer: Serializer[String, Css] =
-    new Serializer[String, Css] { def serialize(s: String) = Css(s) }
+
+  implicit def stringSerializer: StringSerializer[Css] = new StringSerializer[Css] {
+    def serialize(css: Css): String = css.content
+  }
 }
 
-case class Css(content: String) {
+case class Css(properties: ListMap[String, String]) {
+  def content = properties.map { case (k, v) => s"$k: $v;" }.mkString(" ")
   override def toString = s"""css${"\"" * 3}$content${"\"" * 3}"""
 }
 
-case class CssStylesheet(content: String) {
+object CssStylesheet { 
+  implicit def stringSerializer: StringSerializer[CssStylesheet] = new StringSerializer[CssStylesheet] {
+    def serialize(css: CssStylesheet): String = css.content
+  }
+}
+case class CssStylesheet(rules: List[CssRule]) {
   override def toString = s"""cssStylesheet${"\"" * 3}$content${"\"" * 3}"""
+  def content = rules.mkString("\n")
 }
 
 object DomId {
@@ -70,6 +81,18 @@ object Embeddable {
   
   implicit val css: Embeddable[Css, CssStylesheet] = new Embeddable[Css, CssStylesheet] {
     def embed(value: Css): String = value.content
+  }
+  
+  implicit val string: Embeddable[String, CssStylesheet] = new Embeddable[String, CssStylesheet] {
+    def embed(value: String): String = value
+  }
+  
+  implicit val int: Embeddable[Int, CssStylesheet] = new Embeddable[Int, CssStylesheet] {
+    def embed(value: Int): String = value.toString
+  }
+  
+  implicit val double: Embeddable[Double, CssStylesheet] = new Embeddable[Double, CssStylesheet] {
+    def embed(value: Double): String = value.toString
   }
 }
 

@@ -25,13 +25,13 @@ import language.experimental.macros
 
 private[css] object CssMacros {
 
-  def parseSource(s: List[String], stringsUsed: List[Boolean], stylesheet: Boolean): Option[(Int, Int, String)] =
+  def parseSource(s: List[String], substitutions: List[String], stylesheet: Boolean): Option[(Int, Int, String)] =
     try {
-      println("Parsing: "+s)
-      CssValidator.validate(s, stylesheet)
+      if(stylesheet) CssParser.parseStylesheet(s, substitutions)
+      else CssParser.parse(s, substitutions)
       None
     } catch {
-      case CssValidator.ValidationException(strNo, pos, msg) =>
+      case CssParser.ValidationException(strNo, pos, msg) =>
         Some((strNo, pos, s"failed to parse Css literal: $msg"))
     }
 
@@ -66,15 +66,22 @@ private[css] object CssMacros {
                 exprs.map(_.tree).to[List]
             ))
 
-        val stringsUsed: List[Boolean] = listExprs.tree match {
+        val substitutions: List[String] = listExprs.tree match {
           case Apply(_, bs) =>
             bs.map {
-              case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => nme.toString == "forceStringConversion"
-              case other => println(showRaw(other)); ???
+              case Apply(Apply(TypeApply(Select(_, _), _), _), List(Select(_, nme))) => nme.toString match {
+                case "domId" => "#foo"
+                case "css" => "color: red;"
+                case "cssClass" => ".foo"
+                case "int" => "1"
+                case "double" => "1.0"
+                case _ => "null"
+              }
             }
         }
 
-        parseSource(text, stringsUsed, true) foreach {
+        // FIXME: It looks like the cursor will be in the wrong place
+        parseSource(text, substitutions, true) foreach {
           case (n, offset, msg) =>
             val oldPos = ys(n).asInstanceOf[Literal].pos
             val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
@@ -98,7 +105,7 @@ private[css] object CssMacros {
             sb.append(expressions.next.content)
             sb.append(textParts.next)
           }
-          CssStylesheet(sb.toString)
+          CssParser.parseStylesheet(List(sb.toString), Nil)
         }
     }
   }
@@ -118,10 +125,10 @@ private[css] object CssMacros {
                 exprs.map(_.tree).to[List]
             ))
 
-        val stringsUsed: List[Boolean] = listExprs.tree match {
+        val stringsUsed: List[String] = listExprs.tree match {
           case Apply(_, bs) =>
             bs.map {
-              case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => nme.toString == "forceStringConversion"
+              case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => "null"
             }
         }
 
@@ -149,7 +156,7 @@ private[css] object CssMacros {
             sb.append(expressions.next.value.asInstanceOf[Css].content)
             sb.append(textParts.next)
           }
-          Css(sb.toString)
+          CssParser.parse(List(sb.toString), Nil)
         }
     }
   }
