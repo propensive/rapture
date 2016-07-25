@@ -33,6 +33,7 @@ object Css {
 case class Css(properties: ListMap[String, String]) {
   def content = properties.map { case (k, v) => s"$k: $v;" }.mkString(" ")
   override def toString = s"""css${"\"" * 3}$content${"\"" * 3}"""
+  def +(css: Css) = Css(properties ++ css.properties)
 }
 
 object CssStylesheet { 
