@@ -27,6 +27,13 @@ import rapture.css._
 
 import language.{dynamics, implicitConversions}
 
+trait DynamicCssReferencing
+
+object dynamicCssReferencing {
+  def apply(): DynamicCssReferencing = dynamicCssReferencingImplicit
+  implicit val dynamicCssReferencingImplicit: DynamicCssReferencing = new DynamicCssReferencing {}
+}
+
 object htmlSyntax {
 
   import Html5._
@@ -152,8 +159,8 @@ object htmlSyntax {
   val Legend = Tag[Phrasing, Flow, AttributeType]()
   val Div = Tag[Flow, Flow, AttributeType](forceClosingTag = true)
 
-  implicit def id = Attribute[Global, Symbol]("id")(_.name)
-  def id_=[E <: ElementType](v: Symbol) = id.set[E](v)
+  implicit def id = Attribute[Global, String]("id")(identity)
+  def id_=[E <: ElementType, Value: DomIdable](v: Value) = id.set[E](implicitly[DomIdable[Value]].domId(v))
 
   implicit def lang = Attribute[Global, Symbol]("lang")(_.name)
   def lang_=[E <: ElementType](v: Symbol) = lang.set[E](v)
@@ -166,20 +173,34 @@ object htmlSyntax {
     implicit val cssClassable: CssClassable[CssClass] =
       new CssClassable[CssClass] { def cssClass(cssClass: CssClass) = cssClass.classes.to[List] }
     
-    implicit val stringCssClassable: CssClassable[String] =
+    implicit def stringCssClassable(implicit dynamicCssReferencing: DynamicCssReferencing): CssClassable[String] =
       new CssClassable[String] { def cssClass(string: String) = List(string) }
     
-    implicit val symbolCssClassable: CssClassable[Symbol] =
+    implicit def symbolCssClassable(implicit dynamicCssReferencing: DynamicCssReferencing): CssClassable[Symbol] =
       new CssClassable[Symbol] { def cssClass(symbol: Symbol) = List(symbol.name) }
     
-    implicit val stringListCssClassable: CssClassable[List[String]] =
+    implicit def stringListCssClassable(implicit dynamicCssReferencing: DynamicCssReferencing): CssClassable[List[String]] =
       new CssClassable[List[String]] { def cssClass(list: List[String]) = list }
     
-    implicit val symbolListCssClassable: CssClassable[List[Symbol]] =
+    implicit def symbolListCssClassable(implicit dynamicCssReferencing: DynamicCssReferencing): CssClassable[List[Symbol]] =
       new CssClassable[List[Symbol]] { def cssClass(list: List[Symbol]) = list.map(_.name) }
   }
 
   trait CssClassable[Value] { def cssClass(value: Value): List[String] }
+
+  object DomIdable {
+    
+    implicit val domIdable: DomIdable[DomId] =
+      new DomIdable[DomId] { def domId(value: DomId): String = value.id }
+    
+    implicit def stringDomIdable(implicit dynamicCssReferencing: DynamicCssReferencing): DomIdable[String] =
+      new DomIdable[String] { def domId(string: String): String = string }
+    
+    implicit def symbolDomIdable(implicit dynamicCssReferencing: DynamicCssReferencing): DomIdable[Symbol] =
+      new DomIdable[Symbol] { def domId(symbol: Symbol): String = symbol.name }
+  }
+
+  trait DomIdable[Value] { def domId(value: Value): String }
 
   implicit def cls = Attribute[Global, Seq[String]]("cls", "class")(_.mkString(" "))
   def cls_=[E <: ElementType, Value: CssClassable](value: Value) =

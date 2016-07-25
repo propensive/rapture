@@ -71,7 +71,8 @@ object CssParser {
   }
 
   def checkProperties(css: Css) = {
-    for((k, v) <- css.properties) if (!Properties.all.contains(k)) throw ValidationException(0, 0, s"invalid CSS attribute '$k'")
+    var prefixes = List("-webkit-", "-moz-", "-ms-", "-o-")
+    for((k, v) <- css.properties) if (!prefixes.exists(k.startsWith) && !Properties.all.contains(k)) throw ValidationException(0, 0, s"invalid CSS attribute '$k'")
   }
   def convertStylesheet(cssStylesheet: CSSStyleSheet): List[CssRule] = {
     val rules = cssStylesheet.getCssRules()

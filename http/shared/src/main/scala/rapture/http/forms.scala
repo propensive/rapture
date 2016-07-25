@@ -25,7 +25,7 @@ import rapture.uri._
 import rapture.net._
 import rapture.dom._
 import rapture.html._
-import rapture.css._
+import rapture.css._, dynamicCssReferencing._
 
 import scala.collection.mutable.ListBuffer
 

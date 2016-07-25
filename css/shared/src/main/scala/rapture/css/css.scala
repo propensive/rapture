@@ -49,7 +49,9 @@ case class CssStylesheet(rules: List[CssRule]) {
 object DomId {
   def auto(implicit assignedName: AssignedName) = DomId(assignedName.name)
 }
-case class DomId(id: String)
+case class DomId(id: String) {
+  override def toString = s"#$id"
+}
 
 object CssClass {
   def auto(implicit assignedName: AssignedName) = CssClass(Set(assignedName.name))
@@ -60,6 +62,8 @@ case class CssClass(classes: Set[String]) {
   def +(cssClass: CssClass): CssClass = CssClass(classes ++ cssClass.classes)
 
   def asString = classes.mkString(" ")
+  
+  override def toString = classes.mkString(".", ".", "")
 }
 
 object CssEmbed {
