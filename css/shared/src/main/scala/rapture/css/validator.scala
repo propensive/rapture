@@ -33,7 +33,16 @@ object CssParser {
 
   def parseStylesheet(parts: List[String], substitutions: List[String]): CssStylesheet = {
     val errHandler = new ErrorHandler {
-      def error(e: CSSParseException) = throw ValidationException(0, e.getColumnNumber - 1, e.getMessage)
+      
+      def stringNo(c: Int): (Int, Int) =
+        parts.zip(substitutions).map { case (p, s) => p.length + s.length }.foldLeft(0 -> 0) { case ((sum, count), n) => if(sum > c) (sum, count) else (sum + n, count + 1) }
+      
+      def error(e: CSSParseException) = {
+        val c = e.getColumnNumber - 1
+        val (sum, cnt) = stringNo(c)
+        throw ValidationException(cnt, c - sum, e.getMessage)
+      }
+      
       def fatalError(e: CSSParseException) = error(e)
       def warning(e: CSSParseException) = error(e)
     }
@@ -57,7 +66,16 @@ object CssParser {
 
   def parse(parts: List[String], substitutions: List[String]): Css = {
     val errHandler = new ErrorHandler {
-      def error(e: CSSParseException) = throw ValidationException(0, e.getColumnNumber - 1, e.getMessage)
+      
+      def stringNo(c: Int): (Int, Int) =
+        parts.zip(substitutions).map { case (p, s) => p.length + s.length }.foldLeft(0 -> 0) { case ((sum, count), n) => if(sum > c) (sum, count) else (sum + n, count + 1) }
+      
+      def error(e: CSSParseException) = {
+        val c = e.getColumnNumber - 1
+        val (sum, cnt) = stringNo(c)
+        throw ValidationException(cnt, c - sum, e.getMessage)
+      }
+      
       def fatalError(e: CSSParseException) = error(e)
       def warning(e: CSSParseException) = error(e)
     }
