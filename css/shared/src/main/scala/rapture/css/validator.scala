@@ -65,7 +65,6 @@ object CssParser {
   }
 
   def parse(parts: List[String], substitutions: List[String]): Css = {
-    println(s"Parsing($parts, $substitutions)")
     val errHandler = new ErrorHandler {
       
       def stringNo(c: Int): (Int, Int) =
