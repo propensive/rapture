@@ -23,7 +23,9 @@ import language.higherKinds
 object AssignedName {
   implicit def assignedNameImplicit: AssignedName = macro CoreMacros.assignedNameMacro
 }
-class AssignedName(val name: String) extends AnyVal
+case class AssignedName(name: String) extends AnyVal {
+  override def toString = s"`$name`"
+}
 
 object MethodName {
   implicit def assignedMethodNameImplicit: MethodName = macro CoreMacros.assignedMethodNameMacro

@@ -53,19 +53,32 @@ private[core] object CoreMacros {
     name getOrElse c.abort(c.enclosingPosition, "This method invocation must be assigned to a named identifier.")
   }
 
+  object AssignedNameMacroState {
+    var lastPoint: Int = 0
+    var assignmentCount: Int = 0
+  }
+
   def assignedNameMacro(c: BlackboxContext): c.Expr[AssignedName] = {
     import c.universe._
+    import AssignedNameMacroState._
 
-    val name = c.enclosingClass find {
-      case ValDef(_, name, _, rhs) => rhs.pos.isDefined && rhs.pos.point == c.macroApplication.pos.point
-      case other => false
-    } map {
+    val currentPoint = c.macroApplication.pos.point
+
+    if(currentPoint != lastPoint) assignmentCount = 0
+
+    val name = c.enclosingClass.filter {
+      case ValDef(_, name, _, rhs) => rhs.pos.isDefined && rhs.pos.point == currentPoint
+      case _ => false
+    }.drop(assignmentCount).map {
       case ValDef(_, name, _, _) =>
-        val dec = c.Expr[String](Literal(Constant(name.decodedName.toString)))
-        reify { new AssignedName(dec.splice) }
-    }
+        val dec = Literal(Constant(name.decodedName.toString))
+        c.Expr[AssignedName](q"_root_.rapture.core.AssignedName($dec)")
+    }.headOption
 
-    name getOrElse c.abort(c.enclosingPosition, "This method invocation must be assigned to a named identifier.")
+    lastPoint = currentPoint
+    assignmentCount += 1
+
+    name getOrElse c.abort(c.enclosingPosition, "this method invocation must be assigned to a named identifier.")
   }
 
   def allocMacro[T: c.WeakTypeTag](c: BlackboxContext): c.Expr[Alloc0[T]] = {
