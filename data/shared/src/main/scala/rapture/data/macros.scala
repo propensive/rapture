@@ -25,27 +25,13 @@ object Macros {
   // FIXME: Include enclosing position in the HashSet too
   val emittedWarnings = new collection.mutable.HashSet[String]
 
-  // FIXME: Consider adding this check for knownDirectSubclasses to support sealed case classes
-  // def impl[T: c.WeakTypeTag](c: WhiteboxContext): c.Tree = {
-  //   import c.universe._
-  //   def subs = weakTypeOf[T].typeSymbol.asClass.knownDirectSubclasses
-  //   val subs1 = subs
-  //   println(subs1)
-  //   val global = c.universe.asInstanceOf[tools.nsc.Global]
-  //   def checkSubsPostTyper = if (subs1 != subs)
-  //     c.error(c.macroApplication.pos, "sealed descendents appears after macro exansion")
-  //     val dummyTypTree =
-  //     new global.TypeTreeWithDeferredRefCheck()(() => { checkSubsPostTyper ; global.TypeTree(global.NoType) }).asInstanceOf[TypTree]
-  //   q"type T = $dummyTypTree; ${subs1.size} : _root_.scala.Int"
-  // }
-  // def numChildren[T]: Int = macro impl[T]
-
   def extractorMacro[T: c.WeakTypeTag, Data: c.WeakTypeTag, Th](
       c: WhiteboxContext): c.Expr[Extractor[T, Data] { type Throws = Th }] = {
     import c.universe._
     import compatibility._
 
-    val extractor = typeOf[Extractor[_, _]].typeSymbol.asType.toTypeConstructor
+    val extractorType = typeOf[Extractor[_, _]].typeSymbol.asType.toTypeConstructor
+    val nameMapperType = typeOf[NameMapper[_, _]].typeSymbol.asType.toTypeConstructor
 
     val implicitSearchFailures = collection.mutable.ListMap[String, List[String]]().withDefault(_ => Nil)
 
@@ -57,7 +43,7 @@ object Macros {
       val paramType = param.typeSignature
 
       val inferredExtractor =
-        c.inferImplicitValue(appliedType(extractor, List(paramType, weakTypeOf[Data])), false, false)
+        c.inferImplicitValue(appliedType(extractorType, List(paramType, weakTypeOf[Data])), false, false)
 
       c.Expr(q"$inferredExtractor.map { new ${weakTypeOf[T]}(_) }")
 
@@ -73,12 +59,13 @@ object Macros {
         case m: MethodSymbol if m.isCaseAccessor => m.asMethod
       }.zipWithIndex map {
         case (p, idx) =>
-          val deref = q"""data.selectDynamic(${Literal(Constant(p.name.decodedName.toString))})"""
+          val nameMappingImplicit = c.inferImplicitValue(appliedType(nameMapperType, List(weakTypeOf[T], weakTypeOf[Data])), false, false)
+          val deref = q"""data.selectDynamic($nameMappingImplicit.encode(${Literal(Constant(p.name.decodedName.toString))}))"""
 
           val NothingType = weakTypeOf[Nothing]
 
           val imp =
-            try c.inferImplicitValue(appliedType(extractor, List(p.returnType, weakTypeOf[Data])), false, false)
+            try c.inferImplicitValue(appliedType(extractorType, List(p.returnType, weakTypeOf[Data])), false, false)
             catch {
 
               case e: Exception =>
@@ -170,6 +157,7 @@ object Macros {
     import compatibility._
 
     val tpe = weakTypeOf[T].typeSymbol.asClass
+    val nameMapperType = typeOf[NameMapper[_, _]].typeSymbol.asType.toTypeConstructor
     val serializer = typeOf[Serializer[_, _]].typeSymbol.asType.toTypeConstructor
 
     if (weakTypeOf[T] <:< typeOf[AnyVal]) {
@@ -187,49 +175,38 @@ object Macros {
 
       c.Expr(q"$inferredSerializer.contramap[${weakTypeOf[T]}](_.${termName(c, paramName)})")
     } else {
-      val construction = if (tpe.isCaseClass) {
-
-        val params = declarations(c)(weakTypeOf[T]) collect {
+      if (tpe.isCaseClass) {
+        val params = declarations(c)(weakTypeOf[T]).collect {
           case m: MethodSymbol if m.isCaseAccessor => m.asMethod
-        } map { p =>
+        }.map { p =>
           val imp = c.inferImplicitValue(appliedType(serializer, List(p.returnType, weakTypeOf[Data])), false, false)
-          q"""(${Literal(Constant(p.name.decodedName.toString))}, $imp.serialize(${termName(c, "t")}.${p}))"""
+          val appliedSerializerType = appliedType(nameMapperType, List(weakTypeOf[T], weakTypeOf[Data]))
+          val nameMapperImplicit = c.inferImplicitValue(appliedSerializerType, false, false)
+          q"""($nameMapperImplicit.encode(${Literal(Constant(p.name.decodedName.toString))}),
+              $imp.serialize(${termName(c, "t")}.${p}))"""
         }
 
-        c.Expr[Map[String, Any]](q"""_root_.scala.collection.immutable.Map(..$params)""")
+        c.Expr[Serializer[T, Data]](q"""new _root_.rapture.data.Serializer[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
+          def serialize(t: ${weakTypeOf[T]}): _root_.scala.Any =
+            $ast.fromObject(_root_.scala.collection.immutable.Map(..$params).filterNot { v => $ast.isNull(v._2) })
+        }""")
       } else if (tpe.isSealed) {
-        c.Expr[Map[String, Any]](
-            Match(
-                Ident(termName(c, "t")),
-                tpe.knownDirectSubclasses.to[List] map { sc =>
-                  CaseDef(
-                      Bind(
-                          termName(c, "v"),
-                          Typed(
-                              Ident(wildcard(c)),
-                              Ident(sc.asClass)
-                          )
-                      ),
-                      EmptyTree,
-                      Apply(
-                          Select(
-                              c.inferImplicitValue(appliedType(serializer, List(sc.asType.toType)), false, false),
-                              termName(c, "serialize")
-                          ),
-                          List(Ident(termName(c, "v")))
-                      )
-                  )
-                }
-            )
-        )
+        val cases = tpe.knownDirectSubclasses.to[List]
+        try {
+        val caseClauses = cases.map { sc =>
+          val fullySpecifiedSerializer = appliedType(serializer, List(sc.asType.toType, weakTypeOf[Data]))
+          val caseSerializer = c.inferImplicitValue(fullySpecifiedSerializer, false, false)
+          val pattern = pq"v: ${sc.asClass}"
+          cq"${pattern} => $caseSerializer.serialize(v)"
+        }
+        
+        val ser = c.Expr[Serializer[T, Data]](q"""new _root_.rapture.data.Serializer[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
+          def serialize(t: ${weakTypeOf[T]}): _root_.scala.Any = t match { case ..$caseClauses }
+        }""")
+        ser
+        } catch { case e: Throwable => e.printStackTrace(); ??? }
       } else throw new Exception()
 
-      reify(new Serializer[T, Data] {
-        def serialize(t: T): Any =
-          ast.splice.fromObject(construction.splice.filterNot { v =>
-            ast.splice.isNull(v._2)
-          })
-      })
     }
   }
 }

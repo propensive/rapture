@@ -31,6 +31,59 @@ trait Formatter[-AstType <: DataAst] {
 
 object DataCompanion { object Empty }
 
+object serializedNames {
+  object inUnderscoreStyle {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name.flatMap {
+        case lower if lower.isLower => lower.toString
+        case upper if upper.isUpper => s"_$upper".toLowerCase
+        case other => other.toString
+      }
+
+      def decode(name: String): String = name.foldLeft(("", false)) {
+        case ((acc, _), '_') => (acc, true)
+        case ((acc, true), other) => (acc+other.toString.toUpperCase, false)
+        case ((acc, false), other) => (acc+other, false)
+      }._1
+    }
+  }
+  
+  object inDashedStyle {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name.flatMap {
+        case lower if lower.isLower => lower.toString
+        case upper if upper.isUpper => s"-$upper".toLowerCase
+        case other => other.toString
+      }
+
+      def decode(name: String): String = name.foldLeft(("", false)) {
+        case ((acc, _), '-') => (acc, true)
+        case ((acc, true), other) => (acc+other.toString.toUpperCase, false)
+        case ((acc, false), other) => (acc+other, false)
+      }._1
+    }
+  }
+  
+  object identical {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name
+      def decode(name: String): String = name
+    }
+  }
+}
+
+object NameMapper {
+  implicit def identityNameMapper[V, D]: NameMapper[V, D] = serializedNames.identical[V, D]
+}
+
+trait NameMapper[+Value, +Data] {
+  def encode(name: String): String
+  def decode(name: String): String
+}
+
 trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
   type ParseMethodConstraint <: MethodConstraint
