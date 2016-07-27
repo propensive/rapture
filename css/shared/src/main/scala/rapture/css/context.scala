@@ -39,7 +39,6 @@ private[css] object CssMacros {
   def cssClassContextMacro(c: BlackboxContext)(
       exprs: c.Expr[ForcedConversion[CssClass]]*): c.Expr[CssClass] = {
     import c.universe._
-    import compatibility._
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawPart :: Nil))), _) =>
@@ -84,7 +83,7 @@ private[css] object CssMacros {
         parseSource(text, substitutions, true) foreach {
           case (n, offset, msg) =>
             val oldPos = ys(n).asInstanceOf[Literal].pos
-            val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+            val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
 
@@ -135,7 +134,7 @@ private[css] object CssMacros {
         parseSource(text, stringsUsed, false) foreach {
           case (n, offset, msg) =>
             val oldPos = ys(n).asInstanceOf[Literal].pos
-            val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+            val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
 

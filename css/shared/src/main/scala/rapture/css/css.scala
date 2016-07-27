@@ -17,7 +17,6 @@
 
 package rapture.css
 
-import rapture.data._
 import rapture.dom._
 import rapture.core._
 

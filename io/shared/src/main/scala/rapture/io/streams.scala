@@ -239,7 +239,7 @@ object Writer {
   * @tparam Resource Resource for which this corresponds
   * @tparam Data Units of data to be streamed, typically `Byte` or `Char` */
 @implicitNotFound(
-    msg = "Cannot write ${Data} data to ${Resource} resources. Note that if you " +
+    msg = "Cannot write $"+"{Data} data to $"+"{Resource} resources. Note that if you " +
         "are working with Char data, you will require an implicit character encoding, e.g. " +
         "import encodings.system._ or import encodings.`UTF-8`._.")
 trait Writer[-Resource, @specialized(Byte, Char) Data] {
@@ -590,8 +590,8 @@ object Reader extends Reader_1 {
 /** Generic type class for reading a particular kind of data from 
   */
 @implicitNotFound(
-    msg = "Cannot find implicit Reader for ${Resource} resources. " +
-        "${Resource} resources can only be read if a Reader implicit exists within scope. " +
+    msg = "Cannot find implicit Reader for $"+"{Resource} resources. " +
+        "$"+"{Resource} resources can only be read if a Reader implicit exists within scope. " +
         "Note that if you are working with Char data, you will require an implicit character " +
         "encoding, e.g. import encodings.system._ or import encodings.`UTF-8`._.")
 trait Reader[-Resource, @specialized(Byte, Char) Data] {

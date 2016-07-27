@@ -34,7 +34,7 @@ class ReturnValidation[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+T, E <: Exception] = Validation[E, T]
   def wrap[T, E <: Exception](t: => T): Validation[E, T] =
     try Success(t)
-    catch { case e: E => Failure(e) }
+    catch { case e: Exception => Failure(e.asInstanceOf[E]) }
   def unwrap[T](t: => Validation[_ <: Exception, T]): T = t.valueOr { throw _ }
 }
 
@@ -42,7 +42,7 @@ class ReturnDisjunction[+Group <: MethodConstraint] extends Mode[Group] {
   type Wrap[+T, E <: Exception] = \/[E, T]
   def wrap[T, E <: Exception](t: => T): \/[E, T] =
     try \/-(t)
-    catch { case e: E => -\/(e) }
+    catch { case e: Exception => -\/(e.asInstanceOf[E]) }
   def unwrap[T](t: => \/[_ <: Exception, T]): T = t.valueOr { throw _ }
 }
 

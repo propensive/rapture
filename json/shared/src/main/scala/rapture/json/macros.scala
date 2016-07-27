@@ -21,7 +21,7 @@ import rapture.base._
 import rapture.data._
 
 private[json] object JsonMacros {
-  def jsonExtractorMacro[T: c.WeakTypeTag, Th](c: WhiteboxContext): c.Expr[Extractor[T, Json] { type Throws = Th }] =
+  def jsonExtractorMacro[T: c.WeakTypeTag, Th](c: WhiteboxContext): c.Expr[Extractor[T, Json]] =
     Macros.extractorMacro[T, Json, Th](c)
 
   //def jsonBufferExtractorMacro[T: c.WeakTypeTag](c: Context) =

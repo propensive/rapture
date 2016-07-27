@@ -17,7 +17,7 @@
 
 package rapture.core
 
-import language.{higherKinds, implicitConversions}
+import language.higherKinds
 import language.experimental.macros
 import reflect.runtime.universe._
 import reflect.ClassTag

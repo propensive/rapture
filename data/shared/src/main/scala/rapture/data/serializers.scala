@@ -21,8 +21,8 @@ import rapture.core._
 import scala.annotation._
 
 @implicitNotFound(
-    "Cannot serialize type ${T} to ${D}. Please provide an implicit Serializer " +
-      "of type ${T}.")
+    "Cannot serialize type $"+"{T} to $"+"{D}. Please provide an implicit Serializer " +
+      "of type $"+"{T}.")
 trait Serializer[T, -D] { ser =>
   def serialize(t: T): Any
 

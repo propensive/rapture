@@ -16,8 +16,7 @@ lazy val commonSettings = Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-Xlint",
-    "-Ywarn-dead-code"
+    "-Xlint"
  /*   "-language:existentials",
     "-language:higherKinds",
     "-language:implicitConversions",
@@ -161,7 +160,7 @@ lazy val http = crossProject.dependsOn(net, uri, json, html, fs, log, time)
   .settings(raptureSettings:_*)
   .settings(libraryDependencies += "javax.servlet" % "servlet-api" % "2.5")
   .settings(libraryDependencies += "org.w3c.css" % "sac" % "1.3")
-  .settings(libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18")
+  .settings(libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.20")
  
 lazy val httpJVM = http.jvm
 lazy val httpJS = http.js
@@ -309,7 +308,7 @@ lazy val jsJS = js.js
 lazy val css = crossProject.dependsOn(data, dom)
   .settings(moduleName := "rapture-css")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18")
+  .settings(libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.20")
  
 lazy val cssJVM = css.jvm
 lazy val cssJS = css.js

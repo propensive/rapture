@@ -37,7 +37,9 @@ class Compat211() {
   def paramLists[C <: blackbox.Context](c: C)(t: c.universe.MethodSymbol) = t.paramLists
   def normalize[C <: blackbox.Context](c: C)(t: c.universe.Type) = t.dealias
   def declarations[C <: blackbox.Context](c: C)(t: c.universe.Type) = t.decls
+  def declaration[C <: blackbox.Context](c: C)(t: c.universe.Type, d: c.universe.Name) = t.decl(d)
   def readLine(): String = scala.io.StdIn.readLine
   def typecheck[C <: blackbox.Context](c: C)(t: c.Tree) = c.typecheck(t)
   def freshName[C <: blackbox.Context](c: C)(s: String) = c.freshName(s)
+  def companion[C <: blackbox.Context](c: C)(s: c.universe.Symbol) = s.companion
 }

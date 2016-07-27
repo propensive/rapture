@@ -52,12 +52,13 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]): Option[(Int, Int, String)]
 
-  def companion(c: BlackboxContext): c.Expr[DataCompanion[Data, AstType]]
+  def dataCompanion(c: BlackboxContext): c.Expr[DataCompanion[Data, AstType]]
 
   def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Data]]*)(
       parser: c.Expr[Parser[String, AstType]]): c.Expr[Data] = {
     import c.universe._
     import compatibility._
+    
     c.prefix.tree match {
       case Select(Apply(Apply(_, List(Apply(_, rawParts))), _), _) =>
         val ys = rawParts.to[List]
@@ -80,7 +81,7 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
           case (n, offset, msg) =>
             val oldPos = ys(n).asInstanceOf[Literal].pos
 
-            val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+            val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
 
@@ -90,7 +91,7 @@ abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: D
                 rawParts
             ))
 
-        val comp = companion(c)
+        val comp = dataCompanion(c)
 
         reify {
           val sb = new StringBuilder

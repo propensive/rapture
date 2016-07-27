@@ -26,7 +26,7 @@ object Macros {
   val emittedWarnings = new collection.mutable.HashSet[String]
 
   def extractorMacro[T: c.WeakTypeTag, Data: c.WeakTypeTag, Th](
-      c: WhiteboxContext): c.Expr[Extractor[T, Data] { type Throws = Th }] = {
+      c: WhiteboxContext): c.Expr[Extractor[T, Data]] = {
     import c.universe._
     import compatibility._
 
@@ -34,6 +34,8 @@ object Macros {
     val nameMapperType = typeOf[NameMapper[_, _]].typeSymbol.asType.toTypeConstructor
 
     val implicitSearchFailures = collection.mutable.ListMap[String, List[String]]().withDefault(_ => Nil)
+
+    val extractionType = weakTypeOf[T].typeSymbol.asClass
 
     if (weakTypeOf[T] <:< typeOf[AnyVal]) {
       val param = paramLists(c)(declarations(c)(weakTypeOf[T]).collect {
@@ -45,12 +47,48 @@ object Macros {
       val inferredExtractor =
         c.inferImplicitValue(appliedType(extractorType, List(paramType, weakTypeOf[Data])), false, false)
 
-      c.Expr(q"$inferredExtractor.map { new ${weakTypeOf[T]}(_) }")
+      c.Expr[Extractor[T, Data]](q"$inferredExtractor.map { new ${weakTypeOf[T]}(_) }")
+
+    } else if (extractionType.isSealed) {
+      val subclasses = extractionType.knownDirectSubclasses.to[List]
+      def tsort(todo: Map[Set[String], Symbol], done: List[Symbol] = Nil): List[Symbol] = if(todo.isEmpty) done else {
+        val move = todo.filter { case (key, v) => (todo - key).forall(!_._1.subsetOf(key)) }
+        tsort(todo -- move.map(_._1), move.map(_._2).to[List] ::: done)
+      }
+
+      val paramSets = subclasses.map { subclass =>
+        (declarations(c)(subclass.asType.toType).collect {
+          case m: MethodSymbol if m.isCaseAccessor => m.asMethod
+        }.map(_.name.decodedName.toString).to[Set], subclass)
+      }
+
+      val sortedExtractors = tsort(paramSets.toMap).map { subclass =>
+        val searchType = appliedType(extractorType, List(subclass.asType.toType, weakTypeOf[Data]))
+        c.inferImplicitValue(searchType, false, false)
+      }
+      
+      val NothingType = weakTypeOf[Nothing]
+          
+      val throwsType = sortedExtractors.last.tpe.member(typeName(c, "Throws")).typeSignature
+      
+      val combinedExtractors = sortedExtractors.reduceLeft { (left, right) => q"$left.orElse($right)" }
+      
+      c.Expr[Extractor[T, Data]](q"""
+        (new _root_.rapture.data.Extractor[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
+          def extract(data: ${weakTypeOf[Data]}, ast: _root_.rapture.data.DataAst, mode: _root_.rapture.core.Mode[_  <: _root_.rapture.core.MethodConstraint]): mode.Wrap[${weakTypeOf[
+          T]}, Throws] = mode.wrap { $combinedExtractors }
+        }).asInstanceOf[_root_.rapture.data.Extractor[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
+          type Throws = ${throwsType}
+        }]
+      """)
 
     } else {
+
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
 
-      val defaults = weakTypeOf[T].typeSymbol.companionSymbol.typeSignature.declaration(termName(c, "apply")).asMethod.paramss.flatten.map(_.asTerm.isParamWithDefault).zipWithIndex.filter(_._1).map(_._2 + 1).to[Set]
+      val typeDeclaration = companion(c)(weakTypeOf[T].typeSymbol).typeSignature
+      val valueParameters = paramLists(c)(declaration(c)(typeDeclaration, termName(c, "apply")).asMethod)
+      val defaults = valueParameters.flatten.map(_.asTerm.isParamWithDefault).zipWithIndex.filter(_._1).map(_._2 + 1).to[Set]
       
       // FIXME integrate these into a fold
       var throwsTypes: Set[Type] = Set(typeOf[DataGetException])
@@ -64,25 +102,23 @@ object Macros {
 
           val NothingType = weakTypeOf[Nothing]
 
-          val imp =
+          val inferredImplicit =
             try c.inferImplicitValue(appliedType(extractorType, List(p.returnType, weakTypeOf[Data])), false, false)
             catch {
-
               case e: Exception =>
                 implicitSearchFailures(p.returnType.toString) ::= p.name.decodedName.toString
                 null
             }
 
           val t = try {
-            imp.tpe.member(typeName(c, "Throws")).typeSignature match {
+            inferredImplicit.tpe.member(typeName(c, "Throws")).typeSignature match {
               case NothingType => List()
               case refinedType: RefinedType => refinedType.parents
               case typ: Type => List(typ)
               case _ => ???
             }
           } catch {
-            case e: Exception =>
-              List()
+            case e: Exception => List()
           }
 
           if(!defaults.contains(idx + 1)) throwsTypes ++= t
@@ -98,11 +134,12 @@ object Macros {
             else Ident(tpe.typeSymbol.name.toTermName)
           }
 
+
           if (defaults.contains(idx + 1)) q"""
-          mode.unwrap(try $deref.as($imp, mode.generic) catch { case e => mode.wrap(${companionRef(weakTypeOf[T])}.${termName(
+          mode.unwrap(try $deref.as($inferredImplicit, mode.generic) catch { case e: Exception => mode.wrap(${companionRef(weakTypeOf[T])}.${termName(
               c, "apply$default$" + (idx + 1))}.asInstanceOf[${p.returnType}]) }, ${Literal(Constant("." + p.name.decodedName))})
           """ else q"""
-          mode.unwrap($deref.as($imp, mode.generic), ${Literal(Constant("." + p.name.decodedName))})
+          mode.unwrap($deref.as($inferredImplicit, mode.generic), ${Literal(Constant("." + p.name.decodedName))})
         """
       }
 
@@ -140,7 +177,7 @@ object Macros {
 
       val construction = c.Expr[T](q"""new ${weakTypeOf[T]}(..$params)""")
 
-      c.Expr(q"""
+      c.Expr[Extractor[T, Data]](q"""
         (new _root_.rapture.data.Extractor[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
           def extract(data: ${weakTypeOf[Data]}, ast: _root_.rapture.data.DataAst, mode: _root_.rapture.core.Mode[_  <: _root_.rapture.core.MethodConstraint]): mode.Wrap[${weakTypeOf[
           T]}, Throws] = mode.wrap { ${construction} }
@@ -173,7 +210,7 @@ object Macros {
 
       val newName = termName(c, freshName(c)("param$"))
 
-      c.Expr(q"$inferredSerializer.contramap[${weakTypeOf[T]}](_.${termName(c, paramName)})")
+      c.Expr[Serializer[T, Data]](q"$inferredSerializer.contramap[${weakTypeOf[T]}](_.${termName(c, paramName)})")
     } else {
       if (tpe.isCaseClass) {
         val params = declarations(c)(weakTypeOf[T]).collect {
@@ -192,7 +229,6 @@ object Macros {
         }""")
       } else if (tpe.isSealed) {
         val cases = tpe.knownDirectSubclasses.to[List]
-        try {
         val caseClauses = cases.map { sc =>
           val fullySpecifiedSerializer = appliedType(serializer, List(sc.asType.toType, weakTypeOf[Data]))
           val caseSerializer = c.inferImplicitValue(fullySpecifiedSerializer, false, false)
@@ -200,11 +236,9 @@ object Macros {
           cq"${pattern} => $caseSerializer.serialize(v)"
         }
         
-        val ser = c.Expr[Serializer[T, Data]](q"""new _root_.rapture.data.Serializer[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
+        c.Expr[Serializer[T, Data]](q"""new _root_.rapture.data.Serializer[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
           def serialize(t: ${weakTypeOf[T]}): _root_.scala.Any = t match { case ..$caseClauses }
         }""")
-        ser
-        } catch { case e: Throwable => e.printStackTrace(); ??? }
       } else throw new Exception()
 
     }

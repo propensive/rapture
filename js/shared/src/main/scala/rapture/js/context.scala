@@ -58,7 +58,7 @@ private[js] object JsMacros {
         parseSource(text, stringsUsed) foreach {
           case (n, offset, msg) =>
             val oldPos = ys(n).asInstanceOf[Literal].pos
-            val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+            val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
 

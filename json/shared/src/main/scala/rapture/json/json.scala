@@ -23,7 +23,7 @@ import rapture.data._
 import language.experimental.macros
 
 private[json] trait Json_2 {
-  implicit def jsonExtractorMacro[T <: Product, Th]: Extractor[T, Json] { type Throws = Th } = macro JsonMacros
+  implicit def jsonExtractorMacro[T <: Product, Th]: Extractor[T, Json] = macro JsonMacros
     .jsonExtractorMacro[T, Th]
 
   implicit def jsonSerializerMacro[T <: Product](implicit ast: JsonAst): Serializer[T, Json] = macro JsonMacros

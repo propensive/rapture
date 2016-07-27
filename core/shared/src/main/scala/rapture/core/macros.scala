@@ -18,6 +18,7 @@
 package rapture.core
 
 import rapture.base._
+import scala.reflect._
 
 private[core] object CoreMacros {
   def enumerateMacro[Cls: c.WeakTypeTag, T: c.WeakTypeTag](c: BlackboxContext)(value: c.Expr[Cls]): c.Expr[List[T]] = {
@@ -42,7 +43,7 @@ private[core] object CoreMacros {
     import c.universe._
 
     val name = c.enclosingClass.find {
-      case DefDef(_, name, _, _, _, rhs) => rhs.pos.isDefined && rhs.pos.point == c.macroApplication.pos.point
+      case DefDef(_, name, _, _, _, rhs) => rhs.pos != NoPosition && rhs.pos.start == c.macroApplication.pos.start
       case _ => false
     }.map {
       case DefDef(_, name, _, _, _, _) =>
@@ -54,7 +55,7 @@ private[core] object CoreMacros {
   }
 
   object AssignedNameMacroState {
-    var lastPoint: Int = 0
+    var lastPoint: Option[api.Position] = None
     var assignmentCount: Int = 0
   }
 
@@ -62,12 +63,13 @@ private[core] object CoreMacros {
     import c.universe._
     import AssignedNameMacroState._
 
-    val currentPoint = c.macroApplication.pos.point
+    val currentPoint = c.macroApplication.pos
 
-    if(currentPoint != lastPoint) assignmentCount = 0
+    if(Some(currentPoint) != lastPoint) assignmentCount = 0
 
     val name = c.enclosingClass.filter {
-      case ValDef(_, name, _, rhs) => rhs.pos.isDefined && rhs.pos.point == currentPoint
+      case ValDef(_, name, _, rhs) =>
+        rhs.pos != NoPosition && rhs.pos.start == currentPoint.start
       case _ => false
     }.drop(assignmentCount).map {
       case ValDef(_, name, _, _) =>
@@ -75,7 +77,7 @@ private[core] object CoreMacros {
         c.Expr[AssignedName](q"_root_.rapture.core.AssignedName($dec)")
     }.headOption
 
-    lastPoint = currentPoint
+    lastPoint = Some(currentPoint)
     assignmentCount += 1
 
     name getOrElse c.abort(c.enclosingPosition, "this method invocation must be assigned to a named identifier.")

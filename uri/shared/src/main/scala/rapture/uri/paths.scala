@@ -17,8 +17,6 @@
 
 package rapture.uri
 
-import language.implicitConversions
-
 import scala.annotation.implicitNotFound
 
 object RelativePath {

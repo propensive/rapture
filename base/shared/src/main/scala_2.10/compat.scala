@@ -36,7 +36,9 @@ class Compat210() {
   def paramLists(c: Context)(t: c.universe.MethodSymbol) = t.paramss
   def normalize(c: Context)(t: c.universe.Type) = t.normalize
   def declarations(c: Context)(t: c.universe.Type) = t.declarations
+  def declaration(c: Context)(t: c.universe.Type, n: c.universe.Name) = t.declaration(n)
   def readLine(): String = Console.readLine()
   def typecheck(c: Context)(s: c.Tree) = c.typeCheck(s)
   def freshName(c: Context)(s: String) = c.fresh(s)
+  def companion(c: Context)(x: c.universe.Symbol) = x.companionSymbol
 }
