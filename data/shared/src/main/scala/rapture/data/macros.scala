@@ -49,7 +49,8 @@ object Macros {
 
       c.Expr[Extractor[T, Data]](q"$inferredExtractor.map { new ${weakTypeOf[T]}(_) }")
 
-    } else if (extractionType.isSealed) {
+    }/* else if (extractionType.isSealed) {
+      
       val subclasses = extractionType.knownDirectSubclasses.to[List]
       def tsort(todo: Map[Set[String], Symbol], done: List[Symbol] = Nil): List[Symbol] = if(todo.isEmpty) done else {
         val move = todo.filter { case (key, v) => (todo - key).forall(!_._1.subsetOf(key)) }
@@ -82,7 +83,7 @@ object Macros {
         }]
       """)
 
-    } else {
+    }*/ else {
 
       require(weakTypeOf[T].typeSymbol.asClass.isCaseClass)
 
@@ -98,7 +99,7 @@ object Macros {
       }.zipWithIndex map {
         case (p, idx) =>
           val nameMappingImplicit = c.inferImplicitValue(appliedType(nameMapperType, List(weakTypeOf[T], weakTypeOf[Data])), false, false)
-          val deref = q"""data.selectDynamic($nameMappingImplicit.encode(${Literal(Constant(p.name.decodedName.toString))}))"""
+          val deref = q"""data.selectDynamic($nameMappingImplicit.encode(${p.name.decodedName.toString}))"""
 
           val NothingType = weakTypeOf[Nothing]
 
@@ -137,9 +138,9 @@ object Macros {
 
           if (defaults.contains(idx + 1)) q"""
           mode.unwrap(try $deref.as($inferredImplicit, mode.generic) catch { case e: Exception => mode.wrap(${companionRef(weakTypeOf[T])}.${termName(
-              c, "apply$default$" + (idx + 1))}.asInstanceOf[${p.returnType}]) }, ${Literal(Constant("." + p.name.decodedName))})
+              c, "apply$default$" + (idx + 1))}.asInstanceOf[${p.returnType}]) }, ${"." + p.name.decodedName})
           """ else q"""
-          mode.unwrap($deref.as($inferredImplicit, mode.generic), ${Literal(Constant("." + p.name.decodedName))})
+          mode.unwrap($deref.as($inferredImplicit, mode.generic), ${"." + p.name.decodedName})
         """
       }
 
@@ -219,7 +220,7 @@ object Macros {
           val imp = c.inferImplicitValue(appliedType(serializer, List(p.returnType, weakTypeOf[Data])), false, false)
           val appliedSerializerType = appliedType(nameMapperType, List(weakTypeOf[T], weakTypeOf[Data]))
           val nameMapperImplicit = c.inferImplicitValue(appliedSerializerType, false, false)
-          q"""($nameMapperImplicit.encode(${Literal(Constant(p.name.decodedName.toString))}),
+          q"""($nameMapperImplicit.encode(${p.name.decodedName.toString}),
               $imp.serialize(${termName(c, "t")}.${p}))"""
         }
 

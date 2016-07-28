@@ -35,18 +35,13 @@ private[js] object JsMacros {
 
   def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Js]]*): c.Expr[Js] = {
     import c.universe._
-    import compatibility._
-
+    
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
         val ys = rawParts
         val text = rawParts map { case lit @ Literal(Constant(part: String)) => part }
 
-        val listExprs = c.Expr[List[ForcedConversion[Js]]](
-            Apply(
-                Select(reify(List).tree, termName(c, "apply")),
-                exprs.map(_.tree).to[List]
-            ))
+        val listExprs = c.Expr[List[ForcedConversion[Js]]](q"_root_.scala.List(..${exprs.map(_.tree).to[List]})")
 
         val stringsUsed: List[Boolean] = listExprs.tree match {
           case Apply(_, bs) =>
@@ -62,11 +57,7 @@ private[js] object JsMacros {
             c.error(newPos, msg)
         }
 
-        val listParts = c.Expr[List[String]](
-            Apply(
-                Select(reify(List).tree, termName(c, "apply")),
-                rawParts
-            ))
+        val listParts = c.Expr[List[ForcedConversion[Js]]](q"_root_.scala.List(..$rawParts)")
 
         reify {
           val sb = new StringBuilder

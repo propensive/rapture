@@ -41,17 +41,13 @@ private[core] object CoreMacros {
 
   def assignedMethodNameMacro(c: BlackboxContext): c.Expr[MethodName] = {
     import c.universe._
+    import compatibility._
 
-    val name = c.enclosingClass.find {
-      case DefDef(_, name, _, _, _, rhs) => rhs.pos != NoPosition && rhs.pos.start == c.macroApplication.pos.start
-      case _ => false
-    }.map {
-      case DefDef(_, name, _, _, _, _) =>
-        val dec = c.Expr[String](Literal(Constant(name.decodedName.toString)))
-        reify { new MethodName(dec.splice) }
+    val name = enclosingDef(c)(c.macroApplication.pos).map { name =>
+      c.Expr[MethodName](q"new _root_.rapture.core.MethodName(${name.decodedName.toString})")
     }
-
-    name getOrElse c.abort(c.enclosingPosition, "This method invocation must be assigned to a named identifier.")
+    
+    name getOrElse c.abort(c.enclosingPosition, "this method invocation must be assigned to a named identifier.")
   }
 
   object AssignedNameMacroState {
@@ -62,20 +58,15 @@ private[core] object CoreMacros {
   def assignedNameMacro(c: BlackboxContext): c.Expr[AssignedName] = {
     import c.universe._
     import AssignedNameMacroState._
+    import compatibility._
 
     val currentPoint = c.macroApplication.pos
 
     if(Some(currentPoint) != lastPoint) assignmentCount = 0
 
-    val name = c.enclosingClass.filter {
-      case ValDef(_, name, _, rhs) =>
-        rhs.pos != NoPosition && rhs.pos.start == currentPoint.start
-      case _ => false
-    }.drop(assignmentCount).map {
-      case ValDef(_, name, _, _) =>
-        val dec = Literal(Constant(name.decodedName.toString))
-        c.Expr[AssignedName](q"_root_.rapture.core.AssignedName($dec)")
-    }.headOption
+    val name = enclosingVals(c)(currentPoint, assignmentCount).map { name =>
+      c.Expr[AssignedName](q"_root_.rapture.core.AssignedName(${name.decodedName.toString})")
+    }
 
     lastPoint = Some(currentPoint)
     assignmentCount += 1

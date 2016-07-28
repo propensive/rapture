@@ -61,7 +61,6 @@ object MutableArgonautTests extends MutableJsonTests(argonaut.implicitJsonAst, a
 object MutableCirceTests extends MutableJsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
 object MutableLiftTests extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
-
 case class Foo(alpha: String, beta: Int)
 case class Bar(foo: Foo, gamma: Double)
 
@@ -308,7 +307,6 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     j.as[Option[String]]
   } returns None
 
-  // Reported by @ajrnz
   val `Tabs should be escaped when serializing strings` = test {
     Json("\t").toString
   } returns "json\"\"\"\"\\t\"\"\"\""
@@ -341,6 +339,14 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Serialize null` = test { Json(null) } returns json"""{"nullValue":null}""".nullValue
 
   val `Parse basic JSON null value` = test { json"null" } returns json"null"
+
+  /*val `Serialize sealed trait` = test {
+    Json(Left(50): Either[Int, String])
+  }.returns(json"""{"left":50}""")
+
+  val `Extract sealed trait` = test {
+    json"""{ "left": 50 }""".as[Either[Int, String]]
+  }.returns(Left(50))*/
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {

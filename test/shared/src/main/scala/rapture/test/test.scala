@@ -264,10 +264,7 @@ object run {
     val matchingMethods = allMethods filter { m =>
       paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test])
     }
-    val methodNames = matchingMethods map { m =>
-      Select(ts.tree, termName(c, m.name.toString))
-    }
-    val listApply = Select(reify(List).tree, termName(c, "apply"))
+    val methodNames = matchingMethods map { m => q"$ts.${m.name.toTermName}" }
 
     c.Expr(q"""_root_.rapture.test.run.doTests(_root_.scala.List(..$methodNames), $mode)""")
   }
@@ -282,11 +279,10 @@ object run {
       paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test])
     }
     val methodNames = matchingMethods map { m =>
-      val sel = Select(suite.tree, termName(c, m.name.toString))
+      val sel = q"${suite.tree}.${m.name.toTermName}"
       val suiteName = cls.toString.replaceAll(".type$", "").split("\\.").last
       q"""($suiteName+" / "+$sel.name, $sel)"""
     }
-    val listApply = Select(reify(List).tree, termName(c, "apply"))
 
     c.Expr[Unit](q"""includeAll(_root_.scala.List(..$methodNames))""")
   }

@@ -47,7 +47,7 @@ object UriMacros {
 
             val constants = rawParts match {
               case Literal(Constant(h: String)) :: t =>
-                Literal(Constant(h.substring(scheme.length + 1))) :: t
+                q"${h.substring(scheme.length + 1)}" :: t
             }
 
             val variables = content.map(_.tree).to[List]

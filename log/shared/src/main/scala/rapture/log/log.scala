@@ -85,7 +85,7 @@ object LogMacros {
       loggable: c.Expr[Loggable[Msg]],
       srcCtx: c.Expr[SourceContext]): c.Expr[Unit] = {
     import c.universe._
-    val lev = c.Expr[Int](Literal(Constant(level)))
+    val lev = c.Expr[Int](q"$level")
     reify {
       if (log.splice.action.level <= lev.splice) {
         log.splice.out.log(log.splice.spec.render(lev.splice, srcCtx.splice.lineNo, srcCtx.splice.sourceFile),
@@ -96,8 +96,8 @@ object LogMacros {
 
   def sourceContextMacro(c: BlackboxContext): c.Expr[SourceContext] = {
     import c.universe._
-    val lineNo = c.Expr[Int](Literal(Constant(c.enclosingPosition.line)))
-    val sourceFile = c.Expr[String](Literal(Constant(c.enclosingPosition.source.toString)))
+    val lineNo = c.Expr[Int](q"${c.enclosingPosition.line}")
+    val sourceFile = c.Expr[String](q"${c.enclosingPosition.source.toString}")
     reify { SourceContext(lineNo.splice, sourceFile.splice) }
   }
 

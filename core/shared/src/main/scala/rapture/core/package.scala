@@ -146,9 +146,9 @@ trait `Seq#mapAs` extends MethodConstraint
 trait `String#as` extends MethodConstraint
 
 private[core] object Strapped {
-  implicit def toStrapped[T](t: T): Strapped[T] = Strapped(List(t))
-  implicit def toStrapped[T](elems: Iterable[T]): Strapped[T] = Strapped(elems)
-  implicit def toStrapped[T](opt: Option[T]): Strapped[T] = Strapped(opt.toList)
+  implicit def basicStrapping[T](t: T): Strapped[T] = Strapped(List(t))
+  implicit def iterableStrapping[T](elems: Iterable[T]): Strapped[T] = Strapped(elems)
+  implicit def optionStrapping[T](opt: Option[T]): Strapped[T] = Strapped(opt.toList)
 }
 
 private[core] case class Strapped[+T](elems: Iterable[T]) extends AnyVal

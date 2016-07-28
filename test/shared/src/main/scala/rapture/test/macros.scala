@@ -42,6 +42,6 @@ object typeMismatch {
       case _ => false
     }
 
-    c.Expr[Boolean](Literal(Constant(found)))
+    c.Expr[Boolean](q"$found")
   }
 }
