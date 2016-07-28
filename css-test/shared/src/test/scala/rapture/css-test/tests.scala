@@ -37,12 +37,17 @@ object CssTests extends TestSuite {
     cssStylesheet"""$identifier { color: red; }"""
   } returns cssStylesheet""".identifier { color: red; }"""
   
-  /*val `Embed properties in CSS` = test {
+  val `Embed properties in CSS stylesheet` = test {
     val properties = css"border-width: 1px; color: red"
-    cssStylesheet""".class { foo: bar; $properties }"""
-  } returns cssStylesheet""".class { border-width: 1px; color: red; }"""*/
-  
-  val `Embed HTML tag in CSS` = test {
+    cssStylesheet""".class { display: block; $properties }"""
+  } returns cssStylesheet""".class { display: block; border-width: 1px; color: red; }"""
+ 
+  val `Embed string in CSS` = test {
+    val color = "red"
+    css"color: $color"
+  }
+
+  val `Embed HTML tag in CSS stylesheet` = test {
     
     import htmlSyntax._
     
@@ -51,7 +56,7 @@ object CssTests extends TestSuite {
   
   val `Check stylesheet well-formedness` = test {
     
-    cssStylesheet"""div { foo: red; }"""
-  } returns cssStylesheet"""div { foo: red; }"""
+    cssStylesheet"""div { color: red; }"""
+  } returns cssStylesheet"""div { color: red; }"""
 }
 

@@ -49,35 +49,36 @@ private[css] object CssMacros {
         c.Expr(q"_root_.rapture.css.CssClass(_root_.scala.collection.immutable.Set($rawPart))")
     }
   }
+
   def stylesheetContextMacro(c: BlackboxContext)(
       exprs: c.Expr[Embed[CssStylesheet]]*): c.Expr[CssStylesheet] = {
     import c.universe._
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
-        val ys = rawParts
-        val text = rawParts map { case lit @ Literal(Constant(part: String)) => part }
+        val text = rawParts.map { case Literal(Constant(part: String)) => part }
 
         val listExprs = c.Expr[List[Embed[CssStylesheet]]](q"_root_.scala.List(..${exprs.map(_.tree).to[List]})")
 
+        def resolveEmbeddableName(name: String) = name match {
+          case "domId" => "#foo"
+          case "css" => "color: red;"
+          case "cssClass" => ".foo"
+          case "int" => "1"
+          case "double" => "1.0"
+          case _ => "null"
+        }
+
         val substitutions: List[String] = listExprs.tree match {
-          case Apply(_, bs) =>
-            bs.map {
-              case Apply(Apply(TypeApply(Select(_, _), _), _), List(Select(_, nme))) => nme.toString match {
-                case "domId" => "#foo"
-                case "css" => "color: red;"
-                case "cssClass" => ".foo"
-                case "int" => "1"
-                case "double" => "1.0"
-                case _ => "null"
-              }
+          case Apply(_, applications) =>
+            applications.map {
+              case Apply(Apply(TypeApply(Select(_, _), _), _), List(Select(_, name))) => resolveEmbeddableName(name.toString)
             }
         }
 
-        // FIXME: It looks like the cursor will be in the wrong place
-        parseSource(text, substitutions, true) foreach {
+        parseSource(text, substitutions, true).foreach {
           case (n, offset, msg) =>
-            val oldPos = ys(n).asInstanceOf[Literal].pos
+            val oldPos = rawParts(n).asInstanceOf[Literal].pos
             val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
@@ -100,26 +101,38 @@ private[css] object CssMacros {
     }
   }
 
-  def contextMacro(c: BlackboxContext)(exprs: c.Expr[ForcedConversion[Css]]*): c.Expr[Css] = {
+  def cssContextMacro(c: BlackboxContext)(
+      exprs: c.Expr[Embed[Css]]*): c.Expr[Css] = {
     import c.universe._
+    import compatibility._
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
-        val ys = rawParts
-        val text = rawParts map { case lit @ Literal(Constant(part: String)) => part }
+        val text = rawParts.map { case Literal(Constant(part: String)) => part }
 
-        val listExprs = c.Expr[List[ForcedConversion[Css]]](q"_root_.scala.List(..${exprs.map(_.tree).to[List]})")
+        val listExprs = c.Expr[List[Embed[Css]]](
+            Apply(
+                Select(reify(List).tree, termName(c, "apply")),
+                exprs.map(_.tree).to[List]
+            ))
 
-        val stringsUsed: List[String] = listExprs.tree match {
-          case Apply(_, bs) =>
-            bs.map {
-              case Apply(Apply(TypeApply(Select(_, nme), _), _), _) => "null"
+        def resolveEmbeddableName(name: String) = name match {
+          case "cssCss" => "color: red;"
+          case "cssInt" => "1"
+          case "cssDouble" => "1.0"
+          case _ => "null"
+        }
+
+        val substitutions: List[String] = listExprs.tree match {
+          case Apply(_, applications) =>
+            applications.map {
+              case Apply(Apply(TypeApply(Select(_, _), _), _), List(Select(_, name))) => resolveEmbeddableName(name.toString)
             }
         }
 
-        parseSource(text, stringsUsed, false) foreach {
+        parseSource(text, substitutions, false).foreach {
           case (n, offset, msg) =>
-            val oldPos = ys(n).asInstanceOf[Literal].pos
+            val oldPos = rawParts(n).asInstanceOf[Literal].pos
             val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
@@ -129,24 +142,23 @@ private[css] object CssMacros {
         reify {
           val sb = new StringBuilder
           val textParts = listParts.splice.iterator
-          val expressions: Iterator[ForcedConversion[Css]] = listExprs.splice.iterator
+          val expressions: Iterator[Embed[Css]] = listExprs.splice.iterator
 
           sb.append(textParts.next())
 
           while (textParts.hasNext) {
-            sb.append(expressions.next.value.asInstanceOf[Css].content)
+            sb.append(expressions.next.content)
             sb.append(textParts.next)
           }
           CssParser.parse(List(sb.toString), Nil)
         }
     }
   }
-
 }
 
 private[css] class CssStrings(sc: StringContext) {
   class CssContext() {
-    def apply(exprs: ForcedConversion[Css]*): Css = macro CssMacros.contextMacro
+    def apply(exprs: Embed[Css]*): Css = macro CssMacros.cssContextMacro
   }
   
   class CssClassContext() {

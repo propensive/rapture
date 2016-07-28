@@ -48,7 +48,9 @@ case class CssStylesheet(rules: List[CssRule]) {
 object DomId {
   def auto(implicit assignedName: AssignedName) = DomId(assignedName.name)
 }
-case class DomId(id: String)
+case class DomId(id: String) {
+  override def toString = s"#$id"
+}
 
 object CssClass {
   def auto(implicit assignedName: AssignedName) = CssClass(Set(assignedName.name))
@@ -59,6 +61,8 @@ case class CssClass(classes: Set[String]) {
   def +(cssClass: CssClass): CssClass = CssClass(classes ++ cssClass.classes)
 
   def asString = classes.mkString(" ")
+  
+  override def toString = classes.mkString(".", ".", "")
 }
 
 object CssEmbed {
@@ -93,6 +97,22 @@ object Embeddable {
   
   implicit val double: Embeddable[Double, CssStylesheet] = new Embeddable[Double, CssStylesheet] {
     def embed(value: Double): String = value.toString
+  }
+  
+  implicit val cssString: Embeddable[String, Css] = new Embeddable[String, Css] {
+    def embed(value: String): String = value
+  }
+  
+  implicit val cssInt: Embeddable[Int, Css] = new Embeddable[Int, Css] {
+    def embed(value: Int): String = value.toString
+  }
+  
+  implicit val cssDouble: Embeddable[Double, Css] = new Embeddable[Double, Css] {
+    def embed(value: Double): String = value.toString
+  }
+  
+  implicit val cssCss: Embeddable[Css, Css] = new Embeddable[Css, Css] {
+    def embed(value: Css): String = value.content
   }
 }
 
