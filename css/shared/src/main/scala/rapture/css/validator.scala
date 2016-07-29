@@ -22,7 +22,6 @@ import rapture.core._
 import com.steadystate.css.parser._
 import org.w3c.css.sac._
 import org.w3c.dom.css._
-import org.w3c.dom.stylesheets._
 import java.io._
 
 import scala.collection.immutable.ListMap

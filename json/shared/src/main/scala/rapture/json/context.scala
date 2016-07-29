@@ -25,7 +25,7 @@ import language.experimental.macros
 
 private[json] object JsonDataMacros extends DataContextMacros[Json, JsonAst] {
 
-  def companion(c: BlackboxContext): c.Expr[DataCompanion[Json, JsonAst]] = c.universe.reify(Json)
+  def dataCompanion(c: BlackboxContext): c.Expr[DataCompanion[Json, JsonAst]] = c.universe.reify(Json)
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]) =
     try {
@@ -49,7 +49,7 @@ private[json] object JsonDataMacros extends DataContextMacros[Json, JsonAst] {
 
 private[json] object JsonBufferDataMacros extends DataContextMacros[JsonBuffer, JsonBufferAst] {
 
-  def companion(c: BlackboxContext): c.Expr[DataCompanion[JsonBuffer, JsonBufferAst]] =
+  def dataCompanion(c: BlackboxContext): c.Expr[DataCompanion[JsonBuffer, JsonBufferAst]] =
     c.universe.reify(JsonBuffer)
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]) =

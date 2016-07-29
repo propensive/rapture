@@ -54,7 +54,7 @@ object I18nTests extends TestSuite {
     val en: I18n[String, En] = greeting
     val fr: I18n[String, Fr] = greeting
     val both: I18n[String, En with Fr] = greeting
-  } returns ()
+  }.returns(())
 
   val `Check internationalized substitution` = test {
     val greeting = en"Hello world" & fr"Bonjour le monde"

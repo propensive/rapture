@@ -3,11 +3,9 @@ package rapture.mail
 import rapture.core._
 import rapture.io._
 import rapture.fs._
-import rapture.net._
 import rapture.uri._
 import rapture.html._
 import rapture.cli._, environments.enclosing._
-import rapture.mime._
 import rapture.codec._, encodings.`UTF-8`._
 
 package htmlToPlainTextConverters {

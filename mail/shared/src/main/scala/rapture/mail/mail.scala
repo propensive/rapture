@@ -10,7 +10,6 @@ import rapture.mime._
 import rapture.codec._
 
 import scala.reflect._
-import scala.reflect.macros._
 import scala.language.experimental.macros
 
 import java.net.URL

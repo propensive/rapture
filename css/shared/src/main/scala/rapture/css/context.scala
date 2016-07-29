@@ -39,7 +39,6 @@ private[css] object CssMacros {
   def cssClassContextMacro(c: BlackboxContext)(
       exprs: c.Expr[ForcedConversion[CssClass]]*): c.Expr[CssClass] = {
     import c.universe._
-    import compatibility._
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawPart :: Nil))), _) =>
@@ -54,17 +53,12 @@ private[css] object CssMacros {
   def stylesheetContextMacro(c: BlackboxContext)(
       exprs: c.Expr[Embed[CssStylesheet]]*): c.Expr[CssStylesheet] = {
     import c.universe._
-    import compatibility._
 
     c.prefix.tree match {
       case Select(Apply(_, List(Apply(_, rawParts))), _) =>
         val text = rawParts.map { case Literal(Constant(part: String)) => part }
 
-        val listExprs = c.Expr[List[Embed[CssStylesheet]]](
-            Apply(
-                Select(reify(List).tree, termName(c, "apply")),
-                exprs.map(_.tree).to[List]
-            ))
+        val listExprs = c.Expr[List[Embed[CssStylesheet]]](q"_root_.scala.List(..${exprs.map(_.tree).to[List]})")
 
         def resolveEmbeddableName(name: String) = name match {
           case "domId" => "#foo"
@@ -85,15 +79,11 @@ private[css] object CssMacros {
         parseSource(text, substitutions, true).foreach {
           case (n, offset, msg) =>
             val oldPos = rawParts(n).asInstanceOf[Literal].pos
-            val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+            val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
 
-        val listParts = c.Expr[List[String]](
-            Apply(
-                Select(reify(List).tree, termName(c, "apply")),
-                rawParts
-            ))
+        val listParts = c.Expr[List[String]](q"_root_.scala.List(..$rawParts)")
 
         reify {
           val sb = new StringBuilder
@@ -143,15 +133,11 @@ private[css] object CssMacros {
         parseSource(text, substitutions, false).foreach {
           case (n, offset, msg) =>
             val oldPos = rawParts(n).asInstanceOf[Literal].pos
-            val newPos = oldPos.withPoint(oldPos.startOrPoint + offset)
+            val newPos = oldPos.withPoint(oldPos.start + offset)
             c.error(newPos, msg)
         }
 
-        val listParts = c.Expr[List[String]](
-            Apply(
-                Select(reify(List).tree, termName(c, "apply")),
-                rawParts
-            ))
+        val listParts = c.Expr[List[String]](q"_root_.scala.List(..$rawParts)")
 
         reify {
           val sb = new StringBuilder

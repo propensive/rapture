@@ -34,44 +34,13 @@ object Macros {
       case m: MethodSymbol if m.isCaseAccessor => m.asMethod
     }.zipWithIndex.map {
       case (p, i) =>
-        Apply(
-            Select(
-                Ident(termName(c, "mode")),
-                termName(c, "unwrap")
-            ),
-            List(
-                Apply(
-                    Select(
-                        c.inferImplicitValue(appliedType(cellExtractor, List(p.returnType)), false, false),
-                        termName(c, "extract")
-                    ),
-                    List(
-                        Apply(
-                            Select(
-                                Ident(termName(c, "values")),
-                                termName(c, "apply")
-                            ),
-                            List(Literal(Constant(i)))
-                        ),
-                        Literal(Constant(i)),
-                        Ident(termName(c, "mode"))
-                    )
-                )
-            )
-        )
+        val searchType = appliedType(cellExtractor, List(p.returnType))
+        val inferredImplicit = c.inferImplicitValue(searchType, false, false)
+
+        q"mode.unwrap($inferredImplicit.extract(values($i), $i, mode))"
     }
 
-    val construction = c.Expr[T](
-        Apply(
-            Select(
-                New(
-                    TypeTree(weakTypeOf[T])
-                ),
-                constructor(c)
-            ),
-            params.to[List]
-        )
-    )
+    val construction = c.Expr[T](q"new ${weakTypeOf[T]}(..$params)")
 
     reify {
       new CsvRowExtractor[T] {

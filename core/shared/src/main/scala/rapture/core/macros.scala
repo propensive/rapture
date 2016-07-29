@@ -18,6 +18,7 @@
 package rapture.core
 
 import rapture.base._
+import scala.reflect._
 
 private[core] object CoreMacros {
   def enumerateMacro[Cls: c.WeakTypeTag, T: c.WeakTypeTag](c: BlackboxContext)(value: c.Expr[Cls]): c.Expr[List[T]] = {
@@ -40,42 +41,34 @@ private[core] object CoreMacros {
 
   def assignedMethodNameMacro(c: BlackboxContext): c.Expr[MethodName] = {
     import c.universe._
+    import compatibility._
 
-    val name = c.enclosingClass.find {
-      case DefDef(_, name, _, _, _, rhs) => rhs.pos.isDefined && rhs.pos.point == c.macroApplication.pos.point
-      case _ => false
-    }.map {
-      case DefDef(_, name, _, _, _, _) =>
-        val dec = c.Expr[String](Literal(Constant(name.decodedName.toString)))
-        reify { new MethodName(dec.splice) }
+    val name = enclosingDef(c)(c.macroApplication.pos).map { name =>
+      c.Expr[MethodName](q"new _root_.rapture.core.MethodName(${name.decodedName.toString})")
     }
-
-    name getOrElse c.abort(c.enclosingPosition, "This method invocation must be assigned to a named identifier.")
+    
+    name getOrElse c.abort(c.enclosingPosition, "this method invocation must be assigned to a named identifier.")
   }
 
   object AssignedNameMacroState {
-    var lastPoint: Int = 0
+    var lastPoint: Option[api.Position] = None
     var assignmentCount: Int = 0
   }
 
   def assignedNameMacro(c: BlackboxContext): c.Expr[AssignedName] = {
     import c.universe._
     import AssignedNameMacroState._
+    import compatibility._
 
-    val currentPoint = c.macroApplication.pos.point
+    val currentPoint = c.macroApplication.pos
 
-    if(currentPoint != lastPoint) assignmentCount = 0
+    if(Some(currentPoint) != lastPoint) assignmentCount = 0
 
-    val name = c.enclosingClass.filter {
-      case ValDef(_, name, _, rhs) => rhs.pos.isDefined && rhs.pos.point == currentPoint
-      case _ => false
-    }.drop(assignmentCount).map {
-      case ValDef(_, name, _, _) =>
-        val dec = Literal(Constant(name.decodedName.toString))
-        c.Expr[AssignedName](q"_root_.rapture.core.AssignedName($dec)")
-    }.headOption
+    val name = enclosingVals(c)(currentPoint, assignmentCount).map { name =>
+      c.Expr[AssignedName](q"_root_.rapture.core.AssignedName(${name.decodedName.toString})")
+    }
 
-    lastPoint = currentPoint
+    lastPoint = Some(currentPoint)
     assignmentCount += 1
 
     name getOrElse c.abort(c.enclosingPosition, "this method invocation must be assigned to a named identifier.")

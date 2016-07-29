@@ -36,7 +36,21 @@ class Compat210() {
   def paramLists(c: Context)(t: c.universe.MethodSymbol) = t.paramss
   def normalize(c: Context)(t: c.universe.Type) = t.normalize
   def declarations(c: Context)(t: c.universe.Type) = t.declarations
+  def declaration(c: Context)(t: c.universe.Type, n: c.universe.Name) = t.declaration(n)
   def readLine(): String = Console.readLine()
   def typecheck(c: Context)(s: c.Tree) = c.typeCheck(s)
   def freshName(c: Context)(s: String) = c.fresh(s)
+  def companion(c: Context)(x: c.universe.Symbol) = x.companionSymbol
+ 
+  def samePosition(c: Context)(p1: c.universe.Position, p2: c.universe.Position) = p1.isDefined && p1.point == p2.point
+  
+  def enclosingDef(c: Context)(pos: c.universe.Position): Option[c.universe.Name] = {
+    import c.universe._
+    c.enclosingClass.collect { case DefDef(_, name, _, _, _, rhs) if samePosition(c)(rhs.pos, pos) => name }.headOption
+  }
+
+  def enclosingVals(c: Context)(pos: c.universe.Position, count: Int): Option[c.universe.Name] = {
+    import c.universe._
+    c.enclosingClass.collect { case ValDef(_, name, _, rhs) if samePosition(c)(rhs.pos, pos) => name }.drop(count).headOption
+  }
 }

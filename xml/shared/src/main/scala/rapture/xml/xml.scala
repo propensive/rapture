@@ -24,7 +24,7 @@ import language.experimental.macros
 import scala.language.implicitConversions
 
 private[xml] trait Xml_2 {
-  implicit def xmlExtractorMacro[T <: Product, Th]: Extractor[T, Xml] { type Throws = Th } = macro XmlMacros
+  implicit def xmlExtractorMacro[T <: Product, Th]: Extractor[T, Xml] = macro XmlMacros
     .xmlExtractorMacro[T, Th]
 
   implicit def xmlSerializerMacro[T <: Product](implicit ast: XmlAst): Serializer[T, Xml] = macro XmlMacros

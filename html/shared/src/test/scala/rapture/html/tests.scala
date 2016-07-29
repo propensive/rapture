@@ -21,7 +21,7 @@ import rapture.uri._
 import rapture.net._
 import rapture.js._
 
-import rapture.css._, dynamicCssReferencing._
+import dynamicCssReferencing._
 
 object Tests {
 

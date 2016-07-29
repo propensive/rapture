@@ -37,7 +37,20 @@ class Compat211() {
   def paramLists[C <: blackbox.Context](c: C)(t: c.universe.MethodSymbol) = t.paramLists
   def normalize[C <: blackbox.Context](c: C)(t: c.universe.Type) = t.dealias
   def declarations[C <: blackbox.Context](c: C)(t: c.universe.Type) = t.decls
+  def declaration[C <: blackbox.Context](c: C)(t: c.universe.Type, d: c.universe.Name) = t.decl(d)
   def readLine(): String = scala.io.StdIn.readLine
   def typecheck[C <: blackbox.Context](c: C)(t: c.Tree) = c.typecheck(t)
   def freshName[C <: blackbox.Context](c: C)(s: String) = c.freshName(s)
+  def companion[C <: blackbox.Context](c: C)(s: c.universe.Symbol) = s.companion
+  
+  def samePosition[C <: blackbox.Context](c: C)(p1: c.universe.Position, p2: c.universe.Position) = {
+    import c.universe._
+    p1 != NoPosition && p2 != NoPosition && p1.start == p2.start
+  }
+  
+  def enclosingDef[C <: blackbox.Context](c: C)(pos: c.universe.Position): Option[c.universe.Name] =
+    Some(c.internal.enclosingOwner.asTerm.name)
+
+  def enclosingVals[C <: blackbox.Context](c: C)(pos: c.universe.Position, count: Int): Option[c.universe.Name] =
+    Some(c.internal.enclosingOwner.asTerm.name)
 }

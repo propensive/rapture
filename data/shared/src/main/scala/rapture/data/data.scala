@@ -31,6 +31,59 @@ trait Formatter[-AstType <: DataAst] {
 
 object DataCompanion { object Empty }
 
+object serializedNames {
+  object inUnderscoreStyle {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name.flatMap {
+        case lower if lower.isLower => lower.toString
+        case upper if upper.isUpper => s"_$upper".toLowerCase
+        case other => other.toString
+      }
+
+      def decode(name: String): String = name.foldLeft(("", false)) {
+        case ((acc, _), '_') => (acc, true)
+        case ((acc, true), other) => (acc+other.toString.toUpperCase, false)
+        case ((acc, false), other) => (acc+other, false)
+      }._1
+    }
+  }
+  
+  object inDashedStyle {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name.flatMap {
+        case lower if lower.isLower => lower.toString
+        case upper if upper.isUpper => s"-$upper".toLowerCase
+        case other => other.toString
+      }
+
+      def decode(name: String): String = name.foldLeft(("", false)) {
+        case ((acc, _), '-') => (acc, true)
+        case ((acc, true), other) => (acc+other.toString.toUpperCase, false)
+        case ((acc, false), other) => (acc+other, false)
+      }._1
+    }
+  }
+  
+  object identical {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name
+      def decode(name: String): String = name
+    }
+  }
+}
+
+object NameMapper {
+  implicit def identityNameMapper[V, D]: NameMapper[V, D] = serializedNames.identical[V, D]
+}
+
+trait NameMapper[+Value, +Data] {
+  def encode(name: String): String
+  def decode(name: String): String
+}
+
 trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
   type ParseMethodConstraint <: MethodConstraint
@@ -61,6 +114,7 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion2[D])
 
 case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
+  def self = selectDynamic("self")
   def selectDynamic(v: String) = DynamicPath[D](Right(v) :: path)
   def applyDynamic(v: String)(i: Int) = DynamicPath[D](Left(i) :: Right(v) :: path)
   def apply(i: Int) = DynamicPath[D](Left(i) :: path)
@@ -78,6 +132,8 @@ trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dy
 
   /** Assumes the Json object wraps a `Map`, and extracts the element `key`. */
   def selectDynamic(key: String): T = $deref(Right(key) +: $path)
+  
+  def self = selectDynamic("self")
 
   //def applyDynamic(key: String)(i: Int = 0): T = $deref(Left(i) +: Right(key) +: $path)
 
