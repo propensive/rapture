@@ -114,6 +114,7 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion2[D])
 
 case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
+  def self = selectDynamic("self")
   def selectDynamic(v: String) = DynamicPath[D](Right(v) :: path)
   def applyDynamic(v: String)(i: Int) = DynamicPath[D](Left(i) :: Right(v) :: path)
   def apply(i: Int) = DynamicPath[D](Left(i) :: path)
@@ -131,6 +132,8 @@ trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dy
 
   /** Assumes the Json object wraps a `Map`, and extracts the element `key`. */
   def selectDynamic(key: String): T = $deref(Right(key) +: $path)
+  
+  def self = selectDynamic("self")
 
   //def applyDynamic(key: String)(i: Int = 0): T = $deref(Left(i) +: Right(key) +: $path)
 

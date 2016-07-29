@@ -101,6 +101,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Extract Int` = test {
     source1.int.as[Int]
   } returns 42
+  
   val `Extract value called "self"` = test {
     source1.self.as[Int]
   } returns 0
