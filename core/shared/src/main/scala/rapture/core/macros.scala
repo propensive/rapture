@@ -44,7 +44,7 @@ private[core] object CoreMacros {
     import compatibility._
 
     val name = enclosingDef(c)(c.macroApplication.pos).map { name =>
-      c.Expr[MethodName](q"new _root_.rapture.core.MethodName(${name.decodedName.toString})")
+      c.Expr[MethodName](q"new _root_.rapture.core.MethodName(${name.decodedName.toString.trim})")
     }
     
     name getOrElse c.abort(c.enclosingPosition, "this method invocation must be assigned to a named identifier.")
@@ -65,7 +65,7 @@ private[core] object CoreMacros {
     if(Some(currentPoint) != lastPoint) assignmentCount = 0
 
     val name = enclosingVals(c)(currentPoint, assignmentCount).map { name =>
-      c.Expr[AssignedName](q"_root_.rapture.core.AssignedName(${name.decodedName.toString})")
+      c.Expr[AssignedName](q"_root_.rapture.core.AssignedName(${name.decodedName.toString.trim})")
     }
 
     lastPoint = Some(currentPoint)
