@@ -232,9 +232,14 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
               try e.bimap($ast.dereferenceArray(j, _), $ast.dereferenceObject(j, _))
               catch {
                 case TypeMismatchException(exp, fnd) => throw TypeMismatchException(exp, fnd)
-                case e: Exception =>
+                case exc: Exception =>
                   if (orEmpty) DataCompanion.Empty
-                  else throw MissingValueException()
+                  else {
+                    e match {
+                      case Left(e) => throw MissingValueException(s"[$e]")
+                      case Right(e) => throw MissingValueException(e)
+                    }
+                  }
               }
             } else
               throw TypeMismatchException(
