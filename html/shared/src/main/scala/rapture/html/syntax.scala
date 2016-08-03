@@ -212,6 +212,9 @@ object htmlSyntax {
   implicit def onclick = Attribute[Global, Js]("onclick")(_.content)
   def onclick_=[E <: ElementType](v: Js) = onclick.set[E](v)
 
+  implicit def onkeypress = Attribute[Global, Js]("onkeypress")(_.content)
+  def onkeypress_=[E <: ElementType](v: Js) = onkeypress.set(v)
+
   implicit def onmouseover = Attribute[Global, Js]("onmouseover")(_.content)
   def onmouseover_=[E <: ElementType](v: Js) = onmouseover.set(v)
 
