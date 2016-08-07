@@ -42,16 +42,21 @@ object UriMacros {
           case Literal(Constant(part: String)) =>
             val scheme = part.split(":", 2) match {
               case Array(s, _) => s
-              case _ => c.abort(c.enclosingPosition, "Could not find a valid scheme for this URI.")
+              case _ => c.abort(c.enclosingPosition, "could not find a valid scheme for this URI.")
             }
 
-            val constants = rawParts match {
-              case Literal(Constant(h: String)) :: t =>
-                q"${h.substring(scheme.length + 1)}" :: t
+            val constants: List[String] = rawParts.map {
+              case Literal(Constant(s: String)) => s
+            }
+            
+            val constantsAfterScheme = constants match {
+              case h :: t => h.substring(scheme.length + 1) :: t
+              case Nil => Nil
             }
 
             val variables = content.map(_.tree).to[List]
-            c.Expr(q"_root_.rapture.uri.UriContext.${termName(c, scheme)}(List(..$constants))(List(..$variables))")
+            c.Expr(q"""_root_.rapture.uri.UriContext.${termName(c, scheme)}(_root_.scala.List(
+                ..$constantsAfterScheme))(_root_.scala.List(..$variables))""")
         }
     }
   }

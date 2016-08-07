@@ -1,3 +1,20 @@
+/*
+  Rapture, version 2.0.0. Copyright 2010-2016 Jon Pretty, Propensive Ltd.
+
+  The primary distribution site is
+  
+    http://rapture.io/
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
+  compliance with the License. You may obtain a copy of the License at
+  
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under the License is
+  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package rapture.mail
 
 import rapture.base._
@@ -16,7 +33,7 @@ import java.net.URL
 
 object Macros {
 
-  def mailtoMacro(c: WhiteboxContext)(constants: c.Expr[List[String]])(
+  def mailtoMacro(c: BlackboxContext)(constants: c.Expr[List[String]])(
       variables: c.Expr[List[String]]): c.Expr[MailtoUri] = {
     import c.universe._
 
@@ -24,10 +41,35 @@ object Macros {
       new MailtoUri(constants.splice.zip(variables.splice :+ "").map { case (a, b) => a + b }.mkString)
     }
   }
+  
+  def smtpMacro(c: BlackboxContext)(constants: c.Expr[List[String]])(
+      variables: c.Expr[List[String]]): c.Expr[Smtp] = {
+    import c.universe._
+    import compatibility._
+    
+    val start = constants.tree match {
+      case Apply(_, constants) =>
+        val Literal(Constant(start: String)) = constants.head
+        start
+    }
+    if(!start.startsWith("//")) c.abort(c.enclosingPosition, "this is not a valid SMTP URI")
+    val rest = start.substring(2)
+
+    val newName = termName(c, freshName(c)("ctx"))
+
+    c.Expr[Smtp](q"""{
+      val $newName = List($constants, $variables :+ "").transpose.flatten.mkString.substring(2).split(":")
+      _root_.rapture.mail.Smtp($newName(0), new _root_.rapture.core.EnrichedString(if($newName.length > 1) $newName(1) else "25").as[
+          _root_.scala.Int](_root_.rapture.core.StringParser.intParser,
+          _root_.rapture.core.modes.returnOption()).getOrElse(25))
+    }""")
+  }
 }
 
 trait `Smtp#send` extends MethodConstraint
-trait `Smtp#sendTo` extends MethodConstraint
+trait `Smtp#sendmail` extends MethodConstraint
+trait `send` extends MethodConstraint
+trait `sendTo` extends MethodConstraint
 
 object Mailto {
   private val Regex =
@@ -49,7 +91,9 @@ case class MailtoUri(email: String) {
   override def toString = s"mailto:$email"
 }
 
-case class HtmlEmail(html: HtmlDoc, plainText: String, inlines: List[Inline], attachments: List[Attachment])
+case class HtmlEmail(html: HtmlDoc, inlines: List[Inline], attachments: List[Attachment])
+
+case class AddressedHtmlEmail(email: HtmlEmail, from: Recipient, subject: String, to: Seq[Recipient], cc: Seq[Recipient], bcc: Seq[Recipient])
 
 case class Inline(name: String, content: HttpUrl)
 
@@ -72,7 +116,23 @@ object Smtp {
 
 case class MailEnrichedUriContext(uri: UriContext.type) {
   def mailto(constants: List[String])(variables: List[String]): MailtoUri = macro Macros.mailtoMacro
-  def cid(constants: List[String])(variables: List[String]): PathLink = PathLink(s"cid:${constants.mkString}")
+  def smtp(constants: List[String])(variables: List[String]): Smtp = macro Macros.smtpMacro
+  def cid(constants: List[String])(variables: List[String]): PathLink = PathLink(s"cid:${List(constants, variables :+ "").transpose.flatten.mkString}")
+}
+
+object Mailable {
+  implicit val stringMailable: Mailable[String] = new Mailable[String] {
+    def content(t: String) = t
+    def htmlContent(t: String) = None
+    def attachments(t: String): Seq[Attachment] = Nil
+  }
+
+  implicit def htmlMailable(implicit conv: HtmlToPlainTextConverter): Mailable[HtmlEmail] = new Mailable[HtmlEmail] {
+    def content(t: HtmlEmail) = conv.convert(t.html)
+    def htmlContent(t: HtmlEmail) = Some((t.html.format, t.inlines))
+    def attachments(t: HtmlEmail) = t.attachments
+  }
+
 }
 
 trait Mailable[T] {
@@ -85,61 +145,45 @@ object `package` {
 
   implicit def mailEnrichedUriContext(uri: UriContext.type): MailEnrichedUriContext = MailEnrichedUriContext(uri)
 
-  implicit val stringMailable: Mailable[String] = new Mailable[String] {
-    def content(t: String) = t
-    def htmlContent(t: String) = None
-    def attachments(t: String): Seq[Attachment] = Nil
+  implicit class SendToCapability[T](msg: T) {
+    def sendTo(to: Seq[Recipient], from: Recipient, subject: String, cc: Seq[Recipient] = Seq(), bcc: Seq[Recipient] = Seq())
+        (implicit mailable: Mailable[T], smtpServer: Smtp, mode: Mode[`sendTo`]):
+        mode.Wrap[SendReport, SendAddressException with SendException] = mode.wrap {
+      smtpServer.sendmail(to, from, subject, cc, bcc, msg)
+    }
   }
 
-  implicit val htmlMailable: Mailable[HtmlEmail] = new Mailable[HtmlEmail] {
-    def content(t: HtmlEmail) = t.plainText
-    def htmlContent(t: HtmlEmail) = Some((t.html.format, t.inlines))
-    def attachments(t: HtmlEmail) = t.attachments
+  implicit class SendCapability[T](msg: T) {
+    def send()(implicit smtpServer: Smtp, sendable: Sendable[T], mode: Mode[`send`]): mode.Wrap[SendReport, SendAddressException with SendException] =
+      smtpServer.sendmail(sendable.to(msg), sendable.from(msg), sendable.subject(msg), sendable.cc(msg), sendable.bcc(msg), msg)(sendable.mailable(msg), mode.generic)
   }
-
-}
-
-trait AddressedMailable[T] extends Mailable[T] {
-  def sender(t: T): Recipient
-  def recipients(t: T): List[Recipient]
-  def ccRecipients(t: T): List[Recipient] = Nil
-  def subject(t: T): String
 }
 
 case class Smtp(hostname: String, port: Int = 25) {
 
-  def sendTo[Mail: Mailable](sender: Recipient,
-                             recipients: Seq[Recipient],
-                             ccRecipients: Seq[Recipient] = Nil,
+  def sendmail[Mail: Mailable](to: Seq[Recipient],
+                             from: Recipient,
                              subject: String,
-                             mail: Mail)(implicit mode: Mode[`Smtp#sendTo`]): Unit = {
-    sendmail(sender.toString,
-             recipients.map(_.toString),
-             ccRecipients.map(_.toString),
+                             cc: Seq[Recipient],
+                             bcc: Seq[Recipient],
+                             mail: Mail)(implicit mode: Mode[`Smtp#sendmail`]): mode.Wrap[SendReport, SendAddressException with SendException] =
+    doSendmail(to.map(_.toString),
+             from.toString,
              subject,
+             cc.map(_.toString),
+             bcc.map(_.toString),
              ?[Mailable[Mail]].content(mail),
              ?[Mailable[Mail]].htmlContent(mail),
              ?[Mailable[Mail]].attachments(mail))
-  }
 
-  def send[Mail: AddressedMailable](mail: Mail)(implicit mode: Mode[`Smtp#send`]) = {
-    val am = ?[AddressedMailable[Mail]]
-    sendmail(am.sender(mail).toString,
-             am.recipients(mail).map(_.toString),
-             am.ccRecipients(mail).map(_.toString),
-             am.subject(mail),
-             am.content(mail),
-             None,
-             Nil)
-  }
-
-  def sendmail(from: String,
-               to: Seq[String],
-               cc: Seq[String],
+  def doSendmail(to: Seq[String],
+               from: String,
                subject: String,
+               cc: Seq[String],
+               bcc: Seq[String],
                bodyText: String,
                bodyHtml: Option[(String, Seq[Inline])],
-               attachments: Seq[Attachment])(implicit mode: Mode[_]): mode.Wrap[Unit, Exception] = mode wrap {
+               attachments: Seq[Attachment])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
 
     import javax.mail._
     import javax.mail.internet._
@@ -240,5 +284,38 @@ case class Smtp(hostname: String, port: Int = 25) {
       }
     }
     Transport.send(msg)
+    SendReport()
   }
 }
+
+case class SendReport()
+
+object Sendable {
+  implicit def addressedHtmlEmailSendable(implicit m: Mailable[HtmlEmail]): Sendable[AddressedHtmlEmail] = new Sendable[AddressedHtmlEmail] {
+    def to(t: AddressedHtmlEmail): Seq[Recipient] = t.to
+    def cc(t: AddressedHtmlEmail): Seq[Recipient] = t.cc
+    def bcc(t: AddressedHtmlEmail): Seq[Recipient] = t.bcc
+    def from(t: AddressedHtmlEmail): Recipient = t.from
+    def subject(t: AddressedHtmlEmail): String = t.subject
+    def mailable(t: AddressedHtmlEmail): Mailable[AddressedHtmlEmail] = new Mailable[AddressedHtmlEmail] {
+      def content(t: AddressedHtmlEmail): String = m.content(t.email)
+      def htmlContent(t: AddressedHtmlEmail): Option[(String, List[Inline])] = m.htmlContent(t.email)
+      def attachments(t: AddressedHtmlEmail): Seq[Attachment] = m.attachments(t.email)
+    }
+  }
+}
+
+trait Sendable[T] {
+  def to(t: T): Seq[Recipient]
+  def cc(t: T): Seq[Recipient]
+  def bcc(t: T): Seq[Recipient]
+  def from(t: T): Recipient
+  def subject(t: T): String
+  def mailable(t: T): Mailable[T]
+}
+
+case class SendAddressException(invalid: Set[Recipient], validSent: Set[Recipient],
+    validUnsent: Set[Recipient]) extends RuntimeException("the email could not be sent to all addresses")
+
+case class SendException() extends RuntimeException("the email could not be sent")
+
