@@ -97,6 +97,8 @@ case class AddressedHtmlEmail(email: HtmlEmail, from: Recipient, subject: String
 
 case class Inline(name: String, content: HttpUrl)
 
+case class Envelope[T](content: T)
+
 sealed trait Attachment { def name: String }
 case class UrlAttachment(name: String, content: HttpUrl) extends Attachment
 case class FileAttachment(name: String, content: FsUrl) extends Attachment

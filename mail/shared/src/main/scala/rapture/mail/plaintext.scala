@@ -32,7 +32,7 @@ package htmlToPlainTextConverters {
       def convert(html: HtmlDoc): String = {
         val file = uri"file:///tmp/${Guid.generate()()}.html"
         html.format.copyTo(file)
-        val output = sh"elinks -dump -dump-width=76 'file://$file'".exec[String]
+        val output = sh"elinks -dump -dump-width 76 '$file'".exec[String]
         file.delete()
         output
       }
