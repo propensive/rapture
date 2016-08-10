@@ -20,6 +20,7 @@ package rapture.mail
 import rapture.base._
 import rapture.core._
 import rapture.fs._
+import rapture.io._
 import rapture.net._
 import rapture.uri._
 import rapture.html._
@@ -91,11 +92,13 @@ case class MailtoUri(email: String) {
   override def toString = s"mailto:$email"
 }
 
-case class HtmlEmail(html: HtmlDoc, inlines: List[Inline], attachments: List[Attachment])
+case class HtmlEmail(html: HtmlDoc, inlines: List[Inline[_]], attachments: List[Attachment])
 
 case class AddressedHtmlEmail(email: HtmlEmail, from: Recipient, subject: String, to: Seq[Recipient], cc: Seq[Recipient], bcc: Seq[Recipient])
 
-case class Inline(name: String, content: HttpUrl)
+case class Inline[T](name: String, content: T)(implicit val reader: Reader[T, Byte]) {
+  def bytes = content.slurp[Byte]
+}
 
 case class Envelope[T](content: T)
 
@@ -139,7 +142,7 @@ object Mailable {
 
 trait Mailable[T] {
   def content(t: T): String
-  def htmlContent(t: T): Option[(String, List[Inline])]
+  def htmlContent(t: T): Option[(String, List[Inline[_]])]
   def attachments(t: T): Seq[Attachment]
 }
 
@@ -184,10 +187,11 @@ case class Smtp(hostname: String, port: Int = 25) {
                cc: Seq[String],
                bcc: Seq[String],
                bodyText: String,
-               bodyHtml: Option[(String, Seq[Inline])],
+               bodyHtml: Option[(String, Seq[Inline[_]])],
                attachments: Seq[Attachment])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
 
     import javax.mail._
+    import javax.mail.util._
     import javax.mail.internet._
     import javax.activation._
 
@@ -240,11 +244,14 @@ case class Smtp(hostname: String, port: Int = 25) {
           top = new MimeMultipart("related")
           top.addBodyPart(body)
           inlines.foreach {
-            case Inline(name, content) =>
+            case inline@Inline(name, content) =>
               val relPart = new MimeBodyPart()
               relPart.setDisposition(Part.INLINE)
-              relPart.setHeader("Content-ID", "<" + name + ">")
-              val ds = new URLDataSource(new URL(content.link.toString))
+              relPart.setHeader("Content-ID", s"<$name>")
+              val parts = name.split("\\.").to[List]
+              val extension = if (parts.length < 2) Nil else List(parts.last)
+              val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
+              val ds = new ByteArrayDataSource(inline.bytes.bytes, mime.name)
               //ds.setFileTypeMap(MimeTypes.mimeTypesMap)
               relPart.setDataHandler(new DataHandler(ds))
               top.addBodyPart(relPart)
@@ -301,7 +308,7 @@ object Sendable {
     def subject(t: AddressedHtmlEmail): String = t.subject
     def mailable(t: AddressedHtmlEmail): Mailable[AddressedHtmlEmail] = new Mailable[AddressedHtmlEmail] {
       def content(t: AddressedHtmlEmail): String = m.content(t.email)
-      def htmlContent(t: AddressedHtmlEmail): Option[(String, List[Inline])] = m.htmlContent(t.email)
+      def htmlContent(t: AddressedHtmlEmail): Option[(String, List[Inline[_]])] = m.htmlContent(t.email)
       def attachments(t: AddressedHtmlEmail): Seq[Attachment] = m.attachments(t.email)
     }
   }
