@@ -20,6 +20,7 @@ package rapture.uri
 import rapture.core._
 
 object ClasspathUrl {
+
   implicit def cpSlashString: Dereferenceable[ClasspathUrl, String, ClasspathUrl] =
     new Dereferenceable[ClasspathUrl, String, ClasspathUrl] {
       def dereference(p1: ClasspathUrl, p2: String) = ClasspathUrl(p1.elements :+ p2)

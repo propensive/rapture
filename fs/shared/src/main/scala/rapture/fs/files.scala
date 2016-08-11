@@ -151,6 +151,10 @@ object `package` extends LowPriorityImplicits {
 }
 
 object FsUrl {
+  implicit val hasResourceName: HasResourceName[FsUrl] = new HasResourceName[FsUrl] {
+    def resourceName(fsUrl: FsUrl): String = fsUrl.filename
+  }
+  
   implicit val fileCpUrl: ClasspathUrlable[FsUrl] = new ClasspathUrlable[FsUrl] {
     def toClasspathUrlItem(f: FsUrl) = ClasspathUrlItem(List(new java.net.URL(f.toString)))
   }

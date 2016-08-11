@@ -19,9 +19,7 @@ package rapture.mail
 
 import rapture.base._
 import rapture.core._
-import rapture.fs._
 import rapture.io._
-import rapture.net._
 import rapture.uri._
 import rapture.html._
 import rapture.mime._
@@ -30,17 +28,15 @@ import rapture.codec._
 import scala.reflect._
 import scala.language.experimental.macros
 
-import java.net.URL
-
 object Macros {
 
   def mailtoMacro(c: BlackboxContext)(constants: c.Expr[List[String]])(
       variables: c.Expr[List[String]]): c.Expr[MailtoUri] = {
     import c.universe._
 
-    reify {
-      new MailtoUri(constants.splice.zip(variables.splice :+ "").map { case (a, b) => a + b }.mkString)
-    }
+    c.Expr(q"""
+      new _root_.rapture.mail.MailtoUri(List($constants, $variables :+ "").transpose.flatten.mkString)
+    """)
   }
   
   def smtpMacro(c: BlackboxContext)(constants: c.Expr[List[String]])(
@@ -65,6 +61,7 @@ object Macros {
           _root_.rapture.core.modes.returnOption()).getOrElse(25))
     }""")
   }
+
 }
 
 trait `Smtp#send` extends MethodConstraint
@@ -92,22 +89,44 @@ case class MailtoUri(email: String) {
   override def toString = s"mailto:$email"
 }
 
-case class HtmlEmail(html: HtmlDoc, inlines: List[Inline[_]], attachments: List[Attachment])
+case class HtmlEmail(html: HtmlDoc, inlines: List[Annex[Attachable]], attachments: List[Annex[Attachable]])
 
-case class AddressedHtmlEmail(email: HtmlEmail, from: Recipient, subject: String, to: Seq[Recipient], cc: Seq[Recipient], bcc: Seq[Recipient])
-
-case class Inline[T](name: String, content: T)(implicit val reader: Reader[T, Byte]) {
-  def bytes = content.slurp[Byte]
+object Attachable {
+  implicit def attachable[Res: HasResourceName: HasContentType: Reader.ForBytes] = new Attachable[Res] {
+    def resourceName(res: Res): String = res.resourceName
+    def contentType(res: Res): MimeTypes.MimeType = res.contentType
+    def bytes(res: Res): Bytes = res.slurp[Byte]
+  }
 }
 
-case class Envelope[T](content: T)
+trait Attachable[Res] {
+  def resourceName(res: Res): String
+  def contentType(res: Res): MimeTypes.MimeType
+  def bytes(res: Res): Bytes
+}
 
-sealed trait Attachment { def name: String }
-case class UrlAttachment(name: String, content: HttpUrl) extends Attachment
-case class FileAttachment(name: String, content: FsUrl) extends Attachment
-case class DataAttachment(name: String, content: Bytes) extends Attachment
+case class Envelope(subject: String, from: Contact, to: Seq[Contact], cc: Seq[Contact] = Seq(), bcc: Seq[Contact] = Seq()) {
+  def insert(mailable: Annex[Mailable], attachments: Annex[Attachable]*) =
+    EmailMessage(from, to, cc, bcc, subject, mailable, attachments)
 
-case class Recipient(email: String, name: String = "") {
+}
+
+object EmailMessage {
+  implicit val emailMessageSendable: Sendable[EmailMessage] = new Sendable[EmailMessage] {
+    def to(env: EmailMessage): Seq[Contact] = env.to
+    def cc(env: EmailMessage): Seq[Contact] = env.cc
+    def bcc(env: EmailMessage): Seq[Contact] = env.bcc
+    def from(env: EmailMessage): Contact = env.from
+    def subject(env: EmailMessage): String = env.subject
+    def content(env: EmailMessage): String = env.mailable(_.content)
+    def htmlContent(env: EmailMessage): Option[(String, Seq[Annex[Attachable]])] = env.mailable(_.htmlContent)
+    def attachments(env: EmailMessage): Seq[Annex[Attachable]] = env.mailable(_.attachments)
+  }
+}
+
+case class EmailMessage(from: Contact, to: Seq[Contact], cc: Seq[Contact], bcc: Seq[Contact], subject: String, mailable: Annex[Mailable], attachments: Seq[Annex[Attachable]]*)
+
+case class Contact(email: String, name: String = "") {
   override def toString = if (name == "") email else s""""${name}" <${email}>"""
 }
 
@@ -129,57 +148,66 @@ object Mailable {
   implicit val stringMailable: Mailable[String] = new Mailable[String] {
     def content(t: String) = t
     def htmlContent(t: String) = None
-    def attachments(t: String): Seq[Attachment] = Nil
+    def attachments(t: String): Seq[Annex[Attachable]] = Nil
   }
 
-  implicit def htmlMailable(implicit conv: HtmlToPlainTextConverter): Mailable[HtmlEmail] = new Mailable[HtmlEmail] {
-    def content(t: HtmlEmail) = conv.convert(t.html)
-    def htmlContent(t: HtmlEmail) = Some((t.html.format, t.inlines))
-    def attachments(t: HtmlEmail) = t.attachments
-  }
+  implicit def htmlMailable(implicit conv: HtmlToPlainTextConverter): Mailable[HtmlEmail] =
+    new Mailable[HtmlEmail] {
+      def content(t: HtmlEmail) = conv.convert(t.html)
+      def htmlContent(t: HtmlEmail) = Some((t.html.format, t.inlines))
+      def attachments(t: HtmlEmail) = t.attachments
+    }
 
 }
+
+object Attachment {
+  implicit def attachmentIsAttachable: Attachable[Attachment] = new Attachable[Attachment] {
+    def resourceName(attachment: Attachment): String = attachment.name
+    
+    def contentType(attachment: Attachment): MimeTypes.MimeType =
+      attachment.contentType().orElse(MimeTypes.extension(attachment.name).headOption).getOrElse(
+          MimeTypes.`application/octet-stream`)
+    
+    def bytes(attachment: Attachment): Bytes =
+      attachment.content { implicit reader => _.slurp[Byte] }
+  }
+}
+
+case class Attachment(name: String, content: Annex[Reader.ForBytes],
+    contentType: OptionalParameter[MimeTypes.MimeType] = UnspecifiedParameter)
 
 trait Mailable[T] {
   def content(t: T): String
-  def htmlContent(t: T): Option[(String, List[Inline[_]])]
-  def attachments(t: T): Seq[Attachment]
+  def htmlContent(t: T): Option[(String, Seq[Annex[Attachable]])]
+  def attachments(t: T): Seq[Annex[Attachable]]
 }
 
 object `package` {
-
-  implicit def mailEnrichedUriContext(uri: UriContext.type): MailEnrichedUriContext = MailEnrichedUriContext(uri)
-
-  implicit class SendToCapability[T](msg: T) {
-    def sendTo(to: Seq[Recipient], from: Recipient, subject: String, cc: Seq[Recipient] = Seq(), bcc: Seq[Recipient] = Seq())
-        (implicit mailable: Mailable[T], smtpServer: Smtp, mode: Mode[`sendTo`]):
-        mode.Wrap[SendReport, SendAddressException with SendException] = mode.wrap {
-      smtpServer.sendmail(to, from, subject, cc, bcc, msg)
-    }
-  }
-
-  implicit class SendCapability[T](msg: T) {
-    def send()(implicit smtpServer: Smtp, sendable: Sendable[T], mode: Mode[`send`]): mode.Wrap[SendReport, SendAddressException with SendException] =
-      smtpServer.sendmail(sendable.to(msg), sendable.from(msg), sendable.subject(msg), sendable.cc(msg), sendable.bcc(msg), msg)(sendable.mailable(msg), mode.generic)
-  }
+  implicit def mailEnrichedUriContext(uri: UriContext.type): MailEnrichedUriContext =
+    MailEnrichedUriContext(uri)
+  
+  implicit def sendExtensionMethod[T: Sendable](sendable: T): Sendable.Capability[T] =
+    Sendable.Capability[T](sendable)
 }
 
 case class Smtp(hostname: String, port: Int = 25) {
 
-  def sendmail[Mail: Mailable](to: Seq[Recipient],
-                             from: Recipient,
+  def sendmail(to: Seq[Contact],
+                             from: Contact,
                              subject: String,
-                             cc: Seq[Recipient],
-                             bcc: Seq[Recipient],
-                             mail: Mail)(implicit mode: Mode[`Smtp#sendmail`]): mode.Wrap[SendReport, SendAddressException with SendException] =
+                             cc: Seq[Contact],
+                             bcc: Seq[Contact],
+                             content: String,
+                             htmlContent: Option[(String, Seq[Annex[Attachable]])],
+                             attachments: Seq[Annex[Attachable]])(implicit mode: Mode[`Smtp#sendmail`]): mode.Wrap[SendReport, SendAddressException with SendException] =
     doSendmail(to.map(_.toString),
              from.toString,
              subject,
              cc.map(_.toString),
              bcc.map(_.toString),
-             ?[Mailable[Mail]].content(mail),
-             ?[Mailable[Mail]].htmlContent(mail),
-             ?[Mailable[Mail]].attachments(mail))
+             content,
+             htmlContent,
+             attachments)
 
   def doSendmail(to: Seq[String],
                from: String,
@@ -187,8 +215,8 @@ case class Smtp(hostname: String, port: Int = 25) {
                cc: Seq[String],
                bcc: Seq[String],
                bodyText: String,
-               bodyHtml: Option[(String, Seq[Inline[_]])],
-               attachments: Seq[Attachment])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
+               bodyHtml: Option[(String, Seq[Annex[Attachable]])],
+               attachments: Seq[Annex[Attachable]])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
 
     import javax.mail._
     import javax.mail.util._
@@ -205,28 +233,15 @@ case class Smtp(hostname: String, port: Int = 25) {
     for (r <- cc) msg.addRecipient(Message.RecipientType.CC, new InternetAddress(r))
     msg.setSubject(subject)
 
-    def source(a: Attachment) = a match {
-      case FileAttachment(name, file) =>
-        val parts = name.split("\\.").to[List]
-        val extension = if (parts.length < 2) Nil else List(parts.last)
-        val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
-        new FileDataSource(file.javaFile) {
-          override def getContentType() = mime.name
-        }
-      case DataAttachment(name, data) =>
-        val parts = name.split("\\.").to[List]
-        val extension = if (parts.length < 2) Nil else List(parts.last)
-        val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
-        new DataSource {
-          override def getContentType() = mime.name
-          def getOutputStream() = throw new java.io.IOException()
-          def getInputStream() = new java.io.ByteArrayInputStream(data.bytes)
-          def getName = name
-        }
-      case UrlAttachment(name, url) =>
-        new URLDataSource(new URL(url.link.toString))
+    def source(attachment: Annex[Attachable], inline: Boolean) = {
+      val part = new MimeBodyPart()
+      part.setDisposition(if(inline) Part.INLINE else Part.ATTACHMENT)
+      if(inline) part.setHeader("Content-ID", s"<${attachment(_.resourceName)}>")
+      else part.setFileName(attachment(_.resourceName))
+      part.setDataHandler(new DataHandler(new ByteArrayDataSource(attachment(_.bytes).bytes, attachment(_.contentType).name)))
+      part
     }
-
+    
     bodyHtml match {
       case Some((html, inlines)) => {
         var top = new MimeMultipart("alternative")
@@ -243,19 +258,7 @@ case class Smtp(hostname: String, port: Int = 25) {
           body.setContent(top)
           top = new MimeMultipart("related")
           top.addBodyPart(body)
-          inlines.foreach {
-            case inline@Inline(name, content) =>
-              val relPart = new MimeBodyPart()
-              relPart.setDisposition(Part.INLINE)
-              relPart.setHeader("Content-ID", s"<$name>")
-              val parts = name.split("\\.").to[List]
-              val extension = if (parts.length < 2) Nil else List(parts.last)
-              val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
-              val ds = new ByteArrayDataSource(inline.bytes.bytes, mime.name)
-              //ds.setFileTypeMap(MimeTypes.mimeTypesMap)
-              relPart.setDataHandler(new DataHandler(ds))
-              top.addBodyPart(relPart)
-          }
+          inlines.foreach { inline => top.addBodyPart(source(inline, true)) }
         }
 
         if (attachments.length > 0) {
@@ -263,13 +266,7 @@ case class Smtp(hostname: String, port: Int = 25) {
           body.setContent(top)
           top = new MimeMultipart("mixed")
           top.addBodyPart(body)
-          for (a <- attachments) {
-            val attPart = new MimeBodyPart()
-            attPart.setDisposition(Part.ATTACHMENT)
-            attPart.setFileName(a.name)
-            attPart.setDataHandler(new DataHandler(source(a)))
-            top.addBodyPart(attPart)
-          }
+          attachments.foreach { a => top.addBodyPart(source(a, false)) }
         }
         msg.setContent(top)
       }
@@ -279,13 +276,7 @@ case class Smtp(hostname: String, port: Int = 25) {
           body.setText(bodyText, "UTF-8")
           val top = new MimeMultipart("mixed")
           top.addBodyPart(body)
-          for (a <- attachments) {
-            val attPart = new MimeBodyPart()
-            attPart.setDisposition(Part.ATTACHMENT)
-            attPart.setFileName(a.name)
-            attPart.setDataHandler(new DataHandler(source(a)))
-            top.addBodyPart(attPart)
-          }
+          attachments.foreach { a => top.addBodyPart(source(a, false)) }
           msg.setContent(top)
         } else {
           msg.setText(bodyText, "UTF-8")
@@ -300,31 +291,27 @@ case class Smtp(hostname: String, port: Int = 25) {
 case class SendReport()
 
 object Sendable {
-  implicit def addressedHtmlEmailSendable(implicit m: Mailable[HtmlEmail]): Sendable[AddressedHtmlEmail] = new Sendable[AddressedHtmlEmail] {
-    def to(t: AddressedHtmlEmail): Seq[Recipient] = t.to
-    def cc(t: AddressedHtmlEmail): Seq[Recipient] = t.cc
-    def bcc(t: AddressedHtmlEmail): Seq[Recipient] = t.bcc
-    def from(t: AddressedHtmlEmail): Recipient = t.from
-    def subject(t: AddressedHtmlEmail): String = t.subject
-    def mailable(t: AddressedHtmlEmail): Mailable[AddressedHtmlEmail] = new Mailable[AddressedHtmlEmail] {
-      def content(t: AddressedHtmlEmail): String = m.content(t.email)
-      def htmlContent(t: AddressedHtmlEmail): Option[(String, List[Inline[_]])] = m.htmlContent(t.email)
-      def attachments(t: AddressedHtmlEmail): Seq[Attachment] = m.attachments(t.email)
+  case class Capability[T: Sendable](msg: T) {
+    def send()(implicit smtpServer: Smtp, mode: Mode[`send`]): mode.Wrap[SendReport, SendAddressException with SendException] = mode.wrap {
+      smtpServer.sendmail(?[Sendable[T]].to(msg), ?[Sendable[T]].from(msg), ?[Sendable[T]].subject(msg), ?[Sendable[T]].cc(msg),
+          ?[Sendable[T]].bcc(msg), ?[Sendable[T]].content(msg), ?[Sendable[T]].htmlContent(msg), ?[Sendable[T]].attachments(msg))
     }
   }
 }
 
 trait Sendable[T] {
-  def to(t: T): Seq[Recipient]
-  def cc(t: T): Seq[Recipient]
-  def bcc(t: T): Seq[Recipient]
-  def from(t: T): Recipient
+  def to(t: T): Seq[Contact]
+  def cc(t: T): Seq[Contact]
+  def bcc(t: T): Seq[Contact]
+  def from(t: T): Contact
   def subject(t: T): String
-  def mailable(t: T): Mailable[T]
+  def content(t: T): String
+  def htmlContent(t: T): Option[(String, Seq[Annex[Attachable]])]
+  def attachments(t: T): Seq[Annex[Attachable]]
 }
 
-case class SendAddressException(invalid: Set[Recipient], validSent: Set[Recipient],
-    validUnsent: Set[Recipient]) extends RuntimeException("the email could not be sent to all addresses")
+case class SendAddressException(invalid: Set[Contact], validSent: Set[Contact],
+    validUnsent: Set[Contact]) extends RuntimeException("the email could not be sent to all addresses")
 
 case class SendException() extends RuntimeException("the email could not be sent")
 
