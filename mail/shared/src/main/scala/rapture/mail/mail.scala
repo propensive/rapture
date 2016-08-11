@@ -245,103 +245,25 @@ case class Smtp(hostname: String, port: Int = 25) {
                              bcc: Seq[Contact],
                              content: String,
                              htmlContent: Option[(String, Seq[Annex[Attachable]])],
-                             attachments: Seq[Annex[Attachable]])(implicit mode: Mode[`Smtp#sendmail`]): mode.Wrap[SendReport, SendAddressException with SendException] =
-    doSendmail(to.map(_.toString),
-             from.toString,
-             subject,
-             cc.map(_.toString),
-             bcc.map(_.toString),
-             content,
-             htmlContent,
-             attachments)
-
-  def doSendmail(to: Seq[String],
-               from: String,
-               subject: String,
-               cc: Seq[String],
-               bcc: Seq[String],
-               bodyText: String,
-               bodyHtml: Option[(String, Seq[Annex[Attachable]])],
-               attachments: Seq[Annex[Attachable]])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
-
-    import javax.mail._
-    import javax.mail.util._
-    import javax.mail.internet._
-    import javax.activation._
-
-    val props = System.getProperties()
-    props.put("mail.smtp.host", hostname)
-    props.put("mail.smtp.port", port.toString)
-    val session = Session.getDefaultInstance(props, null)
-    val msg = new MimeMessage(session)
-    
-    msg.setFrom(new InternetAddress(from))
-    for (r <- to) msg.addRecipient(Message.RecipientType.TO, new InternetAddress(r))
-    for (r <- cc) msg.addRecipient(Message.RecipientType.CC, new InternetAddress(r))
-    for (r <- bcc) msg.addRecipient(Message.RecipientType.BCC, new InternetAddress(r))
-    msg.setSubject(subject)
-
-    def source(attachment: Annex[Attachable], inline: Boolean) = {
-      val part = new MimeBodyPart()
-      part.setDisposition(if(inline) Part.INLINE else Part.ATTACHMENT)
-      if(inline) part.setHeader("Content-ID", s"<${attachment(_.resourceName)}>")
-      else part.setFileName(attachment(_.resourceName))
-      part.setDataHandler(new DataHandler(new ByteArrayDataSource(attachment(_.bytes).bytes, attachment(_.contentType).name)))
-      part
-    }
-    
-    bodyHtml match {
-      case Some((html, inlines)) =>
-        var top = new MimeMultipart("alternative")
-        val textPart = new MimeBodyPart()
-        textPart.setText(bodyText, "UTF-8")
-        top.addBodyPart(textPart)
-
-        val htmlPart = new MimeBodyPart()
-        htmlPart.setContent(html, "text/html;charset=UTF-8")
-        top.addBodyPart(htmlPart)
-
-        if (inlines.length > 0) {
-          val body = new MimeBodyPart()
-          body.setContent(top)
-          top = new MimeMultipart("related")
-          top.addBodyPart(body)
-          inlines.foreach { inline => top.addBodyPart(source(inline, true)) }
-        }
-
-        if (attachments.length > 0) {
-          val body = new MimeBodyPart()
-          body.setContent(top)
-          top = new MimeMultipart("mixed")
-          top.addBodyPart(body)
-          attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
-        }
-        msg.setContent(top)
-
-      case None => {
-        if (attachments.length > 0) {
-          val body = new MimeBodyPart()
-          body.setText(bodyText, "UTF-8")
-          val top = new MimeMultipart("mixed")
-          top.addBodyPart(body)
-          attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
-          msg.setContent(top)
-        } else {
-          msg.setText(bodyText, "UTF-8")
-        }
-      }
-    }
-
-    Transport.send(msg)
-    SendReport()
-  }
+                             attachments: Seq[Annex[Attachable]])(implicit mode: Mode[`Smtp#sendmail`],
+                                                                           backend: SendmailBackend): mode.Wrap[SendReport, SendAddressException with SendException] =
+    backend.sendmail(hostname,
+                     port,
+                     to.map(_.toString),
+                     from.toString,
+                     subject,
+                     cc.map(_.toString),
+                     bcc.map(_.toString),
+                     content,
+                     htmlContent,
+                     attachments)
 }
 
-case class SendReport()
+case class SendReport(messageId: String)
 
 object Sendable {
   case class Capability[T: Sendable](msg: T) {
-    def send()(implicit smtpServer: Smtp, mode: Mode[`send`]): mode.Wrap[SendReport, SendAddressException with SendException] = mode.wrap {
+    def send()(implicit smtpServer: Smtp, mode: Mode[`send`], sendmailBackend: SendmailBackend): mode.Wrap[SendReport, SendAddressException with SendException] = mode.wrap {
       smtpServer.sendmail(?[Sendable[T]].to(msg), ?[Sendable[T]].from(msg), ?[Sendable[T]].subject(msg), ?[Sendable[T]].cc(msg),
           ?[Sendable[T]].bcc(msg), ?[Sendable[T]].content(msg), ?[Sendable[T]].htmlContent(msg), ?[Sendable[T]].attachments(msg))
     }
@@ -364,3 +286,106 @@ case class SendAddressException(invalid: Set[Contact], validSent: Set[Contact],
 
 case class SendException() extends RuntimeException("the email could not be sent")
 
+
+trait SendmailBackend {
+  def sendmail(hostname: String,
+               port: Int,
+               to: Seq[String],
+               from: String,
+               subject: String,
+               cc: Seq[String],
+               bcc: Seq[String],
+               bodyText: String,
+               bodyHtml: Option[(String, Seq[Annex[Attachable]])],
+               attachments: Seq[Annex[Attachable]])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException]
+}
+
+package sendmailBackends {
+  object javamail {
+    def apply(): SendmailBackend = implicitSendmailBackend
+    implicit val implicitSendmailBackend: SendmailBackend = new SendmailBackend {
+      def sendmail(hostname: String,
+                   port: Int,
+                   to: Seq[String],
+                   from: String,
+                   subject: String,
+                   cc: Seq[String],
+                   bcc: Seq[String],
+                   bodyText: String,
+                   bodyHtml: Option[(String, Seq[Annex[Attachable]])],
+                   attachments: Seq[Annex[Attachable]])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
+
+        import javax.mail._
+        import javax.mail.util._
+        import javax.mail.internet._
+        import javax.activation._
+
+        val props = System.getProperties()
+        props.put("mail.smtp.host", hostname)
+        props.put("mail.smtp.port", port.toString)
+        val session = Session.getDefaultInstance(props, null)
+        val msg = new MimeMessage(session)
+        
+        msg.setFrom(new InternetAddress(from))
+        for (r <- to) msg.addRecipient(Message.RecipientType.TO, new InternetAddress(r))
+        for (r <- cc) msg.addRecipient(Message.RecipientType.CC, new InternetAddress(r))
+        for (r <- bcc) msg.addRecipient(Message.RecipientType.BCC, new InternetAddress(r))
+        msg.setSubject(subject)
+
+        def source(attachment: Annex[Attachable], inline: Boolean) = {
+          val part = new MimeBodyPart()
+          part.setDisposition(if(inline) Part.INLINE else Part.ATTACHMENT)
+          if(inline) part.setHeader("Content-ID", s"<${attachment(_.resourceName)}>")
+          else part.setFileName(attachment(_.resourceName))
+          part.setDataHandler(new DataHandler(new ByteArrayDataSource(attachment(_.bytes).bytes, attachment(_.contentType).name)))
+          part
+        }
+        
+        bodyHtml match {
+          case Some((html, inlines)) =>
+            var top = new MimeMultipart("alternative")
+            val textPart = new MimeBodyPart()
+            textPart.setText(bodyText, "UTF-8")
+            top.addBodyPart(textPart)
+
+            val htmlPart = new MimeBodyPart()
+            htmlPart.setContent(html, "text/html;charset=UTF-8")
+            top.addBodyPart(htmlPart)
+
+            if (inlines.length > 0) {
+              val body = new MimeBodyPart()
+              body.setContent(top)
+              top = new MimeMultipart("related")
+              top.addBodyPart(body)
+              inlines.foreach { inline => top.addBodyPart(source(inline, true)) }
+            }
+
+            if (attachments.length > 0) {
+              val body = new MimeBodyPart()
+              body.setContent(top)
+              top = new MimeMultipart("mixed")
+              top.addBodyPart(body)
+              attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
+            }
+            msg.setContent(top)
+
+          case None => {
+            if (attachments.length > 0) {
+              val body = new MimeBodyPart()
+              body.setText(bodyText, "UTF-8")
+              val top = new MimeMultipart("mixed")
+              top.addBodyPart(body)
+              attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
+              msg.setContent(top)
+            } else {
+              msg.setText(bodyText, "UTF-8")
+            }
+          }
+        }
+
+        Transport.send(msg)
+        SendReport(msg.getMessageID)
+      }
+    }
+  }
+}
