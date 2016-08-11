@@ -59,6 +59,21 @@ object OptionalParameter {
 
 sealed trait OptionalParameter[+T] { def apply(): Option[T] }
 
+
+object SeqParameter {
+  implicit def listToSeqParameter[T](seq: Seq[T]): SeqParameter[T] =
+    SeqParameter(seq: _*)
+  
+  implicit def optionToSeqParameter[T](opt: Option[T]): SeqParameter[T] =
+    SeqParameter(opt.to[Seq]: _*)
+  
+  implicit def anyToSeqParameter[T](value: T): SeqParameter[T] = SeqParameter(value)
+}
+
+case class SeqParameter[T](elements: T*)
+
+
+
 case class SpecifiedParameter[+T] (value: T) extends OptionalParameter[T] {
   def apply(): Option[T] = Some(value)
 }

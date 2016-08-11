@@ -35,10 +35,31 @@ object Macros {
     import c.universe._
 
     c.Expr(q"""
-      new _root_.rapture.mail.MailtoUri(List($constants, $variables :+ "").transpose.flatten.mkString)
+      new _root_.rapture.mail.MailtoUri(_root_.scala.List($constants,
+          $variables :+ "").transpose.flatten.mkString)
     """)
   }
-  
+
+  def contactMacro(c: BlackboxContext)(variables: c.Expr[String]*): c.Expr[Contact] = {
+    import c.universe._
+
+    val literals = c.prefix.tree match {
+      case Apply(_, List(Apply(_, rawParts))) => rawParts.map {
+        case Literal(Constant(s: String)) => s
+      }
+    }
+
+    val mock = literals.mkString("x")
+
+    val result = if(Contact.parse(mock).isDefined) c.Expr(q"""
+      _root_.rapture.mail.Contact.parse(_root_.scala.List($literals,
+          _root_.scala.List(..$variables, "")).transpose.flatten.mkString).get
+    """) else c.abort(c.enclosingPosition, "this is not a valid email address")
+
+
+    result
+  }
+
   def smtpMacro(c: BlackboxContext)(constants: c.Expr[List[String]])(
       variables: c.Expr[List[String]]): c.Expr[Smtp] = {
     import c.universe._
@@ -105,10 +126,15 @@ trait Attachable[Res] {
   def bytes(res: Res): Bytes
 }
 
-case class Envelope(subject: String, from: Contact, to: Seq[Contact], cc: Seq[Contact] = Seq(), bcc: Seq[Contact] = Seq()) {
-  def insert(mailable: Annex[Mailable], attachments: Annex[Attachable]*) =
-    EmailMessage(from, to, cc, bcc, subject, mailable, attachments)
+case class Envelope(
+  subject: String,
+  from: Contact,
+  to: SeqParameter[Contact],
+  cc: SeqParameter[Contact] = Nil,
+  bcc: SeqParameter[Contact] = Nil) {
 
+  def insert(mailable: Annex[Mailable], attachments: Annex[Attachable]*) =
+    EmailMessage(from, to.elements, cc.elements, bcc.elements, subject, mailable, attachments)
 }
 
 object EmailMessage {
@@ -126,8 +152,25 @@ object EmailMessage {
 
 case class EmailMessage(from: Contact, to: Seq[Contact], cc: Seq[Contact], bcc: Seq[Contact], subject: String, mailable: Annex[Mailable], attachments: Seq[Annex[Attachable]]*)
 
-case class Contact(email: String, name: String = "") {
-  override def toString = if (name == "") email else s""""${name}" <${email}>"""
+class ContactStringContext(sc: StringContext) {
+  def contact(variables: String*): Contact = macro Macros.contactMacro
+}
+object Contact {
+  private val EmailWithName =
+    """^([^<]*) <([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,})>$""".r
+  
+  private val JustEmail =
+    """^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,})$""".r
+
+  def parse(email: String): Option[Contact] = email match {
+    case JustEmail(e, _, _) => Some(Contact(e))
+    case EmailWithName(n, e, _, _0) => Some(Contact(e, Some(n)))
+    case _ => None
+  }
+}
+
+case class Contact(email: String, name: Option[String] = None) {
+  override def toString = if (name == None) email else s""""${name.get}" <${email}>"""
 }
 
 object Smtp {
@@ -186,6 +229,9 @@ object `package` {
   implicit def mailEnrichedUriContext(uri: UriContext.type): MailEnrichedUriContext =
     MailEnrichedUriContext(uri)
   
+  implicit def mailEnrichedStringContext(sc: StringContext): ContactStringContext =
+    new ContactStringContext(sc)
+  
   implicit def sendExtensionMethod[T: Sendable](sendable: T): Sendable.Capability[T] =
     Sendable.Capability[T](sendable)
 }
@@ -228,9 +274,11 @@ case class Smtp(hostname: String, port: Int = 25) {
     props.put("mail.smtp.port", port.toString)
     val session = Session.getDefaultInstance(props, null)
     val msg = new MimeMessage(session)
+    
     msg.setFrom(new InternetAddress(from))
     for (r <- to) msg.addRecipient(Message.RecipientType.TO, new InternetAddress(r))
     for (r <- cc) msg.addRecipient(Message.RecipientType.CC, new InternetAddress(r))
+    for (r <- bcc) msg.addRecipient(Message.RecipientType.BCC, new InternetAddress(r))
     msg.setSubject(subject)
 
     def source(attachment: Annex[Attachable], inline: Boolean) = {
@@ -243,7 +291,7 @@ case class Smtp(hostname: String, port: Int = 25) {
     }
     
     bodyHtml match {
-      case Some((html, inlines)) => {
+      case Some((html, inlines)) =>
         var top = new MimeMultipart("alternative")
         val textPart = new MimeBodyPart()
         textPart.setText(bodyText, "UTF-8")
@@ -266,23 +314,24 @@ case class Smtp(hostname: String, port: Int = 25) {
           body.setContent(top)
           top = new MimeMultipart("mixed")
           top.addBodyPart(body)
-          attachments.foreach { a => top.addBodyPart(source(a, false)) }
+          attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
         }
         msg.setContent(top)
-      }
+
       case None => {
         if (attachments.length > 0) {
           val body = new MimeBodyPart()
           body.setText(bodyText, "UTF-8")
           val top = new MimeMultipart("mixed")
           top.addBodyPart(body)
-          attachments.foreach { a => top.addBodyPart(source(a, false)) }
+          attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
           msg.setContent(top)
         } else {
           msg.setText(bodyText, "UTF-8")
         }
       }
     }
+
     Transport.send(msg)
     SendReport()
   }
