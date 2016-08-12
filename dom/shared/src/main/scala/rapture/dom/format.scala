@@ -107,8 +107,8 @@ object DomFormatter {
 }
 
 trait DomFormatter[Output] {
-  protected def text(string: String): String = string.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
-  protected def comment(string: String) = "<!--" + string.replaceAll("&", "&amp;").replaceAll("<", "&lt;") + "-->"
+  protected def text(string: String): String = string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+  protected def comment(string: String) = "<!--" + string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;") + "-->"
 
   def format(element: DomNode[_, _, _]): Output
 }
