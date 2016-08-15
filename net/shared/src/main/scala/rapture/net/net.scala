@@ -170,6 +170,10 @@ trait NetUrl {
 }
 
 object HttpUrl {
+  implicit val hasResourceName: HasResourceName[HttpUrl] = new HasResourceName[HttpUrl] {
+    def resourceName(httpUrl: HttpUrl): String = httpUrl.elements.lastOption.getOrElse(httpUrl.root.hostname)
+  }
+
   implicit val parser: StringParser[HttpUrl] = new StringParser[HttpUrl] {
     type Throws = ParseException
     def parse(s: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[HttpUrl, Throws] = mode.wrap(Http.parse(s))

@@ -422,6 +422,10 @@ trait Reader_1 {
 }
 
 object Reader extends Reader_1 {
+
+  type ForBytes[-Resource] = Reader[Resource, Byte]
+  type ForChars[-Resource] = Reader[Resource, Char]
+
   implicit def inputStreamReader[T, I[T] <: Input[T]]: Reader[I[T], T] =
     new Reader[I[T], T] {
       def input(in: I[T]): Input[T] = in

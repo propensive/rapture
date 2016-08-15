@@ -51,7 +51,7 @@ object extensionBasedMimeTypes {
       val input = reader.input(in)
       val parts = implicitly[Linkable[T]].link(in).link.split("\\.").to[List]
       val extension = if (parts.length < 2) Nil else List(parts.last)
-      val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`text/plain`)
+      val mime = extension.flatMap(MimeTypes.extension).headOption.getOrElse(MimeTypes.`application/octet-stream`)
       ByteStreamResponse(200, Response.NoCache, mime, { os =>
         input > os
         os.close()

@@ -127,7 +127,10 @@ private[json4s] object Json4sAst extends JsonBufferAst {
 
   override def dereferenceObject(obj: Any, element: String): Any =
     obj match {
-      case obj: JObject => obj \ element
+      case obj: JObject =>
+        val result = obj \ element
+        if(result == JNothing) throw MissingValueException()
+        else result
       case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
     }
 
@@ -139,7 +142,10 @@ private[json4s] object Json4sAst extends JsonBufferAst {
 
   override def dereferenceArray(array: Any, element: Int): Any =
     array match {
-      case JArray(arr) => arr(element)
+      case JArray(arr) =>
+        val result = arr(element)
+        if(result == JNothing) throw MissingValueException()
+        else result
       case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
     }
 }

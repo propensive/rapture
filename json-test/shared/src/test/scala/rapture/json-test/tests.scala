@@ -144,7 +144,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   
   val `Extract case class with missing tried value` = test {
     source1.baz.as[Baz2]
-  } returns Baz2("test", util.Failure(MissingValueException()))
+  } returns Baz2("test", util.Failure(MissingValueException("beta")))
   
   val `Extract case class with present optional value` = test {
     source1.baz2.as[Baz]
@@ -220,7 +220,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
 
   val `Check missing value failure` = test {
     source1.nothing.as[Int]
-  } throws MissingValueException()
+  } throws MissingValueException("nothing")
 
   val `Match string` = test {
     source1 match {
