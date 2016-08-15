@@ -77,9 +77,9 @@ object Macros {
 
     c.Expr[Smtp](q"""{
       val $newName = List($constants, $variables :+ "").transpose.flatten.mkString.substring(2).split(":")
-      _root_.rapture.mail.Smtp($newName(0), new _root_.rapture.core.EnrichedString(if($newName.length > 1) $newName(1) else "25").as[
-          _root_.scala.Int](_root_.rapture.core.StringParser.intParser,
-          _root_.rapture.core.modes.returnOption()).getOrElse(25))
+      _root_.rapture.mail.Smtp($newName(0), new _root_.rapture.core.EnrichedString(
+          if($newName.length > 1) $newName(1) else "25").as[_root_.scala.Int](
+          _root_.rapture.core.StringParser.intParser, _root_.rapture.core.modes.returnOption()).getOrElse(25))
     }""")
   }
 
@@ -144,8 +144,8 @@ object EmailMessage {
     def bcc(env: EmailMessage): Seq[Contact] = env.bcc
     def from(env: EmailMessage): Contact = env.from
     def subject(env: EmailMessage): String = env.subject
-    def content(env: EmailMessage): String = env.mailable(_.content)
-    def htmlContent(env: EmailMessage): Option[(String, Seq[Annex[Attachable]])] = env.mailable(_.htmlContent)
+    def bodyText(env: EmailMessage): String = env.mailable(_.bodyText)
+    def bodyHtml(env: EmailMessage): Option[(String, Seq[Annex[Attachable]])] = env.mailable(_.bodyHtml)
     def attachments(env: EmailMessage): Seq[Annex[Attachable]] = env.mailable(_.attachments)
   }
 }
@@ -189,15 +189,15 @@ case class MailEnrichedUriContext(uri: UriContext.type) {
 
 object Mailable {
   implicit val stringMailable: Mailable[String] = new Mailable[String] {
-    def content(t: String) = t
-    def htmlContent(t: String) = None
+    def bodyText(t: String) = t
+    def bodyHtml(t: String) = None
     def attachments(t: String): Seq[Annex[Attachable]] = Nil
   }
 
   implicit def htmlMailable(implicit conv: HtmlToPlainTextConverter): Mailable[HtmlEmail] =
     new Mailable[HtmlEmail] {
-      def content(t: HtmlEmail) = conv.convert(t.html)
-      def htmlContent(t: HtmlEmail) = Some((t.html.format, t.inlines))
+      def bodyText(t: HtmlEmail) = conv.convert(t.html)
+      def bodyHtml(t: HtmlEmail) = Some((t.html.format, t.inlines))
       def attachments(t: HtmlEmail) = t.attachments
     }
 
@@ -220,8 +220,8 @@ case class Attachment(name: String, content: Annex[Reader.ForBytes],
     contentType: OptionalParameter[MimeTypes.MimeType] = UnspecifiedParameter)
 
 trait Mailable[T] {
-  def content(t: T): String
-  def htmlContent(t: T): Option[(String, Seq[Annex[Attachable]])]
+  def bodyText(t: T): String
+  def bodyHtml(t: T): Option[(String, Seq[Annex[Attachable]])]
   def attachments(t: T): Seq[Annex[Attachable]]
 }
 
@@ -236,7 +236,9 @@ object `package` {
     Sendable.Capability[T](sendable)
 }
 
-case class Smtp(hostname: String, port: Int = 25) {
+case class Smtp(hostname: String, port: Int = 25)
+
+/*{
 
   def sendmail(to: Seq[Contact],
                              from: Contact,
@@ -244,7 +246,7 @@ case class Smtp(hostname: String, port: Int = 25) {
                              cc: Seq[Contact],
                              bcc: Seq[Contact],
                              content: String,
-                             htmlContent: Option[(String, Seq[Annex[Attachable]])],
+                             bodyHtml: Option[(String, Seq[Annex[Attachable]])],
                              attachments: Seq[Annex[Attachable]])(implicit mode: Mode[`Smtp#sendmail`],
                                                                            backend: SendmailBackend): mode.Wrap[SendReport, SendAddressException with SendException] =
     backend.sendmail(hostname,
@@ -255,18 +257,26 @@ case class Smtp(hostname: String, port: Int = 25) {
                      cc.map(_.toString),
                      bcc.map(_.toString),
                      content,
-                     htmlContent,
+                     bodyHtml,
                      attachments)
-}
+}*/
 
 case class SendReport(messageId: String)
 
 object Sendable {
   case class Capability[T: Sendable](msg: T) {
-    def send()(implicit smtpServer: Smtp, mode: Mode[`send`], sendmailBackend: SendmailBackend): mode.Wrap[SendReport, SendAddressException with SendException] = mode.wrap {
-      smtpServer.sendmail(?[Sendable[T]].to(msg), ?[Sendable[T]].from(msg), ?[Sendable[T]].subject(msg), ?[Sendable[T]].cc(msg),
-          ?[Sendable[T]].bcc(msg), ?[Sendable[T]].content(msg), ?[Sendable[T]].htmlContent(msg), ?[Sendable[T]].attachments(msg))
-    }
+    def send()(implicit mode: Mode[`send`], sendmailBackend: SendmailBackend): mode.Wrap[SendReport,
+        SendAddressException with SendException] =
+      sendmailBackend.sendmail(
+        to = ?[Sendable[T]].to(msg).map(_.toString),
+        from = ?[Sendable[T]].from(msg).toString,
+        subject = ?[Sendable[T]].subject(msg),
+        cc = ?[Sendable[T]].cc(msg).map(_.toString),
+        bcc = ?[Sendable[T]].bcc(msg).map(_.toString),
+        bodyText = ?[Sendable[T]].bodyText(msg),
+        bodyHtml = ?[Sendable[T]].bodyHtml(msg),
+        attachments = ?[Sendable[T]].attachments(msg)
+      )
   }
 }
 
@@ -276,8 +286,8 @@ trait Sendable[T] {
   def bcc(t: T): Seq[Contact]
   def from(t: T): Contact
   def subject(t: T): String
-  def content(t: T): String
-  def htmlContent(t: T): Option[(String, Seq[Annex[Attachable]])]
+  def bodyText(t: T): String
+  def bodyHtml(t: T): Option[(String, Seq[Annex[Attachable]])]
   def attachments(t: T): Seq[Annex[Attachable]]
 }
 
@@ -288,9 +298,7 @@ case class SendException() extends RuntimeException("the email could not be sent
 
 
 trait SendmailBackend {
-  def sendmail(hostname: String,
-               port: Int,
-               to: Seq[String],
+  def sendmail(to: Seq[String],
                from: String,
                subject: String,
                cc: Seq[String],
@@ -298,94 +306,4 @@ trait SendmailBackend {
                bodyText: String,
                bodyHtml: Option[(String, Seq[Annex[Attachable]])],
                attachments: Seq[Annex[Attachable]])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException]
-}
-
-package sendmailBackends {
-  object javamail {
-    def apply(): SendmailBackend = implicitSendmailBackend
-    implicit val implicitSendmailBackend: SendmailBackend = new SendmailBackend {
-      def sendmail(hostname: String,
-                   port: Int,
-                   to: Seq[String],
-                   from: String,
-                   subject: String,
-                   cc: Seq[String],
-                   bcc: Seq[String],
-                   bodyText: String,
-                   bodyHtml: Option[(String, Seq[Annex[Attachable]])],
-                   attachments: Seq[Annex[Attachable]])(implicit mode: Mode[_]): mode.Wrap[SendReport, SendAddressException with SendException] = mode wrap {
-
-        import javax.mail._
-        import javax.mail.util._
-        import javax.mail.internet._
-        import javax.activation._
-
-        val props = System.getProperties()
-        props.put("mail.smtp.host", hostname)
-        props.put("mail.smtp.port", port.toString)
-        val session = Session.getDefaultInstance(props, null)
-        val msg = new MimeMessage(session)
-        
-        msg.setFrom(new InternetAddress(from))
-        for (r <- to) msg.addRecipient(Message.RecipientType.TO, new InternetAddress(r))
-        for (r <- cc) msg.addRecipient(Message.RecipientType.CC, new InternetAddress(r))
-        for (r <- bcc) msg.addRecipient(Message.RecipientType.BCC, new InternetAddress(r))
-        msg.setSubject(subject)
-
-        def source(attachment: Annex[Attachable], inline: Boolean) = {
-          val part = new MimeBodyPart()
-          part.setDisposition(if(inline) Part.INLINE else Part.ATTACHMENT)
-          if(inline) part.setHeader("Content-ID", s"<${attachment(_.resourceName)}>")
-          else part.setFileName(attachment(_.resourceName))
-          part.setDataHandler(new DataHandler(new ByteArrayDataSource(attachment(_.bytes).bytes, attachment(_.contentType).name)))
-          part
-        }
-        
-        bodyHtml match {
-          case Some((html, inlines)) =>
-            var top = new MimeMultipart("alternative")
-            val textPart = new MimeBodyPart()
-            textPart.setText(bodyText, "UTF-8")
-            top.addBodyPart(textPart)
-
-            val htmlPart = new MimeBodyPart()
-            htmlPart.setContent(html, "text/html;charset=UTF-8")
-            top.addBodyPart(htmlPart)
-
-            if (inlines.length > 0) {
-              val body = new MimeBodyPart()
-              body.setContent(top)
-              top = new MimeMultipart("related")
-              top.addBodyPart(body)
-              inlines.foreach { inline => top.addBodyPart(source(inline, true)) }
-            }
-
-            if (attachments.length > 0) {
-              val body = new MimeBodyPart()
-              body.setContent(top)
-              top = new MimeMultipart("mixed")
-              top.addBodyPart(body)
-              attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
-            }
-            msg.setContent(top)
-
-          case None => {
-            if (attachments.length > 0) {
-              val body = new MimeBodyPart()
-              body.setText(bodyText, "UTF-8")
-              val top = new MimeMultipart("mixed")
-              top.addBodyPart(body)
-              attachments.foreach { attachment => top.addBodyPart(source(attachment, false)) }
-              msg.setContent(top)
-            } else {
-              msg.setText(bodyText, "UTF-8")
-            }
-          }
-        }
-
-        Transport.send(msg)
-        SendReport(msg.getMessageID)
-      }
-    }
-  }
 }
