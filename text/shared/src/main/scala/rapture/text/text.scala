@@ -36,3 +36,21 @@ object unindent {
     }
   }
 }
+
+object smartStringOrdering {
+  implicit val stringOrdering: Ordering[String] = new Ordering[String] {
+    private def surrounding(s: String) = s.split("[0-9]+").to[List]
+    private def numbers(s: String) = s.split("[^0-9]+").to[List].filter(_ != "").map(_.toInt)
+    def compare(a: String, b: String) = {
+      val as = surrounding(a)
+      val bs = surrounding(b)
+      val an = numbers(a)
+      val bn = numbers(b)
+      
+      if(as != bs) math.Ordering.String.compare(a, b)
+      else an.zip(bn).dropWhile { case (ai, bi) => ai == bi }.headOption.map { case (ad, bd) =>
+        math.Ordering.Int.compare(ad, bd)
+      }.getOrElse(0)
+    }
+  }
+}
