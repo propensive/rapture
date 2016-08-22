@@ -221,10 +221,10 @@ object htmlSyntax {
   implicit def onmouseout = Attribute[Global, Js]("onmouseout")(_.content)
   def onmouseout_=[E <: ElementType](v: Js) = onmouseout.set(v)
 
-  implicit def onchange = Attribute[Input, Js]("onchange")(_.content)
+  implicit def onchange = Attribute[Input with Select, Js]("onchange")(_.content)
   def onchange_=[E <: ElementType](v: Js) = onchange.set(v)
 
-  implicit def onblur = Attribute[Input, Js]("onblur")(_.content)
+  implicit def onblur = Attribute[Input with Select, Js]("onblur")(_.content)
   def onblur_=[E <: ElementType](v: Js) = onblur.set(v)
 
   implicit def title = Attribute[Global, String]("title")(identity)
