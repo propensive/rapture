@@ -131,6 +131,18 @@ case class Money[C <: Currency.Key](currency: Currency { type Key = C }, amount:
 
   def /[N: Numeric](divisor: N): Money[C] = *(1.0 / implicitly[Numeric[N]].toDouble(divisor))
 
+  def split(divisor: Int): List[Money[C]] = if(divisor == 0) Nil else {
+    val rounded = (this/divisor).round
+    rounded :: (this - rounded).split(divisor - 1)
+  }
+
+  def round: Money[C] = {
+    val multiplier = math.pow(10, currency.decimalPlaces)
+    Money[C](currency, (amount*multiplier).round/multiplier)
+  }
+
+  def roundingError: Money[C] = this - round
+
   def <(m: Money[C]) = amount < m.amount
   def <=(m: Money[C]) = amount <= m.amount
   def >(m: Money[C]) = amount > m.amount

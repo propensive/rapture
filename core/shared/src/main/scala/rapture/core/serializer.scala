@@ -141,7 +141,7 @@ trait DecimalFormat { def format(bigDecimal: BigDecimal): String }
 case class DecimalPlaces(n: Int) extends DecimalFormat {
   def format(bigDecimal: BigDecimal): String = {
     val integral = bigDecimal.toBigInt.toString.length
-    bigDecimal.round(new java.math.MathContext(integral + n)).setScale(n).toString
+    bigDecimal.round(new java.math.MathContext(integral + n)).setScale(n, BigDecimal.RoundingMode.HALF_UP).toString
   }
 }
 
