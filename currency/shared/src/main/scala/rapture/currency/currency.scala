@@ -21,6 +21,8 @@ import rapture.core._
 
 object Currency {
 
+  final val NoCurrency = new Currency("", "", 0, "", "") { type Key = Currency.Key }
+
   trait Key
   case class Evidence[C <: Currency.Key](currency: Currency { type Key = C })
 
@@ -95,6 +97,8 @@ case class InvalidMoney(currency: Currency)
     extends Exception(s"this is not a valid money value of currency ${currency.code}")
 
 object Money {
+  final def zero[C <: Currency.Key: Currency.Evidence] = Money[C](implicitly[Currency.Evidence[C]].currency, 0.0)
+  
   implicit def moneySerializer[C <: Currency.Key]: StringSerializer[Money[C]] = new StringSerializer[Money[C]] {
     def serialize(m: Money[C]) = {
       implicit val df: DecimalFormat = DecimalPlaces(m.currency.decimalPlaces)
@@ -162,7 +166,9 @@ case class Money[C <: Currency.Key](currency: Currency { type Key = C }, amount:
 
 }
 
-case class CurrencyBasket[C <: Currency.Key](amounts: Map[Currency, Double]) {
+case class CurrencyBasket[C <: Currency.Key](initialAmounts: Map[Currency, Double]) {
+
+  def amounts = initialAmounts - Currency.NoCurrency
 
   def +[M](m: M)(implicit arithmetic: Currency.Arithmetic[CurrencyBasket[C], M]): arithmetic.Return =
     arithmetic.add(this, m)
