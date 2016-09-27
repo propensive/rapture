@@ -153,6 +153,13 @@ case class Money[C <: Currency.Key](currency: Currency { type Key = C }, amount:
     s"${currency.prefix}${String(amount)}${currency.suffix}"
   }
 
+  override def equals(that: Any): Boolean = that match {
+    case m: Money[_] => amount == m.amount && (currency == m.currency || amount == 0.0)
+    case _ => false
+  }
+
+  override def hashCode: Int = if(amount == 0.0) 0 else super.hashCode
+
 }
 
 case class CurrencyBasket[C <: Currency.Key](amounts: Map[Currency, Double]) {
