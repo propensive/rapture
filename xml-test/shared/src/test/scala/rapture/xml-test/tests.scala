@@ -24,6 +24,10 @@ import rapture.test._
 
 import scala.util
 
+class TestRun extends Programme {
+  include(StdlibTests)
+}
+
 private[test] case class Foo(alpha: String, beta: Int)
 private[test] case class Bar(foo: Foo, gamma: Double)
 
@@ -41,7 +45,7 @@ private[test] case class E(e: F)
 private[test] case class F(f: Int)
 
 import xmlBackends._
-class StdlibTests() extends XmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
+object StdlibTests extends XmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
 
 class MutableStdlibTests() extends MutableXmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
 
