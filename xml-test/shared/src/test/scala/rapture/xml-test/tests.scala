@@ -127,7 +127,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Extract case class with missing tried value` = test {
     source1.baz.as[Baz2]
-  } returns Baz2("test", util.Failure(MissingValueException()))
+  } returns Baz2("test", util.Failure(MissingValueException("beta")))
 
   val `Extract case class with present optional value` = test {
     source1.baz2.as[Baz]
