@@ -181,7 +181,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Serialize int` = test {
     Xml(1648).toString
-  } returns "1648"
+  } returns "xml\"\"\"1648\"\"\""
 
   /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
