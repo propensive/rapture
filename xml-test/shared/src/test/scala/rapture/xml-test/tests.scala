@@ -177,7 +177,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Serialize string` = test {
     Xml("Hello World!").toString
-  } returns "Hello World!"
+  } returns "xml\"\"\"Hello World!\"\"\""
 
   val `Serialize int` = test {
     Xml(1648).toString
