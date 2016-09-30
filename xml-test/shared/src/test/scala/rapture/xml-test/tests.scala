@@ -174,6 +174,36 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
   } throws MissingValueException()
 
   // FIXME: Add pattern-matching tests
+  val `Pattern matching` = test {
+    Xml("") match {
+      case xml"""""" => "Match"
+      case _ => "Does not match"
+    }
+  } returns "Match"
+
+  val `Match string` = test {
+    source1 match {
+      case xml"""<string>$h<string>""" => h.as[String]
+    }
+  } returns "Hello"
+
+  val `Match int` = test {
+    source1 match {
+      case xml"""<int>$h<int>""" => h.as[Int]
+    }
+  } returns 42
+
+  val `Match double` = test {
+    source1 match {
+      case xml"""<double>$h<double>""" => h.as[Double]
+    }
+  } returns 3.14159
+
+  val `Match boolean` = test {
+    source1 match {
+      case xml"""<boolean>$h<boolean>""" => h.as[Boolean]
+    }
+  } returns true
 
   val `Serialize string` = test {
     Xml("Hello World!").toString
