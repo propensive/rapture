@@ -171,7 +171,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Check missing value failure` = test {
     source1.nothing.as[Int]
-  } throws MissingValueException()
+  } throws MissingValueException("nothing")
 
   // FIXME: Add pattern-matching tests
 
