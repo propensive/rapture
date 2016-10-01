@@ -47,14 +47,10 @@ private[test] case class F(f: Int)
 import xmlBackends._
 object StdlibTests extends XmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
 
-class MutableStdlibTests() extends MutableXmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
+object StdlibPatternMatchTests extends XmlPatternMatchingTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
 
-abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends TestSuite {
-
-  implicit def implicitAst: XmlAst = ast
-  implicit def implicitParser: Parser[String, XmlAst] = parser
-
-  val source1 = xml"""<source>
+object Data {
+  def source1(implicit ast: XmlAst, parser: Parser[String, XmlAst]) = xml"""<source>
     <string>Hello</string>
     <int>42</int>
     <double>3.14159</double>
@@ -84,6 +80,14 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
     </baz2>
     <self>0</self>
   </source>"""
+}
+
+abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends TestSuite {
+
+  implicit def implicitAst: XmlAst = ast
+  implicit def implicitParser: Parser[String, XmlAst] = parser
+
+  val source1 = Data.source1
 
   val `Extract Int` = test {
     source1.int.as[Int]
@@ -127,7 +131,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Extract case class with missing tried value` = test {
     source1.baz.as[Baz2]
-  } returns Baz2("test", util.Failure(MissingValueException()))
+  } returns Baz2("test", util.Failure(MissingValueException("beta")))
 
   val `Extract case class with present optional value` = test {
     source1.baz2.as[Baz]
@@ -171,9 +175,41 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Check missing value failure` = test {
     source1.nothing.as[Int]
-  } throws MissingValueException()
+  } throws MissingValueException("nothing")
 
-  // FIXME: Add pattern-matching tests
+  /*val `Serialize array` = test {
+    Json(List(1, 2, 3)).toString
+  } returns "123"
+
+  val `Serialize object` = test {
+    import formatters.humanReadable._
+    Xml.format(xml"<baz>quux</baz><foo>bar</foo>")
+  } returns "<baz>quux</baz><foo>bar</foo>"
+
+  val `Empty object serialization` = test {
+    import formatters.humanReadable._
+    Json.format(json"{}")
+  } returns "{}"
+
+  val `Empty node serialization` = test {
+    import formatters.humanReadable._
+    Xml.format(xml"<empty></empty>")
+  } returns "<empty/>"
+
+  val `Extracting Option should not throw exception` = test {
+    val x = xml"""{"foo":"bar"}"""
+    j.as[Option[String]]
+  } returns None*/
+
+}
+
+abstract class XmlPatternMatchingTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends TestSuite {
+  
+  implicit def implicitAst: XmlAst = ast
+  implicit def implicitParser: Parser[String, XmlAst] = parser
+
+  val source1 = Data.source1
+  
   val `Pattern matching` = test {
     Xml("") match {
       case xml"""""" => "Match"
@@ -212,69 +248,4 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
   val `Serialize int` = test {
     Xml(1648).toString
   } returns "1648"
-
-  /*val `Serialize array` = test {
-    Json(List(1, 2, 3)).toString
-  } returns "123"
-
-  val `Serialize object` = test {
-    import formatters.humanReadable._
-    Xml.format(xml"<baz>quux</baz><foo>bar</foo>")
-  } returns "<baz>quux</baz><foo>bar</foo>"
-
-  val `Empty object serialization` = test {
-    import formatters.humanReadable._
-    Json.format(json"{}")
-  } returns "{}"
-
-  val `Empty node serialization` = test {
-    import formatters.humanReadable._
-    Xml.format(xml"<empty></empty>")
-  } returns "<empty/>"
-
-  val `Extracting Option should not throw exception` = test {
-    val x = xml"""{"foo":"bar"}"""
-    j.as[Option[String]]
-  } returns None*/
-
-}
-
-abstract class MutableXmlTests(ast: XmlBufferAst, parser: Parser[String, XmlBufferAst]) extends TestSuite {
-
-  implicit def implicitAst: XmlBufferAst = ast
-  implicit def implicitParser: Parser[String, XmlBufferAst] = parser
-
-  case class Foo(alpha: String, beta: Int)
-  case class Bar(foo: Foo, gamma: Double)
-
-  val source1 = xmlBuffer"""<source>
-    <string>Hello</string>
-    <int>42</int>
-    <double>3.14159</double>
-    <boolean>true</boolean>
-    <list>
-      <item>1</item>
-      <item>2</item>
-      <item>3</item>
-    </list>
-    <foo>
-      <alpha>test</alpha>
-      <beta>1</beta>
-    </foo>
-    <bar>
-      <foo>
-        <alpha>test2</alpha>
-        <beta>2</beta>
-      </foo>
-      <gamma>2.7</gamma>
-    </bar>
-    <baz>
-      <alpha>test</alpha>
-    </baz>
-    <baz2>
-      <alpha>test</alpha>
-      <beta>7</beta>
-    </baz2>
-    <self>0</self>
-  </source>"""
 }
