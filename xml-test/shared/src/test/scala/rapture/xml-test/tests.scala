@@ -177,6 +177,14 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
     source1.nothing.as[Int]
   } throws MissingValueException("nothing")
 
+  val `Serialize string` = test {
+    Xml("Hello World!").toString
+  } returns "xml\"\"\"Hello World!\"\"\""
+
+  val `Serialize int` = test {
+    Xml(1648).toString
+  } returns "xml\"\"\"1648\"\"\""
+
   /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
   } returns "123"
@@ -240,12 +248,4 @@ abstract class XmlPatternMatchingTests(ast: XmlAst, parser: Parser[String, XmlAs
       case xml"""<boolean>$h<boolean>""" => h.as[Boolean]
     }
   } returns true
-
-  val `Serialize string` = test {
-    Xml("Hello World!").toString
-  } returns "Hello World!"
-
-  val `Serialize int` = test {
-    Xml(1648).toString
-  } returns "1648"
 }
