@@ -127,7 +127,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Extract case class with missing tried value` = test {
     source1.baz.as[Baz2]
-  } returns Baz2("test", util.Failure(MissingValueException()))
+  } returns Baz2("test", util.Failure(MissingValueException("beta")))
 
   val `Extract case class with present optional value` = test {
     source1.baz2.as[Baz]
@@ -171,17 +171,17 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Check missing value failure` = test {
     source1.nothing.as[Int]
-  } throws MissingValueException()
+  } throws MissingValueException("nothing")
 
   // FIXME: Add pattern-matching tests
 
   val `Serialize string` = test {
     Xml("Hello World!").toString
-  } returns "Hello World!"
+  } returns "xml\"\"\"Hello World!\"\"\""
 
   val `Serialize int` = test {
     Xml(1648).toString
-  } returns "1648"
+  } returns "xml\"\"\"1648\"\"\""
 
   /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
