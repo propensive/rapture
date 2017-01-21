@@ -361,7 +361,7 @@ lazy val jsonJawnJS = `json-jawn`.js
 lazy val playJsonDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies += (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, 10)) => "com.typesafe.play" %% "play-json" % "2.4.6"
-    case Some((2, 11)) => "com.typesafe.play" %% "play-json" % "2.5.3"
+    case Some((2, scalaMajor)) if scalaMajor >= 11 => "com.typesafe.play" %% "play-json" % "2.5.3"
   })
 )
 
@@ -448,8 +448,11 @@ lazy val xmlTestJS = `xml-test`.js
 lazy val `json-lift` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-lift")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "net.liftweb" %% "lift-json" % "3.0.1")
- 
+  .settings(libraryDependencies += (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 10)) => "net.liftweb" %% "lift-json" % "2.6.3"
+    case Some((2, scalaMajor)) if scalaMajor >= 11 => "net.liftweb" %% "lift-json" % "3.0.1"
+  }))
+
 lazy val jsonLiftJVM = `json-lift`.jvm
 lazy val jsonLiftJS = `json-lift`.js
 
@@ -522,8 +525,8 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
       // in Scala 2.10, quasiquotes are provided by macro paradise
       case Some((2, 10)) =>
         Seq(
-          compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
-              "org.scalamacros" %% "quasiquotes" % "2.1.0-M5" cross CrossVersion.binary
+          compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+              "org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary
         )
     }
   }
