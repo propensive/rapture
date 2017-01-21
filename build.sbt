@@ -5,21 +5,21 @@ enablePlugins(GitBranchPrompt)
 
 lazy val buildSettings = Seq(
   organization := "com.propensive",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.10.6")
+  scalaVersion := "2.12.1",
+  crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.6")
 )
 
 lazy val commonSettings = Seq(
-  scalafmtConfig in ThisBuild := Some(file(".scalafmt")),
+//  scalafmtConfig in ThisBuild := Some(file(".scalafmt")),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
     "-Xfatal-warnings",
-    "-Xlint"
- /*   "-language:existentials",
-    "-language:higherKinds",
+    "-Xlint",
+    "-language:existentials"
+  /*  "-language:higherKinds",
     "-language:implicitConversions",
     "-language:experimental.macros",
     "-Yinline-warnings",
@@ -28,7 +28,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-value-discard",
     "-Xfuture" */
   ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 11)) => Seq("-Ywarn-unused-import")
+    case Some((2, majorVersion)) if majorVersion >= 11 => Seq("-Ywarn-unused-import")
     case _             => Seq.empty
   }),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
@@ -361,7 +361,8 @@ lazy val jsonJawnJS = `json-jawn`.js
 lazy val playJsonDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies += (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, 10)) => "com.typesafe.play" %% "play-json" % "2.4.6"
-    case Some((2, scalaMajor)) if scalaMajor >= 11 => "com.typesafe.play" %% "play-json" % "2.5.3"
+    case Some((2, 11)) => "com.typesafe.play" %% "play-json" % "2.5.3"
+    case Some((2, 12)) => "com.typesafe.play" %% "play-json" % "2.6.0-M1"
   })
 )
 

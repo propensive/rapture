@@ -4,6 +4,8 @@ git:
 scala:
 - 2.10.6
 - 2.11.8
+- 2.12.1
+
 jdk:
 - oraclejdk8
 script:

@@ -17,10 +17,9 @@
 
 package rapture.json.jsonBackends.json4s
 
+import org.json4s._
 import rapture.data.DataTypes
 import rapture.json._
-
-import org.json4s._
 
 private[json4s] object Json4sAst extends JsonBufferAst {
 
@@ -78,7 +77,10 @@ private[json4s] object Json4sAst extends JsonBufferAst {
 
   def setObjectValue(obj: Any, name: String, value: Any): Any = {
     val contents = (name, value) :: obj.asInstanceOf[JObject].obj.filter(_._1 != name)
-    JObject(contents map { case (k: String, v: JValue) => k -> v })
+    JObject(contents map {
+      case (k: String, v: JValue) => k -> v
+      case _ => ???
+    })
   }
 
   def removeObjectValue(obj: Any, name: String): Any =

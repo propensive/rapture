@@ -84,7 +84,7 @@ trait NameMapper[+Value, +Data] {
   def decode(name: String): String
 }
 
-trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
+trait DataCompanion[Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
   type ParseMethodConstraint <: MethodConstraint
 

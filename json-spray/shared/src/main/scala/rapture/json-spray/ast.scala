@@ -106,6 +106,7 @@ private[spray] object SprayAst extends JsonBufferAst {
   def setObjectValue(obj: Any, name: String, value: Any): Any =
     (value, obj) match {
       case (value: JsValue, obj: JsValue) => obj.asJsObject.fields.updated(name, value).toJson
+      case _ => ???
     }
 
   def removeObjectValue(obj: Any, name: String): Any = obj match {
@@ -192,7 +193,10 @@ private[spray] object SprayAst extends JsonBufferAst {
   def fromBigDecimal(number: BigDecimal): Any = number.toJson
 
   def fromObject(obj: Map[String, Any]): Any =
-    (obj.map { case (k, v: JsValue) => (k, v) }).toJson
+    obj.map {
+      case (k, v: JsValue) => (k, v)
+      case _ => ???
+    }.toJson
 
   def fromString(string: String): Any = string.toJson
 

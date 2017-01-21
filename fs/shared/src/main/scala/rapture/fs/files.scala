@@ -127,10 +127,10 @@ trait LowPriorityImplicits extends LowerPriorityImplicits {
 
   /** Specifies how file: URLs should be navigable. */
   implicit object NavigableFile extends Navigable[FsUrl] {
-    def children(url: FsUrl)(implicit mode: Mode[`Navigable#children`]): mode.Wrap[List[FsUrl], Exception] =
+    override def children(url: FsUrl)(implicit mode: Mode[`Navigable#children`]): mode.Wrap[Seq[FsUrl], Exception] =
       mode.wrap { if (url.isFile) Nil else url.javaFile.list().to[List].map(url / _) }
 
-    def isDirectory(url: FsUrl)(implicit mode: Mode[`Navigable#isDirectory`]): mode.Wrap[Boolean, Exception] =
+    override def isDirectory(url: FsUrl)(implicit mode: Mode[`Navigable#isDirectory`]): mode.Wrap[Boolean, Exception] =
       mode.wrap { url.javaFile.isDirectory() }
   }
 

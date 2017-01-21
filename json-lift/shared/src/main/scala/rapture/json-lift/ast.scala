@@ -141,7 +141,10 @@ private[lift] object LiftAst extends JsonBufferAst {
   def fromBigDecimal(number: BigDecimal): Any = JDouble(number.toDouble)
 
   def fromObject(obj: Map[String, Any]): Any =
-    JObject(obj.map { case (k, v: JValue) => JField(k, v) }.to[List])
+    JObject(obj.map {
+      case (k, v: JValue) => JField(k, v)
+      case _ => ???
+    }.to[List])
 
   def fromString(string: String): Any = JString(string)
 

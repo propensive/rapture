@@ -24,19 +24,33 @@ object `package` {
   type BlackboxContext = blackbox.Context
   type WhiteboxContext = whitebox.Context
 
-  lazy val compatibility = new Compat211()
+  lazy val compatibility = new Compat212()
 }
 
-class Compat211() {
+class Compat212() {
   def termName[C <: blackbox.Context](c: C, s: String) = c.universe.TermName(s)
   def typeName[C <: blackbox.Context](c: C, s: String) = c.universe.TypeName(s)
   def constructor[C <: blackbox.Context](c: C) = c.universe.termNames.CONSTRUCTOR
   def wildcard[C <: blackbox.Context](c: C) = c.universe.termNames.WILDCARD
-  def typeIntersection[C <: blackbox.Context](c: C)(xs: List[c.universe.Type]) = c.universe.internal.intersectionType(xs)
+  def typeIntersection[C <: blackbox.Context](c: C)(xs: List[c.universe.Type]) =
+    c.universe.internal.intersectionType(xs)
   def paramLists[C <: blackbox.Context](c: C)(t: c.universe.MethodSymbol) = t.paramLists
   def normalize[C <: blackbox.Context](c: C)(t: c.universe.Type) = t.dealias
   def declarations[C <: blackbox.Context](c: C)(t: c.universe.Type) = t.decls
+  def declaration[C <: blackbox.Context](c: C)(t: c.universe.Type, d: c.universe.Name) = t.decl(d)
   def readLine(): String = scala.io.StdIn.readLine
   def typecheck[C <: blackbox.Context](c: C)(t: c.Tree) = c.typecheck(t)
   def freshName[C <: blackbox.Context](c: C)(s: String) = c.freshName(s)
+  def companion[C <: blackbox.Context](c: C)(s: c.universe.Symbol) = s.companion
+
+  def samePosition[C <: blackbox.Context](c: C)(p1: c.universe.Position, p2: c.universe.Position) = {
+    import c.universe._
+    p1 != NoPosition && p2 != NoPosition && p1.start == p2.start
+  }
+
+  def enclosingDef[C <: blackbox.Context](c: C)(pos: c.universe.Position): Option[c.universe.Name] =
+    Some(c.internal.enclosingOwner.asTerm.name)
+
+  def enclosingVals[C <: blackbox.Context](c: C)(pos: c.universe.Position, count: Int): Option[c.universe.Name] =
+    Some(c.internal.enclosingOwner.asTerm.name)
 }

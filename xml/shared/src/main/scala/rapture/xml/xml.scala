@@ -41,7 +41,7 @@ private[xml] class DynamicWorkaround(xml: Xml) {
 
 trait `Xml.parse` extends MethodConstraint
 
-private[xml] trait XmlDataCompanion[+Type <: XmlDataType[Type, AstType], AstType <: XmlAst]
+private[xml] trait XmlDataCompanion[Type <: XmlDataType[Type, AstType], AstType <: XmlAst]
     extends DataCompanion[Type, AstType] {
 
   type ParseMethodConstraint = `Xml.parse`
