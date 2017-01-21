@@ -259,7 +259,7 @@ lazy val latexJS = latex.js
 lazy val test = crossProject.dependsOn(cli, fs, text)
   .settings(moduleName := "rapture-test")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6")
+  .settings(libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1")
  
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
@@ -333,8 +333,8 @@ lazy val jsonJS = json.js
 lazy val `json-circe` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-circe")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.circe" %% "circe-core" % "0.5.2")
-  .settings(libraryDependencies += "io.circe" %% "circe-jawn" % "0.5.2")
+  .settings(libraryDependencies += "io.circe" %% "circe-core" % "0.7.0")
+  .settings(libraryDependencies += "io.circe" %% "circe-jawn" % "0.7.0")
  
 lazy val jsonCirceJVM = `json-circe`.jvm
 lazy val jsonCirceJS = `json-circe`.js
@@ -351,8 +351,8 @@ lazy val xmlStdlibJS = `xml-stdlib`.js
 lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.4")
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.10.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.10.4")
  
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
@@ -378,7 +378,7 @@ lazy val jsonPlayJS = `json-play`.js
 lazy val `json-json4s` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-json4s")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0")
+  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.0")
  
 lazy val jsonJson4sJVM = `json-json4s`.jvm
 lazy val jsonJson4sJS = `json-json4s`.js
@@ -387,7 +387,7 @@ lazy val jsonJson4sJS = `json-json4s`.js
 lazy val `json-spray` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-spray")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.spray" %% "spray-json" % "1.3.2")
+  .settings(libraryDependencies += "io.spray" %% "spray-json" % "1.3.3")
  
 lazy val jsonSprayJVM = `json-spray`.jvm
 lazy val jsonSprayJS = `json-spray`.js
@@ -396,7 +396,7 @@ lazy val jsonSprayJS = `json-spray`.js
 lazy val `json-argonaut` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-argonaut")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.2-M1")
+  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.2-RC1")
  
 lazy val jsonArgonautJVM = `json-argonaut`.jvm
 lazy val jsonArgonautJS = `json-argonaut`.js
@@ -414,8 +414,8 @@ lazy val jsonJacksonJS = `json-jackson`.js
 lazy val `core-scalaz` = crossProject.dependsOn(core)
   .settings(moduleName := "rapture-core-scalaz")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.3")
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.1.3")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.8")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.2.8")
  
 lazy val coreScalazJVM = `core-scalaz`.jvm
 lazy val coreScalazJS = `core-scalaz`.js
@@ -448,7 +448,7 @@ lazy val xmlTestJS = `xml-test`.js
 lazy val `json-lift` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-lift")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "net.liftweb" %% "lift-json" % "2.6.3")
+  .settings(libraryDependencies += "net.liftweb" %% "lift-json" % "3.0.1")
  
 lazy val jsonLiftJVM = `json-lift`.jvm
 lazy val jsonLiftJS = `json-lift`.js
