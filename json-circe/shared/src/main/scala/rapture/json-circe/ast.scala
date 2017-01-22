@@ -49,7 +49,7 @@ private[circe] object CirceAst extends JsonBufferAst {
   }
 
   def getArray(j: Any): List[Any] = j match {
-    case j: CirceJson if j.isArray => j.asArray.get.toList
+    case j: CirceJson if j.isArray => j.asArray.get.to[List]
     case _ => throw TypeMismatchException(getType(j), DataTypes.Array)
   }
 

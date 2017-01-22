@@ -182,7 +182,8 @@ object HttpSupport {
             }
         }
 
-        new HttpResponse(mapAsScalaMapConverter(conn.getHeaderFields()).asScala.toMap.mapValues(x => collectionAsScalaIterableConverter(x).asScala.toList), statusCode, is)
+        new HttpResponse(mapAsScalaMapConverter(conn.getHeaderFields()).asScala.toMap
+          .mapValues(collectionAsScalaIterableConverter(_).asScala.to[List]), statusCode, is)
       }
   }
 }

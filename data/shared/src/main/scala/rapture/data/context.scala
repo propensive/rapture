@@ -48,7 +48,7 @@ object ObjectMatchingConfig {
 trait ArrayMatchingConfig { def checkLengths: Boolean }
 trait ObjectMatchingConfig { def checkSizes: Boolean }
 
-abstract class DataContextMacros[Data <: DataType[Data, DataAst], -AstType <: DataAst] {
+abstract class DataContextMacros[+Data <: DataType[Data, DataAst], -AstType <: DataAst] {
 
   def parseSource(s: List[String], stringsUsed: List[Boolean]): Option[(Int, Int, String)]
 

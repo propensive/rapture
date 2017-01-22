@@ -40,7 +40,7 @@ private[json] class DynamicWorkaround(json: Json) {
 
 trait `Json.parse` extends MethodConstraint
 
-private[json] trait JsonDataCompanion[Type <: JsonDataType[Type, AstType], AstType <: JsonAst]
+private[json] trait JsonDataCompanion[+Type <: JsonDataType[Type, AstType], AstType <: JsonAst]
     extends DataCompanion[Type, AstType] {
 
   type ParseMethodConstraint = `Json.parse`

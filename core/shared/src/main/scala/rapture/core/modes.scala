@@ -18,10 +18,9 @@
 package rapture.core
 
 import language.higherKinds
-
+import scala.annotation.unchecked.uncheckedVariance
 import scala.reflect._
 import scala.util._
-
 import scala.concurrent._
 
 trait MethodConstraint
@@ -38,7 +37,7 @@ object Mode extends Mode_1 {
     msg = "No implicit mode was available for $"+"{Group} methods. " +
         "Please import a member of rapture.core.modes, e.g. modes.throwExceptions.")
 trait Mode[+Group <: MethodConstraint] { mode =>
-  type Wrap[_, _ <: Exception]
+  type Wrap[+_, _ <: Exception]
   def wrap[Res, E <: Exception](blk: => Res): Wrap[Res, E]
 
   def flatWrap[Res, E <: Exception: ClassTag](blk: => Wrap[Res, E]): Wrap[Res, E] =
@@ -46,25 +45,25 @@ trait Mode[+Group <: MethodConstraint] { mode =>
 
   var callPath = "_"
 
-  def unwrap[Res](value: => Wrap[Res, _ <: Exception]): Res
-  def unwrap[Res](value: => Wrap[Res, _ <: Exception], path: String): Res = {
+  def unwrap[Res, E <: Exception](value: => Wrap[Res, E]): Res
+  def unwrap[Res, E <: Exception](value: => Wrap[Res, E], path: String): Res = {
     val oldCallPath = callPath
     callPath += path
-    val res = unwrap[Res](value)
+    val res = unwrap[Res, E](value)
     callPath = oldCallPath
     res
   }
 
-  def generic[C <: MethodConstraint]: Mode[C] { type Wrap[T, E <: Exception] = mode.Wrap[T, E] } =
-    this.asInstanceOf[Mode[C] { type Wrap[T, E <: Exception] = mode.Wrap[T, E] }]
+  def generic[C <: MethodConstraint]: Mode[C] { type Wrap[+T, E <: Exception] = mode.Wrap[T, E] } =
+    this.asInstanceOf[Mode[C] { type Wrap[+T, E <: Exception] = mode.Wrap[T, E] }]
 
   def compose[Group2 <: MethodConstraint](mode2: Mode[Group2]) = new Mode[Group] {
-    type Wrap[Res, E <: Exception] = mode.Wrap[mode2.Wrap[Res, E], E]
+    type Wrap[+Res, E <: Exception] = mode.Wrap[mode2.Wrap[Res, E], E]
 
     def wrap[Res, E <: Exception](blk: => Res): Wrap[Res, E] =
       mode.wrap(mode2.wrap(blk))
 
-    def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return =
+    def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return =
       mode2.unwrap(mode.unwrap(value))
   }
 
@@ -109,7 +108,8 @@ object repl {
   }
 
   class Repl[+Group <: MethodConstraint] extends Mode[Group] {
-    type Wrap[Return, E <: Exception] = Return
+
+    type Wrap[+Return, E <: Exception] = Return
     def wrap[Return, E <: Exception](blk: => Return): Return =
       try blk
       catch {
@@ -123,7 +123,7 @@ object repl {
           }
       }
 
-    def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value
+    def unwrap[Return, E <: Exception](value: => Wrap[Return, E ] @uncheckedVariance): Return = value
   }
 }
 
@@ -196,25 +196,25 @@ private[core] trait Mode_1 {
 }
 
 private[core] class ThrowExceptionsMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[T, E <: Exception] = T
+  type Wrap[+T, E <: Exception] = T
   def wrap[T, E <: Exception](t: => T): T = t
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E] @uncheckedVariance): Return = value
 }
 
 private[core] class ExplicitMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[T, E <: Exception] = modes.Explicitly[T, E]
+  type Wrap[+T, E <: Exception] = modes.Explicitly[T, E]
 
   def wrap[T, E <: Exception](t: => T): modes.Explicitly[T, E] =
     new modes.Explicitly[T, E](t)
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value.get
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return = value.get
 }
 
 private[core] class ReturnTryMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[T, E <: Exception] = Try[T]
+  type Wrap[+T, E <: Exception] = Try[T]
   def wrap[T, E <: Exception](t: => T): Try[T] = Try(t)
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value.get
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return = value.get
 
   override def toString = "[modes.returnTry]"
 }
@@ -223,7 +223,7 @@ private[core] class ExponentialBackoffMode[+G <: MethodConstraint](maxRetries: I
                                                                    initialPause: Long = 1000L,
                                                                    backoffRate: Double = 2.0)
     extends Mode[G] {
-  type Wrap[T, E <: Exception] = T
+  type Wrap[+T, E <: Exception] = T
   def wrap[T, E <: Exception](t: => T): T = {
     var multiplier = 1.0
     var count = 1
@@ -240,36 +240,36 @@ private[core] class ExponentialBackoffMode[+G <: MethodConstraint](maxRetries: I
     if (result != null) result else throw exception
   }
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E] @uncheckedVariance): Return = value
 }
 
 private[core] class KeepCalmAndCarryOnMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[T, E <: Exception] = T
+  type Wrap[+T, E <: Exception] = T
   def wrap[T, E <: Exception](t: => T): T =
     try t
     catch { case e: Exception => null.asInstanceOf[T] }
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = Option[Return](value).get
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E] @uncheckedVariance): Return = Option[Return](value).get
 
   override def toString = "[modes.kcaco]"
 }
 
 private[core] class ReturnOptionMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[T, E <: Exception] = Option[T]
+  type Wrap[+T, E <: Exception] = Option[T]
   def wrap[T, E <: Exception](t: => T): Option[T] =
     try Some(t)
     catch { case e: Exception => None }
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value.get
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return = value.get
 
   override def toString = "[modes.returnOption]"
 }
 
 private[core] class ReturnFutureMode[+G <: MethodConstraint](implicit ec: ExecutionContext) extends Mode[G] {
-  type Wrap[T, E <: Exception] = Future[T]
+  type Wrap[+T, E <: Exception] = Future[T]
   def wrap[T, E <: Exception](t: => T): Future[T] = Future { t }
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return =
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return =
     Await.result(value, duration.Duration.Inf)
 
   override def flatWrap[Res, E <: Exception: ClassTag](blk: => Wrap[Res, E]): Wrap[Res, E] = blk
@@ -279,13 +279,13 @@ private[core] class ReturnFutureMode[+G <: MethodConstraint](implicit ec: Execut
 
 private[core] class TimeExecution[D: TimeSystem.ByDuration, +G <: MethodConstraint] extends Mode[G] {
   val ts = ?[TimeSystem.ByDuration[D]]
-  type Wrap[T, E <: Exception] = (T, D)
+  type Wrap[+T, E <: Exception] = (T, D)
   def wrap[T, E <: Exception](r: => T): (T, D) = {
     val t0 = System.currentTimeMillis
     (r, ts.duration(t0, System.currentTimeMillis))
   }
 
-  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value._1
+  def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return = value._1
 
   override def toString = "[modes.timeExecution]"
 }
