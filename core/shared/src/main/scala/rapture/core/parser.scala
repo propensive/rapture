@@ -89,6 +89,18 @@ trait StringParser_1 {
 }
 
 object StringParser extends StringParser_1 {
+  def apply[T](f: String => T): StringParser[T] = {
+    new StringParser[T] {
+      type Throws = ParseException
+      def parse(str: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, ParseException] = mode.wrap {
+        try f(str)
+        catch {
+          case e: Exception => mode.exception(ParseException(str, e.getMessage))
+        }
+      }
+    }
+  }
+
   implicit def booleanParser(implicit bp: BooleanParser): StringParser[Boolean] { type Throws = InvalidBoolean } =
     new StringParser[Boolean] {
       type Throws = InvalidBoolean
