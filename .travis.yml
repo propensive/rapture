@@ -9,7 +9,7 @@ scala:
 jdk:
 - oraclejdk8
 script:
-- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "dev" && $(cat version.sbt) =~ "-SNAPSHOT" ]] ; then sbt ++$TRAVIS_SCALA_VERSION test publish gitSnapshots publish ; else sbt ++$TRAVIS_SCALA_VERSION test publishLocal; fi
+- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "dev" && $(cat version.sbt) =~ "-SNAPSHOT" ]] ; then sbt ++$TRAVIS_SCALA_VERSION test publish gitSnapshots publish ; else sbt ++$TRAVIS_SCALA_VERSION test ; fi
 notifications:
   webhooks:
     urls:
@@ -27,10 +27,9 @@ sudo: false
 cache:
   directories:
   - $HOME/.sbt/0.13/dependency
-  - $HOME/.sbt/boot/scala*
+  - $HOME/.sbt/boot/
   - $HOME/.sbt/launchers
   - $HOME/.ivy2/cache
-  - $HOME/.nvm
 
 before_cache:
   - du -h -d 1 $HOME/.ivy2/cache
