@@ -269,7 +269,7 @@ private[core] class ReturnResultMode[+Group <: MethodConstraint] extends Mode[Gr
 
   override def flatWrap[R, E <: Exception: ClassTag](blk: => Wrap[R, E]): Wrap[R, E] = blk
 
-  def unwrap[Return, E <: Exception](value: => Wrap[Return, E]): Return = value match {
+  def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value match {
     case Answer(a) => a
     case Errata(xs) => null.asInstanceOf[Return]
     case Unforeseen(e) => throw e
