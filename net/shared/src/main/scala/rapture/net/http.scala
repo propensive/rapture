@@ -166,7 +166,7 @@ object HttpSupport {
             ?[PostType[C]].sender(content) > out
           }
 
-        import scala.collection.JavaConversions._
+        import scala.collection.JavaConverters._
 
         val statusCode = conn match {
           case c: HttpsURLConnection => c.getResponseCode()
@@ -182,7 +182,8 @@ object HttpSupport {
             }
         }
 
-        new HttpResponse(mapAsScalaMap(conn.getHeaderFields()).toMap.mapValues(_.to[List]), statusCode, is)
+        new HttpResponse(mapAsScalaMapConverter(conn.getHeaderFields()).asScala.toMap
+          .mapValues(collectionAsScalaIterableConverter(_).asScala.to[List]), statusCode, is)
       }
   }
 }

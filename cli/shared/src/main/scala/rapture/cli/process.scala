@@ -55,8 +55,8 @@ case class Process(params: Vector[String]) {
 object Environment {
   implicit val defaultEnvironment = new Environment {
     def apply(): Map[String, String] = {
-      import scala.collection.JavaConversions._
-      System.getenv().toMap
+      import scala.collection.JavaConverters._
+      mapAsScalaMapConverter(System.getenv()).asScala.toMap
     }
 
     def workDir: Option[String] = Option(System.getProperty("user.dir"))

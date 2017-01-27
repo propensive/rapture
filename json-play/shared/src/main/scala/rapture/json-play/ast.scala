@@ -85,6 +85,7 @@ private[play] object PlayAst extends JsonBufferAst {
   def setObjectValue(obj: Any, name: String, value: Any): Any =
     (value, obj) match {
       case (value: JsValue, obj: JsValue) => PJson.toJson(obj.as[Map[String, JsValue]].updated(name, value))
+      case (_, _) => ??? // should never get there?
     }
 
   def removeObjectValue(obj: Any, name: String): Any = obj match {
@@ -155,7 +156,10 @@ private[play] object PlayAst extends JsonBufferAst {
   def fromBigDecimal(number: BigDecimal): Any = PJson.toJson(number)
 
   def fromObject(obj: Map[String, Any]): Any =
-    PJson.toJson(obj.map { case (k, v: JsValue) => (k, v) })
+    PJson.toJson(obj.map {
+      case (k, v: JsValue) => (k, v)
+      case _ => ???
+    })
 
   def fromString(string: String): Any = PJson.toJson(string)
 

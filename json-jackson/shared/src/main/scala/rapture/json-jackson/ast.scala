@@ -22,7 +22,7 @@ import rapture.data.DataTypes
 import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.node.NullNode
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /** A type class for Jackson parsing */
 private[jackson] object JacksonAst extends JsonAst {
@@ -34,7 +34,7 @@ private[jackson] object JacksonAst extends JsonAst {
     .enable(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS)
 
   def getArray(array: Any): List[Any] = array match {
-    case list: JsonNode if list.isArray => list.elements.to[List]
+    case list: JsonNode if list.isArray => asScalaIteratorConverter(list.elements).asScala.to[List]
     case _ => throw TypeMismatchException(getType(array), DataTypes.Array)
   }
 
@@ -67,7 +67,7 @@ private[jackson] object JacksonAst extends JsonAst {
 
   def getObject(obj: Any): Map[String, Any] = obj match {
     case obj: JsonNode if obj.isObject =>
-      (obj.fieldNames map { case k => k -> Option(obj.get(k)).get }).toMap
+      (asScalaIteratorConverter(obj.fieldNames).asScala map { case k => k -> Option(obj.get(k)).get }).toMap
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
 
@@ -77,7 +77,7 @@ private[jackson] object JacksonAst extends JsonAst {
   }
 
   override def getKeys(obj: Any): Iterator[String] = obj match {
-    case obj: JsonNode if obj.isObject => obj.fieldNames.to[Iterator]
+    case obj: JsonNode if obj.isObject => asScalaIteratorConverter(obj.fieldNames).asScala
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
 
