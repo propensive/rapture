@@ -170,11 +170,11 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     source1.bar.foo.alpha.as[String]
   } returns "test2"
 
-  val `Extract null element` = test {
+  val `Extract null element` = test[Null] {
     source1.boo.as[Null]
   } returns null
 
-  val `Extract null element from inner value` = test {
+  val `Extract null element from inner value` = test[Null] {
     source1.booInner.foo.as[Null]
   } returns null
 
@@ -186,13 +186,13 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     source1.double.as[Null]
   } throws TypeMismatchException(DataTypes.Number, DataTypes.Null)
 
-  val `Match null element` = test {
+  val `Match null element` = test[Null] {
     source1 match {
       case json""" { "boo": $h } """ => h.as[Null]
     }
   } returns null
 
-  val `Match inner null element` = test {
+  val `Match inner null element` = test[Null] {
     source1 match {
       case json""" { "booInner": {"foo": $h } } """ => h.as[Null]
     }
