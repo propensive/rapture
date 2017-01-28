@@ -17,7 +17,6 @@
 
 package rapture.core
 
-import scala.language.existentials
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 

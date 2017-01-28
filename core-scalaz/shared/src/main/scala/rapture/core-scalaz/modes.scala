@@ -27,7 +27,7 @@ import scalaz.concurrent._
 class ReturnTasks[+Group <: MethodConstraint](implicit pool: ExecutorService) extends Mode[Group] {
   type Wrap[+T, E <: Exception] = Task[T]
   def wrap[T, E <: Exception](t: => T): Task[T] = Task.delay(t)
-  def unwrap[T](t: => Wrap[T, _ <: Exception]): T = t.attemptRun.valueOr { throw _ }
+  def unwrap[T](t: => Wrap[T, _ <: Exception]): T = t.unsafePerformSyncAttempt.valueOr { throw _ }
 }
 
 class ReturnValidation[+Group <: MethodConstraint] extends Mode[Group] {

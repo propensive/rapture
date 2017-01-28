@@ -5,21 +5,21 @@ enablePlugins(GitBranchPrompt)
 
 lazy val buildSettings = Seq(
   organization := "com.propensive",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.10.6")
+  scalaVersion := "2.12.1",
+  crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.6")
 )
 
 lazy val commonSettings = Seq(
-  scalafmtConfig in ThisBuild := Some(file(".scalafmt")),
+//  scalafmtConfig in ThisBuild := Some(file(".scalafmt")),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
     "-Xfatal-warnings",
-    "-Xlint"
- /*   "-language:existentials",
-    "-language:higherKinds",
+    "-Xlint",
+    "-language:existentials"
+  /*  "-language:higherKinds",
     "-language:implicitConversions",
     "-language:experimental.macros",
     "-Yinline-warnings",
@@ -28,7 +28,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-value-discard",
     "-Xfuture" */
   ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 11)) => Seq("-Ywarn-unused-import")
+    case Some((2, majorVersion)) if majorVersion >= 11 => Seq("-Ywarn-unused-import")
     case _             => Seq.empty
   }),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
@@ -259,8 +259,7 @@ lazy val latexJS = latex.js
 lazy val test = crossProject.dependsOn(cli, fs, text)
   .settings(moduleName := "rapture-test")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6")
-
+  .settings(libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1")
 lazy val testJVM = test.jvm
 lazy val testJS = test.js
 
@@ -338,12 +337,11 @@ lazy val java8SupportJVM = `java8-support`.jvm
 lazy val java8SupportJS = `java8-support`.js
 
 // rapture-json-circe
-val circeVersion = "0.7.0"
 lazy val `json-circe` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-circe")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.circe" %% "circe-core" % circeVersion)
-  .settings(libraryDependencies += "io.circe" %% "circe-jawn" % circeVersion)
+  .settings(libraryDependencies += "io.circe" %% "circe-core" % "0.7.0")
+  .settings(libraryDependencies += "io.circe" %% "circe-jawn" % "0.7.0")
 
 lazy val jsonCirceJVM = `json-circe`.jvm
 lazy val jsonCirceJS = `json-circe`.js
@@ -360,8 +358,8 @@ lazy val xmlStdlibJS = `xml-stdlib`.js
 lazy val `json-jawn` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-jawn")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.8.4")
-  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.8.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-parser" % "0.10.4")
+  .settings(libraryDependencies += "org.spire-math" %% "jawn-ast" % "0.10.4")
 
 lazy val jsonJawnJVM = `json-jawn`.jvm
 lazy val jsonJawnJS = `json-jawn`.js
@@ -371,6 +369,7 @@ lazy val playJsonDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies += (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, 10)) => "com.typesafe.play" %% "play-json" % "2.4.6"
     case Some((2, 11)) => "com.typesafe.play" %% "play-json" % "2.5.3"
+    case Some((2, 12)) => "com.typesafe.play" %% "play-json" % "2.6.0-M1"
   })
 )
 
@@ -387,7 +386,7 @@ lazy val jsonPlayJS = `json-play`.js
 lazy val `json-json4s` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-json4s")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.3.0")
+  .settings(libraryDependencies += "org.json4s" %% "json4s-native" % "3.5.0")
 
 lazy val jsonJson4sJVM = `json-json4s`.jvm
 lazy val jsonJson4sJS = `json-json4s`.js
@@ -396,7 +395,7 @@ lazy val jsonJson4sJS = `json-json4s`.js
 lazy val `json-spray` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-spray")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.spray" %% "spray-json" % "1.3.2")
+  .settings(libraryDependencies += "io.spray" %% "spray-json" % "1.3.3")
 
 lazy val jsonSprayJVM = `json-spray`.jvm
 lazy val jsonSprayJS = `json-spray`.js
@@ -405,7 +404,7 @@ lazy val jsonSprayJS = `json-spray`.js
 lazy val `json-argonaut` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-argonaut")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.2-M1")
+  .settings(libraryDependencies += "io.argonaut" %% "argonaut" % "6.2-RC1")
 
 lazy val jsonArgonautJVM = `json-argonaut`.jvm
 lazy val jsonArgonautJS = `json-argonaut`.js
@@ -423,8 +422,8 @@ lazy val jsonJacksonJS = `json-jackson`.js
 lazy val `core-scalaz` = crossProject.dependsOn(core)
   .settings(moduleName := "rapture-core-scalaz")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.3")
-  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.1.3")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.2.8")
+  .settings(libraryDependencies += "org.scalaz" %% "scalaz-concurrent" % "7.2.8")
 
 lazy val coreScalazJVM = `core-scalaz`.jvm
 lazy val coreScalazJS = `core-scalaz`.js
@@ -458,8 +457,11 @@ lazy val xmlTestJS = `xml-test`.js
 lazy val `json-lift` = crossProject.dependsOn(json)
   .settings(moduleName := "rapture-json-lift")
   .settings(raptureSettings:_*)
-  .settings(libraryDependencies += "net.liftweb" %% "lift-json" % "2.6.3")
- 
+  .settings(libraryDependencies += (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 10)) => "net.liftweb" %% "lift-json" % "2.6.3"
+    case Some((2, scalaMajor)) if scalaMajor >= 11 => "net.liftweb" %% "lift-json" % "3.0.1"
+  }))
+
 lazy val jsonLiftJVM = `json-lift`.jvm
 lazy val jsonLiftJS = `json-lift`.js
 
@@ -532,8 +534,8 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
       // in Scala 2.10, quasiquotes are provided by macro paradise
       case Some((2, 10)) =>
         Seq(
-          compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
-              "org.scalamacros" %% "quasiquotes" % "2.1.0-M5" cross CrossVersion.binary
+          compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+              "org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary
         )
     }
   }

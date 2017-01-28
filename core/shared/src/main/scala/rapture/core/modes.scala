@@ -17,11 +17,9 @@
 
 package rapture.core
 
-import language.higherKinds
-
+import language.{existentials, higherKinds}
 import scala.reflect._
 import scala.util._
-
 import scala.concurrent._
 
 trait MethodConstraint
@@ -38,7 +36,7 @@ object Mode extends Mode_1 {
     msg = "No implicit mode was available for $"+"{Group} methods. " +
         "Please import a member of rapture.core.modes, e.g. modes.throwExceptions.")
 trait Mode[+Group <: MethodConstraint] { mode =>
-  type Wrap[+ _, _ <: Exception]
+  type Wrap[+_, _ <: Exception]
   def wrap[Res, E <: Exception](blk: => Res): Wrap[Res, E]
 
   def flatWrap[Res, E <: Exception: ClassTag](blk: => Wrap[Res, E]): Wrap[Res, E] =
@@ -109,7 +107,8 @@ object repl {
   }
 
   class Repl[+Group <: MethodConstraint] extends Mode[Group] {
-    type Wrap[+Return, E <: Exception] = Return
+
+    type Wrap[+Return, E <: Exception] = T2 forSome { type T2 <: Return }
     def wrap[Return, E <: Exception](blk: => Return): Return =
       try blk
       catch {
@@ -196,7 +195,7 @@ private[core] trait Mode_1 {
 }
 
 private[core] class ThrowExceptionsMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[+T, E <: Exception] = T
+  type Wrap[+T, E <: Exception] = T2 forSome { type T2 <: T  }
   def wrap[T, E <: Exception](t: => T): T = t
   def unwrap[Return](value: => Wrap[Return, _ <: Exception]): Return = value
 }
@@ -223,7 +222,7 @@ private[core] class ExponentialBackoffMode[+G <: MethodConstraint](maxRetries: I
                                                                    initialPause: Long = 1000L,
                                                                    backoffRate: Double = 2.0)
     extends Mode[G] {
-  type Wrap[+T, E <: Exception] = T
+  type Wrap[+T, E <: Exception] = T2 forSome { type T2 <: T }
   def wrap[T, E <: Exception](t: => T): T = {
     var multiplier = 1.0
     var count = 1
@@ -244,7 +243,7 @@ private[core] class ExponentialBackoffMode[+G <: MethodConstraint](maxRetries: I
 }
 
 private[core] class KeepCalmAndCarryOnMode[+G <: MethodConstraint] extends Mode[G] {
-  type Wrap[+T, E <: Exception] = T
+  type Wrap[+T, E <: Exception] = T2 forSome { type T2 <: T }
   def wrap[T, E <: Exception](t: => T): T =
     try t
     catch { case e: Exception => null.asInstanceOf[T] }
