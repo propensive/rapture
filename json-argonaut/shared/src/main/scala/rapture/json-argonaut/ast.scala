@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.argonaut
 
 import rapture.core._
-import rapture.data.DataTypes
 import rapture.json._
 
 import argonaut.{Json => AJson, _}

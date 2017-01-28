@@ -18,11 +18,11 @@
 package rapture.http
 
 import rapture.json._
-import rapture.data._
 import rapture.mime._
 import rapture.io._
 import rapture.net._
-import rapture.codec._, encodings.`UTF-8`._
+import rapture.codec._
+import encodings.`UTF-8`._
 
 package object jsonInterop {
   implicit def jsonHttpHandler(implicit formatter: Formatter[JsonAst] { type Out = String }): HttpHandler[Json] =

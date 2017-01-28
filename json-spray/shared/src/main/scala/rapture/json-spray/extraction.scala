@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.spray
 
 import rapture.json._
-import rapture.data._
 
 import spray.json._
 

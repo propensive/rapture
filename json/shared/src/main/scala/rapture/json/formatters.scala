@@ -18,7 +18,6 @@
 package rapture.json
 
 import rapture.core._
-import rapture.data._
 
 object formatters extends formatters_1 {
   object compact {

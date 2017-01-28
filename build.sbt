@@ -322,7 +322,7 @@ lazy val currencyJVM = currency.jvm
 lazy val currencyJS = currency.js
 
 // rapture-json
-lazy val json = crossProject.dependsOn(data)
+lazy val json = crossProject.dependsOn(core)
   .settings(moduleName := "rapture-json")
   .settings(raptureSettings:_*)
  

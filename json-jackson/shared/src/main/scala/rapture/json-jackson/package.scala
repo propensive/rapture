@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.jackson
 
 import rapture.json._
-import rapture.data._
 
 object `package` extends Extractors with Serializers {
   implicit val implicitJsonAst: JsonAst = JacksonAst

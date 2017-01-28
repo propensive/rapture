@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.jackson
 import rapture.core._
 import rapture.json._
-import rapture.data.DataTypes
 import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.node.NullNode
 

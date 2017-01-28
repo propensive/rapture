@@ -16,8 +16,6 @@
  */
 
 package rapture.json.jsonBackends.circe
-import rapture.core._
-import rapture.data._
 import rapture.json._
 
 import io.circe.jawn._

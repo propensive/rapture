@@ -16,8 +16,6 @@
  */
 
 package rapture.json.jsonBackends.argonaut
-import rapture.core._
-import rapture.data._
 import rapture.json._
 
 import argonaut._

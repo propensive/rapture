@@ -17,7 +17,6 @@
 
 package rapture.json.jsonBackends.json4s
 
-import rapture.data._
 import rapture.json._
 
 import org.json4s._

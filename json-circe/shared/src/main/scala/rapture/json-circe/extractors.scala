@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.circe
 
 import rapture.json._
-import rapture.data._
 
 import io.circe.{Json => CirceJson, _}
 

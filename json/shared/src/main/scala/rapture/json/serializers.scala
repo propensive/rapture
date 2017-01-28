@@ -18,9 +18,20 @@
 package rapture.json
 
 import rapture.core._
-import rapture.data._
-
+import scala.annotation._
 import language.higherKinds
+
+@implicitNotFound(
+  "Cannot serialize type $"+"{T} to $"+"{D}. Please provide an implicit Serializer " +
+    "of type $"+"{T}.")
+trait Serializer[T, -D] { ser =>
+  def serialize(t: T): Any
+
+  def contramap[T2](fn: T2 => T) = new Serializer[T2, D] {
+    def serialize(t: T2): Any = ser.serialize(fn(t))
+  }
+
+}
 
 private[json] case class DirectJsonSerializer[T](ast: JsonAst)
 

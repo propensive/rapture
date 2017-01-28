@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.lift
 
 import rapture.json._
-import rapture.data._
 
 import net.liftweb.json._
 import JsonAST._

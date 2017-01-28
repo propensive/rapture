@@ -19,7 +19,6 @@ package rapture.json.jsonBackends.play
 
 import rapture.core._
 import rapture.json._
-import rapture.data.DataTypes
 
 import play.api.libs.json.{Json => PJson, _}
 

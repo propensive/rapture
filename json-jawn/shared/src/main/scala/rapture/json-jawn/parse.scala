@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.jawn
 
 import rapture.core._
-import rapture.data._
 import rapture.json._
 
 import jawn.{Parser => JawnParser, _}

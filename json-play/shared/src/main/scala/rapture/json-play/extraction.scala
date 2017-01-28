@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.play
 
 import rapture.json._
-import rapture.data._
 
 import play.api.libs.json._
 

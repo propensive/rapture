@@ -18,7 +18,6 @@
 package rapture.json
 
 import rapture.core._
-import rapture.data._
 
 import language.experimental.macros
 
@@ -104,8 +103,8 @@ object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
   implicit def stringParser(implicit parser: Parser[String, JsonAst],
                             mode: Mode[_ <: ParseMethodConstraint]): StringParser[Json] =
     new StringParser[Json] {
-      type Throws = rapture.data.ParseException
-      def parse(str: String, mode2: Mode[_ <: MethodConstraint]): mode2.Wrap[Json, rapture.data.ParseException] =
+      type Throws = rapture.json.ParseException
+      def parse(str: String, mode2: Mode[_ <: MethodConstraint]): mode2.Wrap[Json, rapture.json.ParseException] =
         mode2.wrap {
           mode.unwrap(Json.parse(str)(implicitly[StringSerializer[String]], mode, parser))
         }
@@ -123,7 +122,7 @@ object Json extends JsonDataCompanion[Json, JsonAst] with Json_1 {
     new Extractor[T, JsonDataType[_, _ <: JsonAst]] {
       type Throws = DataGetException
       def extract(value: JsonDataType[_, _ <: JsonAst],
-                  ast2: DataAst,
+                  ast2: JsonAst,
                   mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DataGetException] =
         mode.wrap(ast2 match {
           case ast2: JsonAst =>

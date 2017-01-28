@@ -18,7 +18,6 @@
 package rapture.json.jsonBackends.json4s
 
 import org.json4s._
-import rapture.data.DataTypes
 import rapture.json._
 
 private[json4s] object Json4sAst extends JsonBufferAst {
