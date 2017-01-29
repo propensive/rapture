@@ -19,7 +19,7 @@ package rapture.json.test
 
 import rapture.json._
 import rapture.test._
-
+import jsonBackends._
 
 class TestRun extends Programme {
   include(PlayTests)
@@ -37,26 +37,28 @@ class TestRun extends Programme {
   //include(MutableArgonautTests)
   //include(MutableCirceTests)
   //include(MutableLiftTests)
+
+
+  object PlayTests extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
+  object JawnTests extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
+  object Json4sTests extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
+  object SprayTests extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
+  object JacksonTests extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
+  object ArgonautTests extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+  object CirceTests extends JsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
+  object LiftTests extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+
+  object MutablePlayTests extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
+  object MutableJawnTests extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
+  object MutableJson4sTests extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
+  object MutableSprayTests extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
+  object MutableArgonautTests extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+  object MutableCirceTests extends MutableJsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
+  object MutableLiftTests extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+
 }
 
-import jsonBackends._
 
-object PlayTests extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
-object JawnTests extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
-object Json4sTests extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
-object SprayTests extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-object JacksonTests extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
-object ArgonautTests extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-object CirceTests extends JsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
-object LiftTests extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
-
-object MutablePlayTests extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
-object MutableJawnTests extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
-object MutableJson4sTests extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
-object MutableSprayTests extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-object MutableArgonautTests extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-object MutableCirceTests extends MutableJsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
-object MutableLiftTests extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 case class Foo(alpha: String, beta: Int)
 case class Bar(foo: Foo, gamma: Double)
