@@ -22,7 +22,6 @@ import rapture.xml._
 import rapture.data.Parser
 import rapture.test._
 
-import scala.util
 
 class TestRun extends Programme {
   include(StdlibTests)
