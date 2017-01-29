@@ -89,7 +89,7 @@ trait StringParser_1 {
 }
 
 object StringParser extends StringParser_1 {
-  def apply[T](f: String => T): StringParser[T] = {
+  def apply[T](f: String => T): StringParser[T] { type Throws = ParseException } = {
     new StringParser[T] {
       type Throws = ParseException
       def parse(str: String, mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, ParseException] = mode.wrap {

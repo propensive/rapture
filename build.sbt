@@ -329,7 +329,7 @@ lazy val jsonJVM = json.jvm
 lazy val jsonJS = json.js
 
 // rapture-java8-support
-lazy val `java8-support` = crossProject.dependsOn(data)
+lazy val `java8-support` = crossProject.dependsOn(core)
   .settings(moduleName := "rapture-java8-support")
   .settings(raptureSettings:_*)
 

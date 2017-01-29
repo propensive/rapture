@@ -24,6 +24,7 @@ import rapture.xml._
 import rapture.data.Parser
 import rapture.test._
 import rapture.xml.xmlBackends.stdlib
+import rapture.core.java8.time._
 
 class XmlJava8TimeApiTestRun extends Programme {
   include(StdlibTests)
@@ -36,8 +37,6 @@ abstract class XmlJava8TimeApiTests(ast: XmlAst, parser: Parser[String, XmlAst])
   implicit def implicitAst: XmlAst = ast
 
   implicit def implicitParser: Parser[String, XmlAst] = parser
-
-  import rapture.java8.time._
 
   case class TestLocalDate(time: LocalDate)
   case class TestLocalDateTime(time: LocalDateTime)

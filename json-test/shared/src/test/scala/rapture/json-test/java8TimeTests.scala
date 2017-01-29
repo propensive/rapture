@@ -24,6 +24,7 @@ import rapture.data.Parser
 import rapture.json.jsonBackends._
 import rapture.json.{JsonAst, _}
 import rapture.test.{Programme, TestSuite}
+import rapture.core.java8.time._
 
 class JsonJava8TimeApiTestRun extends Programme {
   include(PlayTests)
@@ -60,7 +61,6 @@ abstract class JsonJava8TimeApiTests(ast: JsonAst, parser: Parser[String, JsonAs
 
   implicit def implicitParser: Parser[String, JsonAst] = parser
 
-  import rapture.java8.time._
 
   case class TestLocalDate(time: LocalDate)
   case class TestLocalDateTime(time: LocalDateTime)
