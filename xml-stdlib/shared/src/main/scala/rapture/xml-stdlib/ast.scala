@@ -17,11 +17,7 @@
 
 package rapture.xml.xmlBackends.stdlib
 
-import rapture.core._
 import rapture.xml._
-import rapture.data.DataTypes
-import rapture.data.TypeMismatchException
-import rapture.data.MissingValueException
 
 import scala.xml._
 

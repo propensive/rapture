@@ -21,7 +21,6 @@ import java.time._
 
 import rapture.core.ParseException
 import rapture.xml._
-import rapture.data.Parser
 import rapture.test._
 import rapture.xml.xmlBackends.stdlib
 import rapture.core.java8.time._
