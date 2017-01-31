@@ -21,15 +21,15 @@ import scala.util._
 
 trait XmlAst {
 
-  /** Dereferences the named element within the JSON object. */
+  /** Dereferences the named element within the XML object. */
   def dereferenceObject(obj: Any, element: String): Any =
     getObject(obj)(element)
 
-  /** Returns at `Iterator[String]` over the names of the elements in the JSON object. */
+  /** Returns at `Iterator[String]` over the names of the elements in the XML object. */
   def getKeys(obj: Any): Iterator[String] =
     getObject(obj).keys.iterator
 
-  /** Gets the indexed element from the parsed JSON array. */
+  /** Gets the indexed element from the parsed XML array. */
   def dereferenceArray(array: Any, element: Int): Any =
     getArray(array)(element)
 
@@ -41,7 +41,7 @@ trait XmlAst {
 
   def isNull(any: Any): Boolean
 
-  /** Extracts a JSON object as a `Map[String, Any]` from the parsed JSON. */
+  /** Extracts a XML object as a `Map[String, Any]` from the parsed XML. */
   def getObject(obj: Any): Map[String, Any]
 
   def getChildren(obj: Any): Seq[Any] = {
@@ -51,7 +51,7 @@ trait XmlAst {
 
   def fromObject(obj: Map[String, Any]): Any
 
-  /** Extracts a JSON array as a `Seq[Any]` from the parsed JSON. */
+  /** Extracts a XML array as a `Seq[Any]` from the parsed XML. */
   def getArray(array: Any): Seq[Any]
 
   def fromArray(array: Seq[Any]): Any

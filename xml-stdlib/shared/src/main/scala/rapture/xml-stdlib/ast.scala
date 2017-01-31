@@ -25,6 +25,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
 
   override def dereferenceObject(obj: Any, element: String): Any = obj match {
     case n: Node if n.child.exists(_.label == element) => n \ element
+    case ns: NodeSeq if ns.exists(_.label == element) => ns.filter(_.label == element)
     case ns: NodeSeq if ns.exists(_.child.exists(_.label == element)) => ns \ element
     case _ => throw MissingValueException()
   }

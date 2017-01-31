@@ -183,6 +183,11 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
     Xml(1648).toString
   } returns "xml\"\"\"1648\"\"\""
 
+  val `Extract top level xml elements` = test {
+    val fooXML = Xml(Foo("Joe", 10))
+    fooXML.alpha.as[String]
+  } returns "Joe"
+
   /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
   } returns "123"
