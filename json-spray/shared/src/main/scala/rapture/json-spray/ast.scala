@@ -19,7 +19,6 @@ package rapture.json.jsonBackends.spray
 
 import rapture.core._
 import rapture.json._
-import rapture.data.DataTypes
 
 import spray.json._
 

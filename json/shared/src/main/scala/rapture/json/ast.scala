@@ -17,13 +17,56 @@
 
 package rapture.json
 
-import rapture.core._
-import rapture.data._
 
 /** Represents a JSON ast implementation which is used throughout this library */
-trait JsonAst extends DataAst {
+trait JsonAst {
+
+  /** Dereferences the named element within the JSON object. */
+  def dereferenceObject(obj: Any, element: String): Any =
+    getObject(obj)(element)
+
+  /** Returns at `Iterator[String]` over the names of the elements in the JSON object. */
+  def getKeys(obj: Any): Iterator[String] =
+    getObject(obj).keys.iterator
+
+  /** Gets the indexed element from the parsed JSON array. */
+  def dereferenceArray(array: Any, element: Int): Any =
+    getArray(array)(element)
+
+  /** Tests if the element represents an `Object` */
+  def isObject(any: Any): Boolean
+
+  /** Tests if the element represents an `Array` */
+  def isArray(any: Any): Boolean
+
+  /** Tests if the element represents a `Boolean` */
+  def isBoolean(any: Any): Boolean
+
+  /** Tests if the element represents a `String` */
+  def isString(any: Any): Boolean
+
+  /** Tests if the element represents a number */
+  def isNumber(any: Any): Boolean
+
+  /** Tests if the element represents a `null` */
+  def isNull(any: Any): Boolean
 
   def isScalar(any: Any) = isBoolean(any) || isNumber(any) || isString(any)
+
+  /** Extracts a JSON object as a `Map[String, Any]` from the parsed JSON. */
+  def getObject(obj: Any): Map[String, Any]
+
+  def getChildren(obj: Any): Seq[Any] = {
+    val m = getObject(obj)
+    getKeys(obj).to[List] map m
+  }
+
+  def fromObject(obj: Map[String, Any]): Any
+
+  /** Extracts a JSON array as a `Seq[Any]` from the parsed JSON. */
+  def getArray(array: Any): Seq[Any]
+
+  def fromArray(array: Seq[Any]): Any
 
   /** Extracts a `Boolean` from the parsed JSON. */
   def getBoolean(boolean: Any): Boolean
@@ -45,18 +88,6 @@ trait JsonAst extends DataAst {
 
   def fromBigDecimal(number: BigDecimal): Any
 
-  /** Tests if the element represents a `Boolean` */
-  def isBoolean(any: Any): Boolean
-
-  /** Tests if the element represents a `String` */
-  def isString(any: Any): Boolean
-
-  /** Tests if the element represents a number */
-  def isNumber(any: Any): Boolean
-
-  /** Tests if the element represents a `null` */
-  def isNull(any: Any): Boolean
-
   /** The value used to represent a `null` */
   def nullValue: Any
 
@@ -70,7 +101,7 @@ trait JsonAst extends DataAst {
     else if (isNull(any)) DataTypes.Null
     else throw MissingValueException()
 
-  def convert(v: Any, ast: DataAst): Any = {
+  def convert(v: Any, ast: JsonAst): Any = {
     val oldAst = ast.asInstanceOf[JsonAst]
     if (oldAst.isString(v)) fromString(oldAst.getString(v))
     else if (oldAst.isBoolean(v)) fromBoolean(oldAst.getBoolean(v))
@@ -83,4 +114,22 @@ trait JsonAst extends DataAst {
   protected def typeTest(pf: PartialFunction[Any, Unit])(v: Any) = pf.isDefinedAt(v)
 }
 
-trait JsonBufferAst extends JsonAst with MutableDataAst
+object DataTypes {
+  sealed class DataType(val name: String)
+  case object Number extends DataType("number")
+  case object String extends DataType("string")
+  case object Null extends DataType("null")
+  case object Boolean extends DataType("boolean")
+  case object Array extends DataType("array")
+  case object Object extends DataType("object")
+  case object Scalar extends DataType("scalar")
+  case object Container extends DataType("container")
+  case object Any extends DataType("any")
+}
+
+trait JsonBufferAst extends JsonAst {
+  def setObjectValue(obj: Any, name: String, value: Any): Any
+  def setArrayValue(array: Any, index: Int, value: Any): Any
+  def removeObjectValue(obj: Any, name: String): Any
+  def addArrayValue(array: Any, value: Any): Any
+}

@@ -17,8 +17,6 @@
 
 package rapture.xml.xmlBackends.stdlib
 
-import rapture.core._
-import rapture.data._
 import rapture.xml._
 
 import scala.xml._

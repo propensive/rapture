@@ -2,12 +2,12 @@
   Rapture, version 2.0.0. Copyright 2010-2016 Jon Pretty, Propensive Ltd.
 
   The primary distribution site is
-  
+
     http://rapture.io/
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
   compliance with the License. You may obtain a copy of the License at
-  
+
     http://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software distributed under the License is
@@ -16,13 +16,14 @@
  */
 
 package rapture.xml
-import scala.language.implicitConversions
 
-object `package` {
+sealed abstract class DataGetException(msg: String) extends RuntimeException(msg)
 
-  implicit def xmlStringContext(sc: StringContext)(implicit parser: Parser[String, XmlAst]) =
-    new XmlStrings(sc)
+case class TypeMismatchException(found: DataTypes.DataType, expected: DataTypes.DataType)
+    extends DataGetException(s"type mismatch: Expected ${expected.name} but found ${found.name}")
 
-  implicit def xmlBufferStringContext(sc: StringContext)(implicit parser: Parser[String, XmlBufferAst]) =
-    new XmlBufferStrings(sc)
-}
+case class MissingValueException(name: String = "")
+    extends DataGetException(
+        if (name.isEmpty)
+          "missing value"
+        else s"missing value: $name")

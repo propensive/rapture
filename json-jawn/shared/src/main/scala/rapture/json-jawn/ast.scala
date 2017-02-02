@@ -19,9 +19,6 @@ package rapture.json.jsonBackends.jawn
 
 import rapture.core._
 import rapture.json._
-import rapture.data.DataTypes
-import rapture.data.TypeMismatchException
-import rapture.data.MissingValueException
 
 import jawn.ast._
 

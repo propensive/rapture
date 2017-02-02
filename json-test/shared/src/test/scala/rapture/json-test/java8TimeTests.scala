@@ -20,7 +20,6 @@ package rapture.json.test
 import java.time._
 
 import rapture.core.ParseException
-import rapture.data.Parser
 import rapture.json.jsonBackends._
 import rapture.json.{JsonAst, _}
 import rapture.test.{Programme, TestSuite}

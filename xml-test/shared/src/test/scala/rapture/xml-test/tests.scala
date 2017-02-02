@@ -19,12 +19,12 @@ package rapture.xml.test
 
 import rapture.core._
 import rapture.xml._
-import rapture.data.Parser
 import rapture.test._
 
 
 class TestRun extends Programme {
   include(StdlibTests)
+  include(StdlibPatternMatchTests)
 }
 
 private[test] case class Foo(alpha: String, beta: Int)
@@ -184,6 +184,32 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
     Xml(1648).toString
   } returns "xml\"\"\"1648\"\"\""
 
+  val `Extract top level xml elements` = test {
+    val fooXML = Xml(Foo("Joe", 10))
+    fooXML.alpha.as[String]
+  } returns "Joe"
+
+  case class FooList(name: String, abc: List[String])
+
+  val `Serialize class with list` = test {
+    val user = FooList("Joe", List("abc", "1,2,3"))
+    Xml(user).toBareString
+  } returns """<name>Joe</name><abc>abc</abc><abc>1,2,3</abc>"""
+
+  val `Serialize class with list of elements and deserialize it` = test {
+    val user = FooList("Joe", List("abc", "1,2,3"))
+    Xml(user).as[FooList]
+  } returns FooList("Joe", List("abc", "1,2,3"))
+
+  val `Serialize class with list of elements and deserialize it (from XmlContext)` = test {
+    xml"""<a><name>Joe</name><abc>abc</abc><abc>1,2,3</abc></a>""".as[FooList]
+  } returns FooList("Joe", List("abc", "1,2,3"))
+
+  val `Extract list of elements` = test {
+    xml"""<a><name>Joe</name><abc>abc</abc><abc>1,2,3</abc></a>""".abc.as[List[String]]
+  } returns List("abc", "1,2,3")
+
+
   /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
   } returns "123"
@@ -217,34 +243,34 @@ abstract class XmlPatternMatchingTests(ast: XmlAst, parser: Parser[String, XmlAs
 
   val source1 = Data.source1
   
-  val `Pattern matching` = test {
-    Xml("") match {
-      case xml"""""" => "Match"
-      case _ => "Does not match"
-    }
-  } returns "Match"
+//  val `Pattern matching` = test {
+//    Xml("<a>") match {
+//      case xml"""""""" => "Match"
+//      case _ => "Does not match"
+//    }
+//  } returns "Match"
 
   val `Match string` = test {
-    source1 match {
-      case xml"""<string>$h<string>""" => h.as[String]
+    source1.string match {
+      case xml"""<string>$h</string>""" => h.as[String]
     }
   } returns "Hello"
 
   val `Match int` = test {
-    source1 match {
-      case xml"""<int>$h<int>""" => h.as[Int]
+    source1.int match {
+      case xml"""<int>$h</int>""" => h.as[Int]
     }
   } returns 42
 
   val `Match double` = test {
-    source1 match {
-      case xml"""<double>$h<double>""" => h.as[Double]
+    source1.double match {
+      case xml"""<double>$h</double>""" => h.as[Double]
     }
   } returns 3.14159
 
   val `Match boolean` = test {
-    source1 match {
-      case xml"""<boolean>$h<boolean>""" => h.as[Boolean]
+    source1.boolean match {
+      case xml"""<boolean>$h</boolean>""" => h.as[Boolean]
     }
   } returns true
 }

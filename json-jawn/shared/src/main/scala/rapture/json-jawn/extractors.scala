@@ -17,7 +17,6 @@
 
 package rapture.json.jsonBackends.jawn
 
-import rapture.data._
 import rapture.json._
 
 import _root_.jawn.ast._

@@ -17,11 +17,7 @@
 
 package rapture.xml.xmlBackends.stdlib
 
-import rapture.core._
 import rapture.xml._
-import rapture.data.DataTypes
-import rapture.data.TypeMismatchException
-import rapture.data.MissingValueException
 
 import scala.xml._
 
@@ -29,6 +25,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
 
   override def dereferenceObject(obj: Any, element: String): Any = obj match {
     case n: Node if n.child.exists(_.label == element) => n \ element
+    case ns: NodeSeq if ns.exists(_.label == element) => ns.filter(_.label == element)
     case ns: NodeSeq if ns.exists(_.child.exists(_.label == element)) => ns \ element
     case _ => throw MissingValueException()
   }
@@ -52,7 +49,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
   def getObject(obj: Any): Map[String, Any] = obj match {
     case n: Node =>
       n.child.map { e =>
-        e.label -> e.child
+        n.label -> e
       }.toMap
     case n: NodeSeq =>
       n.flatMap(_.child.map { e =>
@@ -141,14 +138,18 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
 
   def fromArray(array: Seq[Any]): Any = array.collect { case e: NodeSeq => e }.foldLeft(NodeSeq.Empty)(_ ++ _)
 
-  def fromObject(obj: Map[String, Any]): Any =
+  def fromObject(obj: Map[String, Any]): Any = {
     obj
       .to[List]
       .collect {
         case (k, v: NodeSeq) =>
-          Elem(null, k, Null, TopScope, true, v: _*): NodeSeq
+          v.map{ x =>
+            Elem(null, k, Null, TopScope, true, x): NodeSeq
+          }.foldLeft(NodeSeq.Empty)(_ ++ _)
       }
       .foldLeft(NodeSeq.Empty)(_ ++ _)
+  }
+
 
   def fromString(string: String): Any = Text(string)
 

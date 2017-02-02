@@ -19,7 +19,6 @@ package rapture.json.jsonBackends.lift
 
 import rapture.core._
 import rapture.json._
-import rapture.data.DataTypes
 
 import net.liftweb.json._
 

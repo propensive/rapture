@@ -20,8 +20,6 @@ package rapture.json.jsonBackends.spray
 import rapture.core._
 import rapture.json._
 
-import rapture.data._
-
 import spray.json._
 
 private[spray] object SprayParser extends Parser[String, JsonBufferAst] {

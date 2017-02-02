@@ -18,7 +18,6 @@
 package rapture.xml
 
 import rapture.core._
-import rapture.data._
 
 import language.experimental.macros
 import scala.language.implicitConversions
@@ -102,7 +101,7 @@ object Xml extends XmlDataCompanion[Xml, XmlAst] with Xml_1 {
     new Extractor[T, XmlDataType[_, _ <: XmlAst]] {
       type Throws = DataGetException
       def extract(value: XmlDataType[_, _ <: XmlAst],
-                  ast2: DataAst,
+                  ast2: XmlAst,
                   mode: Mode[_ <: MethodConstraint]): mode.Wrap[T, DataGetException] =
         mode.wrap(ast2 match {
           case ast2: XmlAst =>

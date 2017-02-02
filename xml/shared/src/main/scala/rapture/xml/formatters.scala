@@ -18,7 +18,6 @@
 package rapture.xml
 
 import rapture.core._
-import rapture.data._
 
 object formatters {
   object compact {

@@ -17,9 +17,7 @@
 
 package rapture.json.test
 
-//import rapture.core._
 import rapture.json._
-import rapture.data.{DataTypes, Parser}
 import rapture.test._
 import jsonBackends._
 
