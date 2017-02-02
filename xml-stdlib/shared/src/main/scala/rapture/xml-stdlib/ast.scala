@@ -49,7 +49,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
   def getObject(obj: Any): Map[String, Any] = obj match {
     case n: Node =>
       n.child.map { e =>
-        e.label -> e.child
+        n.label -> e
       }.toMap
     case n: NodeSeq =>
       n.flatMap(_.child.map { e =>
@@ -138,14 +138,18 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
 
   def fromArray(array: Seq[Any]): Any = array.collect { case e: NodeSeq => e }.foldLeft(NodeSeq.Empty)(_ ++ _)
 
-  def fromObject(obj: Map[String, Any]): Any =
+  def fromObject(obj: Map[String, Any]): Any = {
     obj
       .to[List]
       .collect {
         case (k, v: NodeSeq) =>
-          Elem(null, k, Null, TopScope, true, v: _*): NodeSeq
+          v.map{ x =>
+            Elem(null, k, Null, TopScope, true, x): NodeSeq
+          }.foldLeft(NodeSeq.Empty)(_ ++ _)
       }
       .foldLeft(NodeSeq.Empty)(_ ++ _)
+  }
+
 
   def fromString(string: String): Any = Text(string)
 

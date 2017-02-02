@@ -105,9 +105,9 @@ class DataContext[+Data <: DataType[Data, XmlAst], -AstType <: XmlAst](companion
     parser: Parser[String, AstType]): Option[Seq[DataType[D, XmlAst]]] =
     try {
       val placeholder = uniqueNonSubstring(sc.parts.mkString)
-      val PlaceholderNumber = (placeholder + "([0-9]+)" + placeholder).r
+      val PlaceholderNumber = ("\""+placeholder + "([0-9]+)" + placeholder+"\"").r
       val count = Iterator.from(0)
-      val txt = sc.parts.reduceLeft(_ + s""""${placeholder}${count.next()}${placeholder}" """ + _)
+      val txt = sc.parts.reduceLeft(_ + s""""${placeholder}${count.next()}${placeholder}"""" + _)
 
       val paths: Array[Vector[Either[Int, String]]] =
         Array.fill[Vector[Either[Int, String]]](sc.parts.length - 1)(Vector())
