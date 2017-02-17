@@ -226,7 +226,7 @@ object Macros {
 
         c.Expr[Serializer[T, Data]](q"""new _root_.rapture.data.Serializer[${weakTypeOf[T]}, ${weakTypeOf[Data]}] {
           def serialize(t: ${weakTypeOf[T]}): _root_.scala.Any =
-            $ast.fromObject(_root_.scala.collection.immutable.Map(..$params).filterNot { v => $ast.isNull(v._2) })
+            $ast.fromObject(_root_.scala.collection.immutable.ListMap(..$params).filterNot { v => $ast.isNull(v._2) })
         }""")
       } else if (tpe.isSealed) {
         val cases = tpe.knownDirectSubclasses.to[List]
