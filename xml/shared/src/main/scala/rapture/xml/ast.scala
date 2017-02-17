@@ -21,6 +21,7 @@ import rapture.core._
 import rapture.data._
 
 import scala.util._
+import scala.collection.immutable._
 
 trait XmlAst extends DataAst {
 

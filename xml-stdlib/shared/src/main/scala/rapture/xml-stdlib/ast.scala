@@ -23,6 +23,7 @@ import rapture.data.DataTypes
 import rapture.data.TypeMismatchException
 import rapture.data.MissingValueException
 
+import scala.collection.immutable.ListMap
 import scala.xml._
 
 private[stdlib] object StdlibAst extends XmlBufferAst {
@@ -49,16 +50,15 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
     case _ => throw TypeMismatchException(getType(string), DataTypes.String)
   }
 
-  def getObject(obj: Any): Map[String, Any] = obj match {
+  def getObject(obj: Any): ListMap[String, Any] = obj match {
     case n: Node =>
-      n.child.map { e =>
+      ListMap(n.child.map { e =>
         e.label -> e.child
-      }.toMap
+      }: _*)
     case n: NodeSeq =>
-      n.flatMap(_.child.map { e =>
+      ListMap(n.flatMap(_.child.map { e =>
           e.label -> e.child
-        })
-        .toMap
+        }): _*)
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
 
@@ -78,7 +78,7 @@ private[stdlib] object StdlibAst extends XmlBufferAst {
     fromObject(getObject(obj).updated(name, value))
 
   def removeObjectValue(obj: Any, name: String): Any = obj match {
-    case obj: Map[_, _] => obj.asInstanceOf[Map[String, Any]] - name
+    case obj: ListMap[_, _] => obj.asInstanceOf[ListMap[String, Any]] - name
     case _ => throw TypeMismatchException(getType(obj), DataTypes.Object)
   }
 
