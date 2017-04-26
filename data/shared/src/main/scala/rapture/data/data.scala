@@ -142,6 +142,13 @@ case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
     DynamicApplication(Left(i) :: path, value)
 }
 
+case class DynamicAccess[D](path: List[Either[Int, String]]) extends Dynamic {
+  def self = selectDynamic("self")
+  def selectDynamic(v: String) = DynamicAccess[D](Right(v) :: path)
+  def applyDynamic(v: String)(i: Int) = DynamicAccess[D](Left(i) :: Right(v) :: path)
+  def apply(i: Int) = DynamicAccess[D](Left(i) :: path)
+}
+
 case class MutableCell(var value: Any)
 
 trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dynamic {
@@ -182,6 +189,40 @@ object DataType {
       dataType.$wrap(merge(left, right), Vector())
     }
 
+    def delete(pvs: (DynamicAccess[T] => DynamicAccess[_ <: DataType[T, _ <: AstType]])*): T = {
+      dataType.$wrap(pvs.foldLeft(dataType.$normalize) {
+        case (cur, pv) =>
+          val dPath = pv(DynamicAccess(Nil))
+          val ast = dataType.$ast
+
+          def nav(path: List[Either[Int, String]], dest: Any): Any = path match {
+            case Nil =>
+              ???
+
+            case Right(next) :: Nil =>
+              ast.fromObject(ast.getObject(if(ast.isObject(dest)) dest else Map()) - next)
+              
+            case Right(next) :: list =>
+              val d = try ast.dereferenceObject(dest, next)
+              catch { case e: Exception => ast.fromObject(Map()) }
+              val src = ast.getObject(if (ast.isObject(dest)) dest else Map())
+              ast.fromObject(src + ((next, nav(list, d))))
+
+            case Left(next) :: Nil =>
+              val src = if (ast.isArray(dest)) ast.getArray(dest) else Nil
+              ast.fromArray(src.slice(0, next) ++ src.slice(next + 1, src.length))
+
+            case Left(next) :: list =>
+              val d = try ast.dereferenceArray(dest, next)
+              catch { case e: Exception => ast.fromArray(List()) }
+              val src = if (ast.isArray(dest)) ast.getArray(dest) else Nil
+              ast.fromArray(src.padTo(next + 1, ast.fromObject(Map())).updated(next, nav(list, d)))
+          }
+
+          nav(dPath.path.reverse, cur)
+      })
+    }
+    
     def copy(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
       dataType.$wrap(pvs.foldLeft(dataType.$normalize) {
         case (cur, pv) =>
