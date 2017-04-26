@@ -101,8 +101,11 @@ object GoogleTranslate {
   import rapture.uri._
   import rapture.net._
   import rapture.io._
+  import rapture.data._
   import rapture.codec._, encodings.`UTF-8`._
   import rapture.json._, jsonBackends.jawn._
+
+  implicit val dict = Dictionary.define("translations", "data", "translatedText")
 
   def translate(key: String, text: String, from: String, to: String): String = {
     val out = uri"https://www.googleapis.com/language/translate/v2?q=$text&target=$to&format=text&source=$from&key=$key".slurp[Char]

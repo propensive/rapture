@@ -35,7 +35,7 @@ private[json] trait Json_1 extends Json_2 {
 }
 
 private[json] class DynamicWorkaround(json: Json) {
-  def self: Json = json.selectDynamic("self")
+  def self: Json = json.selectDynamic("self")(null)
 }
 
 trait `Json.parse` extends MethodConstraint
@@ -162,7 +162,7 @@ class Json(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vect
     else
       sp match {
         case Left(i) +: tail => apply(i).$extract(tail)
-        case Right(e) +: tail => selectDynamic(e).$extract(tail)
+        case Right(e) +: tail => selectDynamic(e)(null).$extract(tail)
       }
 
   def toBareString: String =
@@ -192,7 +192,7 @@ class JsonBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] 
     else
       sp match {
         case Left(i) +: tail => apply(i).$extract(tail)
-        case Right(e) +: tail => selectDynamic(e).$extract(tail)
+        case Right(e) +: tail => selectDynamic(e)(null).$extract(tail)
       }
 
   def toBareString: String =
