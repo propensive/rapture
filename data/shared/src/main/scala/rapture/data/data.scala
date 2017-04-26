@@ -113,14 +113,30 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
 case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion2[D])
 
+object dictionaries {
+  object dynamic {
+    implicit val implicitDictionary: Dictionary[Nothing] = new Dictionary[Nothing](Nil)
+  }
+}
+
+object Dictionary {
+
+  implicit def stringToDefineParam[S <: String](s: S): DefineParam[s.type] = new DefineParam[s.type](s)
+  class DefineParam[-T <: String](val value: String)
+
+  def define[T <: String](params: DefineParam[T]*): Dictionary[T] = new Dictionary[T](params.map(_.value))
+}
+@implicitNotFound("the key ${S} is not in the dictionary")
+class Dictionary[+S <: String](params: Seq[String])
+
 case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
-  def self = selectDynamic("self")
-  def selectDynamic(v: String) = DynamicPath[D](Right(v) :: path)
-  def applyDynamic(v: String)(i: Int) = DynamicPath[D](Left(i) :: Right(v) :: path)
+  def self = selectDynamic("self")(null)
+  def selectDynamic[S <: String](v: S)(implicit dictionary: Dictionary[v.type]) = DynamicPath[D](Right(v) :: path)
+  def applyDynamic[S <: String](v: String)(i: Int)(implicit dictionary: Dictionary[v.type]) = DynamicPath[D](Left(i) :: Right(v) :: path)
   def apply(i: Int) = DynamicPath[D](Left(i) :: path)
 
-  def updateDynamic(p: String)(value: ForcedConversion2[D]) =
-    DynamicApplication(Right(p) :: path, value)
+  def updateDynamic[S <: String](v: String)(value: ForcedConversion2[D])(implicit dictionary: Dictionary[v.type]) =
+    DynamicApplication(Right(v) :: path, value)
 
   def update(i: Int, value: ForcedConversion2[D]) =
     DynamicApplication(Left(i) :: path, value)
@@ -131,9 +147,9 @@ case class MutableCell(var value: Any)
 trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dynamic {
 
   /** Assumes the Json object wraps a `Map`, and extracts the element `key`. */
-  def selectDynamic(key: String): T = $deref(Right(key) +: $path)
+  def selectDynamic[S <: String](key: S)(implicit dictionary: Dictionary[key.type]): T = $deref(Right(key) +: $path)
   
-  def self = selectDynamic("self")
+  def self = selectDynamic("self")(null)
 
   //def applyDynamic(key: String)(i: Int = 0): T = $deref(Left(i) +: Right(key) +: $path)
 

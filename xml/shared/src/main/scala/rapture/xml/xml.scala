@@ -36,7 +36,7 @@ private[xml] trait Xml_1 extends Xml_2 {
 }
 
 private[xml] class DynamicWorkaround(xml: Xml) {
-  def self: Xml = xml.selectDynamic("self")
+  def self: Xml = xml.selectDynamic("self")(null)
 }
 
 trait `Xml.parse` extends MethodConstraint
@@ -154,7 +154,7 @@ class Xml(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vecto
     else
       sp match {
         case Left(i) +: tail => apply(i).$extract(tail)
-        case Right(e) +: tail => selectDynamic(e).$extract(tail)
+        case Right(e) +: tail => selectDynamic(e)(null).$extract(tail)
       }
 
   override def toBareString =
@@ -182,7 +182,7 @@ class XmlBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] =
     else
       sp match {
         case Left(i) +: tail => apply(i).$extract(tail)
-        case Right(e) +: tail => selectDynamic(e).$extract(tail)
+        case Right(e) +: tail => selectDynamic(e)(null).$extract(tail)
       }
 
   override def toBareString =
