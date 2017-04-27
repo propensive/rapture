@@ -29,7 +29,9 @@ object `package` {
   type DataGetException = rapture.data.DataGetException
   type TypeMismatchException = rapture.data.TypeMismatchException
   type MissingValueException = rapture.data.MissingValueException
+  type Dictionary[S <: String] = rapture.data.Dictionary[S]
 
+  val Dictionary = rapture.data.Dictionary
   val TypeMismatchException = rapture.data.TypeMismatchException
   val MissingValueException = rapture.data.MissingValueException
 
@@ -40,4 +42,6 @@ object `package` {
     new JsonBufferStrings(sc)
 
   implicit class JsonOperations(json: Json) extends DataType.DataClassOperations[Json, JsonAst](json)
+
+  val dictionaries = rapture.data.dictionaries
 }

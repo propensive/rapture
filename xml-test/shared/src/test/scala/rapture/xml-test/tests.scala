@@ -21,6 +21,7 @@ import rapture.core._
 import rapture.xml._
 import rapture.data.Parser
 import rapture.test._
+import rapture.data.dictionaries.dynamic._
 
 
 class TestRun extends Programme {

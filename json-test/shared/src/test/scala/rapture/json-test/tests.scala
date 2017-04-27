@@ -22,6 +22,7 @@ import rapture.json._
 import rapture.data.{DataTypes, Parser}
 import rapture.test._
 import jsonBackends._
+import dictionaries.dynamic._
 
 class TestRun extends Programme {
   include(PlayTests)

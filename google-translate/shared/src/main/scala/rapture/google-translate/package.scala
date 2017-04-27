@@ -101,7 +101,6 @@ object GoogleTranslate {
   import rapture.uri._
   import rapture.net._
   import rapture.io._
-  import rapture.data._
   import rapture.codec._, encodings.`UTF-8`._
   import rapture.json._, jsonBackends.jawn._
 

@@ -25,6 +25,7 @@ import rapture.json.jsonBackends._
 import rapture.json.{JsonAst, _}
 import rapture.test.{Programme, TestSuite}
 import rapture.core.java8.time._
+import dictionaries.dynamic._
 
 class JsonJava8TimeApiTestRun extends Programme {
   include(PlayTests)
