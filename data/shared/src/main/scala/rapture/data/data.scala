@@ -266,18 +266,19 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
   def $extract($path: Vector[Either[Int, String]]): T
 
   def \(key: String): T = $deref(Right(key) +: $path)
+  def \(index: Int): T = $deref(Left(index) +: $path)
 
   def \\(key: String): T = $wrap($ast.fromArray(derefRecursive(key, $normalize)))
 
   def toBareString: String
 
-  private def derefRecursive(key: String, any: Any): List[Any] =
-    if (!$ast.isObject(any)) Nil
-    else
-      $ast.getKeys(any).to[List].flatMap {
-        case k if k == key => List($ast.dereferenceObject(any, k))
-        case k => derefRecursive(key, $ast.dereferenceObject(any, k))
-      }
+  private def derefRecursive(key: String, any: Any): Seq[Any] =
+    if ($ast.isObject(any)) $ast.getKeys(any).to[Seq].flatMap {
+      case k if k == key => Seq($ast.dereferenceObject(any, k))
+      case k => derefRecursive(key, $ast.dereferenceObject(any, k))
+    } else if ($ast.isArray(any)) $ast.getArray(any).flatMap(derefRecursive(key, _))
+      
+    else Nil
 
   protected def doNormalize(orEmpty: Boolean): Any = {
     yCombinator[(Any, Vector[Either[Int, String]]), Any] { fn =>
