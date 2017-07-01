@@ -30,7 +30,7 @@ object Locale {
 }
 case class Locale[L <: Language: TypeTag]() {
   val typeTag: TypeTag[L] = implicitly[TypeTag[L]]
-  val name = typeTag.tpe.dealias.toString.split("\\.").last.toLowerCase
+  val name = typeTag.tpe.toString.split("\\.").last.toLowerCase
   def from[T, L2 <: L](i18n: I18n[T, L2]) = i18n(typeTag)
 
   def |[L2 <: Language](locale: Locale[L2]): LocaleParser[L with L2] =
@@ -63,8 +63,6 @@ object I18n {
 
   implicit def convertToType[T, L <: Language, L2 >: L <: Language: DefaultLanguage](i18n: I18n[T, L]): T =
     i18n.map(implicitly[DefaultLanguage[L2]].tag.tpe)
-
-  import scala.reflect.runtime.universe._
 
   class `I18n.apply`[L <: Language]() {
     def apply[T](value: T)(implicit tt: TypeTag[L]) = {
