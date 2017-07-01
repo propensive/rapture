@@ -17,7 +17,7 @@
 
 package rapture.i18n
 
-import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 import language.implicitConversions
 import scala.annotation._
 import rapture.core._
@@ -28,17 +28,17 @@ object Locale {
   implicit def upcastLocale[From <: Language, ToLang <: From](loc: Locale[From]): Locale[ToLang] =
     loc.asInstanceOf[Locale[ToLang]]
 }
-case class Locale[L <: Language: ClassTag]() {
-  val classTag: ClassTag[L] = implicitly[ClassTag[L]]
-  val name = classTag.runtimeClass.getName.split("\\.").last.toLowerCase
-  def from[T, L2 <: L](i18n: I18n[T, L2]) = i18n(classTag)
+case class Locale[L <: Language: TypeTag]() {
+  val typeTag: TypeTag[L] = implicitly[TypeTag[L]]
+  val name = typeTag.tpe.dealias.toString.split("\\.").last.toLowerCase
+  def from[T, L2 <: L](i18n: I18n[T, L2]) = i18n(typeTag)
 
   def |[L2 <: Language](locale: Locale[L2]): LocaleParser[L with L2] =
     new LocaleParser[L with L2](Map(name -> this, locale.name -> locale))
 
   override def toString = name
 
-  implicit val defaultLanguage: DefaultLanguage[L] = DefaultLanguage[L](classTag)
+  implicit val defaultLanguage: DefaultLanguage[L] = DefaultLanguage[L](typeTag)
 }
 
 case class LocaleException(locale: String) extends Exception(s"Locale '$locale' not recognised.")
@@ -62,10 +62,14 @@ object I18n {
     .missingTranslationsMacro[ToLang, FromLang]
 
   implicit def convertToType[T, L <: Language, L2 >: L <: Language: DefaultLanguage](i18n: I18n[T, L]): T =
-    i18n.map(implicitly[DefaultLanguage[L2]].tag)
+    i18n.map(implicitly[DefaultLanguage[L2]].tag.tpe)
+
+  import scala.reflect.runtime.universe._
 
   class `I18n.apply`[L <: Language]() {
-    def apply[T](value: T)(implicit ct: ClassTag[L]) = new I18n[T, L](Map(ct -> value))
+    def apply[T](value: T)(implicit tt: TypeTag[L]) = {
+      new I18n[T, L](parentsOrSelf(tt.tpe).map(_ -> value).toMap)
+    }
   }
 
   def apply[L <: Language] = new `I18n.apply`[L]()
@@ -75,16 +79,16 @@ object I18n {
 private[i18n] trait RequireLanguage[Lang]
 private[i18n] object RequireLanguage { implicit def requireLanguage: RequireLanguage[Language] = null }
 
-class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
-  def apply[Lang >: Languages](implicit ct: ClassTag[Lang]): T = map(ct)
+class I18n[T, Languages <: Language](private val map: Map[Type, T]) {
+  def apply[Lang >: Languages](implicit tt: TypeTag[Lang]): T = map(tt.tpe)
 
   final def &[L >: Languages <: Language, Lang2 <: L](s2: I18n[T, Lang2])(
       implicit ev: RequireLanguage[L]): I18n[T, Languages with Lang2] =
     new I18n[T, Languages with Lang2](map ++ s2.map)
 
   override def toString = {
-    val langs = map.keys.map(_.runtimeClass.getName.takeRight(2).toLowerCase).mkString("&")
-    val content: Option[T] = map.get(implicitly[ClassTag[En]])
+    val langs = map.keys.map(_.toString.takeRight(2).toLowerCase).mkString("&")
+    val content: Option[T] = map.get(implicitly[TypeTag[En]].tpe)
     lazy val first: Option[T] = map.headOption.flatMap { case (k, v) => map.get(k) }
     val value = content.orElse(first).map(_.toString).getOrElse("") match {
       case string: String => string
@@ -104,7 +108,7 @@ class I18n[T, Languages <: Language](private val map: Map[ClassTag[_], T]) {
 object I18nStringParam {
   implicit def stringToStringParam[L <: Language](s: String): I18nStringParam[L] =
     new I18nStringParam[L](new I18n[String, L](Map()) {
-      override def apply[Lang >: L](implicit ct: ClassTag[Lang]) = s
+      override def apply[Lang >: L](implicit tt: TypeTag[Lang]) = s
     })
 
   implicit def toI18nStringParam[L <: Language](s: I18n[String, L]): I18nStringParam[L] =

@@ -131,4 +131,8 @@ object I18nTests extends TestSuite {
     msg: String
   } returns "Bonjour"
 
+  val `Get both parent languages from a refined-type i18n` = test {
+    val msg = I18n[En with Fr]("biscuit")
+    (msg[En], msg[Fr])
+  } returns (("biscuit", "biscuit"))
 }
