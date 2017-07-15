@@ -19,22 +19,27 @@ package rapture.i18n
 
 import rapture.base._
 
-import scala.reflect._
 
 import language.implicitConversions
+import scala.reflect.runtime.universe._
 
 object `package` {
+
+  def parentsOrSelf(t: Type): List[Type] = t match {
+    case RefinedType(parents, _) => parents
+    case other => other :: Nil
+  }
 
   implicit def i18nStringToString[L <: Language](msg: I18n[String, L])
       (implicit locale: Locale[_ >: L]): String = locale.from(msg)
   
   implicit class I18nEnrichedStringContext(sc: StringContext) {
     
-    private def context[L <: Language: ClassTag](sc: StringContext, params: List[I18nStringParam[L]]):
+    private def context[L <: Language: TypeTag](sc: StringContext, params: List[I18nStringParam[L]]):
         I18n[String, L] =
-      new I18n[String, L](Map(implicitly[ClassTag[L]] -> sc.parts.zip(params.map(_.i18n.apply[L]) :+ "").map {
+      new I18n[String, L](parentsOrSelf(implicitly[TypeTag[L]].tpe).map(_ -> sc.parts.zip(params.map(_.i18n.apply[L]) :+ "").map {
         case (a, b) => a+b
-      }.mkString))
+      }.mkString).toMap)
 
     def aa(params: I18nStringParam[Aa]*): I18n[String, Aa] = context[Aa](sc, params.toList)
     def ab(params: I18nStringParam[Ab]*): I18n[String, Ab] = context[Ab](sc, params.toList)
