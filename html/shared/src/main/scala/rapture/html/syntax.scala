@@ -27,9 +27,27 @@ import rapture.css._
 
 import language.{dynamics, implicitConversions}
 
+trait DynamicCssReferences
+
+object dynamicCssReferencing {
+  def apply(): DynamicCssReferences = dynamicCssReferencingImplicit
+  implicit val dynamicCssReferencingImplicit: DynamicCssReferences = new DynamicCssReferences {}
+}
+
 object htmlSyntax {
 
   import Html5._
+
+  class DynamicAttributeKey[Name <: String, Att <: AttributeType, Val](name: String, ser: Val => String) extends AttributeKey[Name, Att](name) with Dynamic {
+    type Value = Val
+    def serialize(v: Value): String = ser(v)
+
+    def selectDynamic(att: String) = Attribute[Global, String](s"$name-$att")(identity(_))
+    def updateDynamic[E <: ElementType](att: String)(v: String) = selectDynamic(att).set[E](v)
+  }
+
+  def dynamic[Att <: AttributeType, Val](name: String, actualName: String = null)(serializer: Val => String) = new DynamicAttributeKey[name.type, Att, Val](if(actualName == null) name else actualName, serializer)
+
 
   implicit def stringToTextNode(str: String): TextNode[Nothing, Nothing, Html5.Text] =
     TextNode[Nothing, Nothing, Html5.Text](str)
@@ -141,13 +159,8 @@ object htmlSyntax {
   val Legend = Tag[Phrasing, Flow, AttributeType]()
   val Div = Tag[Flow, Flow, AttributeType](forceClosingTag = true)
 
-  object Data extends Dynamic {
-    def selectDynamic(att: String) = Attribute[Global, String](s"data-$att")(identity)
-    def updateDynamic[E <: ElementType](att: String)(v: String) = selectDynamic(att).set[E](v)
-  }
-
-  implicit def id = Attribute[Global, Symbol]("id")(_.name)
-  def id_=[E <: ElementType](v: Symbol) = id.set[E](v)
+  implicit def id = Attribute[Global, String]("id")(identity)
+  def id_=[E <: ElementType, Value: DomIdable](v: Value) = id.set[E](implicitly[DomIdable[Value]].domId(v))
 
   implicit def lang = Attribute[Global, Symbol]("lang")(_.name)
   def lang_=[E <: ElementType](v: Symbol) = lang.set[E](v)
@@ -155,14 +168,52 @@ object htmlSyntax {
   implicit def translate = Attribute[Global, Boolean]("translate")(v => if (v) "yes" else "no")
   def translate_=[E <: ElementType](v: Boolean) = translate.set[E](v)
 
-  implicit def classes = Attribute[Global, Seq[String]]("classes", "class")(_.mkString(" "))
-  def classes_=[E <: ElementType](v: Seq[String]) = classes.set[E](v)
+  object CssClassable {
+
+    implicit val cssClassable: CssClassable[CssClass] =
+      new CssClassable[CssClass] { def cssClass(cssClass: CssClass) = cssClass.classes.to[List] }
+
+    implicit def stringCssClassable(implicit dynamicCssReferencing: DynamicCssReferences): CssClassable[String] =
+      new CssClassable[String] { def cssClass(string: String) = List(string) }
+
+    implicit def symbolCssClassable(implicit dynamicCssReferencing: DynamicCssReferences): CssClassable[Symbol] =
+      new CssClassable[Symbol] { def cssClass(symbol: Symbol) = List(symbol.name) }
+
+    implicit def stringListCssClassable(implicit dynamicCssReferencing: DynamicCssReferences): CssClassable[List[String]] =
+      new CssClassable[List[String]] { def cssClass(list: List[String]) = list }
+
+    implicit def symbolListCssClassable(implicit dynamicCssReferencing: DynamicCssReferences): CssClassable[List[Symbol]] =
+      new CssClassable[List[Symbol]] { def cssClass(list: List[Symbol]) = list.map(_.name) }
+  }
+
+  trait CssClassable[Value] { def cssClass(value: Value): List[String] }
+
+  object DomIdable {
+
+    implicit val domIdable: DomIdable[DomId] =
+      new DomIdable[DomId] { def domId(value: DomId): String = value.id }
+
+    implicit def stringDomIdable(implicit dynamicCssReferencing: DynamicCssReferences): DomIdable[String] =
+      new DomIdable[String] { def domId(string: String): String = string }
+
+    implicit def symbolDomIdable(implicit dynamicCssReferencing: DynamicCssReferences): DomIdable[Symbol] =
+      new DomIdable[Symbol] { def domId(symbol: Symbol): String = symbol.name }
+  }
+
+  trait DomIdable[Value] { def domId(value: Value): String }
+
+  implicit def cls = Attribute[Global, Seq[String]]("cls", "class")(_.mkString(" "))
+  def cls_=[E <: ElementType, Value: CssClassable](value: Value) =
+    cls.set(implicitly[CssClassable[Value]].cssClass(value))
 
   implicit def onload = Attribute[Body, Js]("onload")(_.content)
   def onload_=[E <: ElementType](v: Js) = onload.set[E](v)
 
   implicit def onclick = Attribute[Global, Js]("onclick")(_.content)
   def onclick_=[E <: ElementType](v: Js) = onclick.set[E](v)
+
+  implicit def onkeypress = Attribute[Global, Js]("onkeypress")(_.content)
+  def onkeypress_=[E <: ElementType](v: Js) = onkeypress.set(v)
 
   implicit def onmouseover = Attribute[Global, Js]("onmouseover")(_.content)
   def onmouseover_=[E <: ElementType](v: Js) = onmouseover.set(v)
@@ -405,7 +456,7 @@ object htmlSyntax {
   implicit def poster = Attribute[Video, PathLink]("poster")(_.link)
   def poster_=[E <: ElementType, L: Linkable](v: L) = poster.set(implicitly[Linkable[L]].link(v))
 
-  implicit def data = Attribute[Object, String]("data")(identity)
+  implicit def data = dynamic[Object, String]("data")(identity)
   def data_=[E <: ElementType](v: String) = data.set(v)
 
   implicit def autobuffer = Attribute[Video with Audio, Boolean]("autobuffer")(v => if (v) "autobuffer" else null)

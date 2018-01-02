@@ -17,12 +17,12 @@
 
 package rapture.json.test
 
-import rapture.core._
+//import rapture.core._
 import rapture.json._
 import rapture.data.{DataTypes, Parser}
 import rapture.test._
-
-import scala.util
+import jsonBackends._
+import dictionaries.dynamic._
 
 class TestRun extends Programme {
   include(PlayTests)
@@ -40,26 +40,27 @@ class TestRun extends Programme {
   //include(MutableArgonautTests)
   //include(MutableCirceTests)
   //include(MutableLiftTests)
+
+
+  object PlayTests extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
+  object JawnTests extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
+  object Json4sTests extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
+  object SprayTests extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
+  object JacksonTests extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
+  object ArgonautTests extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+  object CirceTests extends JsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
+  object LiftTests extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+
+  object MutablePlayTests extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
+  object MutableJawnTests extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
+  object MutableJson4sTests extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
+  object MutableSprayTests extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
+  object MutableArgonautTests extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
+  object MutableCirceTests extends MutableJsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
+  object MutableLiftTests extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
+
 }
 
-import jsonBackends._
-
-object PlayTests extends JsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
-object JawnTests extends JsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
-object Json4sTests extends JsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
-object SprayTests extends JsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-object JacksonTests extends JsonTests(jackson.implicitJsonAst, jackson.implicitJsonStringParser)
-object ArgonautTests extends JsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-object CirceTests extends JsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
-object LiftTests extends JsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
-
-object MutablePlayTests extends MutableJsonTests(play.implicitJsonAst, play.implicitJsonStringParser)
-object MutableJawnTests extends MutableJsonTests(jawn.implicitJsonAst, jawn.implicitJsonStringParser(jawn.jawnFacade))
-object MutableJson4sTests extends MutableJsonTests(json4s.implicitJsonAst, json4s.implicitJsonStringParser)
-object MutableSprayTests extends MutableJsonTests(spray.implicitJsonAst, spray.implicitJsonStringParser)
-object MutableArgonautTests extends MutableJsonTests(argonaut.implicitJsonAst, argonaut.implicitJsonStringParser)
-object MutableCirceTests extends MutableJsonTests(circe.implicitJsonAst, circe.implicitJsonStringParser)
-object MutableLiftTests extends MutableJsonTests(lift.implicitJsonAst, lift.implicitJsonStringParser)
 
 
 case class Foo(alpha: String, beta: Int)
@@ -102,6 +103,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Extract Int` = test {
     source1.int.as[Int]
   } returns 42
+  
   val `Extract value called "self"` = test {
     source1.self.as[Int]
   } returns 0
@@ -144,7 +146,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   
   val `Extract case class with missing tried value` = test {
     source1.baz.as[Baz2]
-  } returns Baz2("test", util.Failure(MissingValueException()))
+  } returns Baz2("test", util.Failure(MissingValueException("beta")))
   
   val `Extract case class with present optional value` = test {
     source1.baz2.as[Baz]
@@ -170,11 +172,11 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     source1.bar.foo.alpha.as[String]
   } returns "test2"
 
-  val `Extract null element` = test {
+  val `Extract null element` = test[Null] {
     source1.boo.as[Null]
   } returns null
 
-  val `Extract null element from inner value` = test {
+  val `Extract null element from inner value` = test[Null] {
     source1.booInner.foo.as[Null]
   } returns null
 
@@ -186,13 +188,13 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     source1.double.as[Null]
   } throws TypeMismatchException(DataTypes.Number, DataTypes.Null)
 
-  val `Match null element` = test {
+  val `Match null element` = test[Null] {
     source1 match {
       case json""" { "boo": $h } """ => h.as[Null]
     }
   } returns null
 
-  val `Match inner null element` = test {
+  val `Match inner null element` = test[Null] {
     source1 match {
       case json""" { "booInner": {"foo": $h } } """ => h.as[Null]
     }
@@ -201,8 +203,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Extract long element` = test {
     source1.int.as[Long]
   } returns 42L
-  // For some reason these two tests work fine in the REPL, but not here.
-  /*
+  
   val `Extract missing value with case class default` = test {
     json"""{"beta": 0}""".as[HasDefault]
   } returns HasDefault("yes", 0)
@@ -210,8 +211,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Extract missing value with case class default 2` = test {
     json"""{"alpha": "no"}""".as[HasDefault2]
   } returns HasDefault2("no", 1)
-  */
-  
+ 
   val `Extract case class ignoring default value` = test {
     json"""{"alpha": "no", "beta": 0}""".as[HasDefault2]
   } returns HasDefault2("no", 0)
@@ -222,7 +222,7 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
 
   val `Check missing value failure` = test {
     source1.nothing.as[Int]
-  } throws MissingValueException()
+  } throws MissingValueException("nothing")
 
   val `Match string` = test {
     source1 match {
@@ -310,7 +310,6 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
     j.as[Option[String]]
   } returns None
 
-  // Reported by @ajrnz
   val `Tabs should be escaped when serializing strings` = test {
     Json("\t").toString
   } returns "json\"\"\"\"\\t\"\"\"\""
@@ -343,6 +342,14 @@ abstract class JsonTests(ast: JsonAst, parser: Parser[String, JsonAst]) extends 
   val `Serialize null` = test { Json(null) } returns json"""{"nullValue":null}""".nullValue
 
   val `Parse basic JSON null value` = test { json"null" } returns json"null"
+
+  /*val `Serialize sealed trait` = test {
+    Json(Left(50): Either[Int, String])
+  }.returns(json"""{"left":50}""")
+
+  val `Extract sealed trait` = test {
+    json"""{ "left": 50 }""".as[Either[Int, String]]
+  }.returns(Left(50))*/
 }
 
 abstract class MutableJsonTests(ast: JsonBufferAst, parser: Parser[String, JsonBufferAst]) extends TestSuite {

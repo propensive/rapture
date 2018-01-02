@@ -39,8 +39,8 @@ trait `Ipv6.parse` extends MethodConstraint
 object `package` {
 
   implicit class EnrichedHttpUriContext(uc: UriContext.type) {
-    def http(constants: List[String])(variables: List[String]) = macro NetMacros.httpUrlMacro
-    def https(constants: List[String])(variables: List[String]) = macro NetMacros.httpsUrlMacro
+    def http(constants: List[String])(variables: List[String]): Any = macro NetMacros.httpUrlMacro
+    def https(constants: List[String])(variables: List[String]): Any = macro NetMacros.httpsUrlMacro
   }
 
   implicit def httpUrlSizable(implicit httpTimeout: HttpTimeout, toUri: UriCapable[HttpUrl]): Sizable[HttpUrl, Byte] =

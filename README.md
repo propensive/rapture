@@ -4,6 +4,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.propensive/rapture-core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.propensive/rapture-core_2.11)
 [![License](http://img.shields.io/:license-Apache%202-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/propensive/rapture)
+[![Javadocs](https://javadoc.io/badge/com.propensive/rapture_2.12.svg)](https://javadoc.io/doc/com.propensive/rapture-core_2.12)
 
 Rapture is an evolving collection of *useful* libraries for solving common,
 everyday programming tasks, using advanced features of Scala to offer better

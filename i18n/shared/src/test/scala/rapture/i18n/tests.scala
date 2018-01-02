@@ -54,7 +54,7 @@ object I18nTests extends TestSuite {
     val en: I18n[String, En] = greeting
     val fr: I18n[String, Fr] = greeting
     val both: I18n[String, En with Fr] = greeting
-  } returns ()
+  }.returns(())
 
   val `Check internationalized substitution` = test {
     val greeting = en"Hello world" & fr"Bonjour le monde"
@@ -131,4 +131,13 @@ object I18nTests extends TestSuite {
     msg: String
   } returns "Bonjour"
 
+  val `Get both parent languages from a refined-type i18n` = test {
+    val msg = I18n[En with Fr]("biscuit")
+    (msg[En], msg[Fr])
+  } returns (("biscuit", "biscuit"))
+
+  val `Refined-type i18n can be combined like others` = test {
+    val msg = I18n[En with Fr]("biscuit") & de"german biscuit"
+    (msg[En], msg[Fr], msg[De])
+  } returns (("biscuit", "biscuit", "german biscuit"))
 }

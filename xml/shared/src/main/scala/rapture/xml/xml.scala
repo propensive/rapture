@@ -24,7 +24,7 @@ import language.experimental.macros
 import scala.language.implicitConversions
 
 private[xml] trait Xml_2 {
-  implicit def xmlExtractorMacro[T <: Product, Th]: Extractor[T, Xml] { type Throws = Th } = macro XmlMacros
+  implicit def xmlExtractorMacro[T <: Product, Th]: Extractor[T, Xml] = macro XmlMacros
     .xmlExtractorMacro[T, Th]
 
   implicit def xmlSerializerMacro[T <: Product](implicit ast: XmlAst): Serializer[T, Xml] = macro XmlMacros
@@ -36,12 +36,12 @@ private[xml] trait Xml_1 extends Xml_2 {
 }
 
 private[xml] class DynamicWorkaround(xml: Xml) {
-  def self: Xml = xml.selectDynamic("self")
+  def self: Xml = xml.selectDynamic("self")(null)
 }
 
 trait `Xml.parse` extends MethodConstraint
 
-private[xml] trait XmlDataCompanion[+Type <: XmlDataType[Type, AstType], AstType <: XmlAst]
+private[xml] trait XmlDataCompanion[Type <: XmlDataType[Type, AstType], AstType <: XmlAst]
     extends DataCompanion[Type, AstType] {
 
   type ParseMethodConstraint = `Xml.parse`
@@ -154,7 +154,7 @@ class Xml(val $root: MutableCell, val $path: Vector[Either[Int, String]] = Vecto
     else
       sp match {
         case Left(i) +: tail => apply(i).$extract(tail)
-        case Right(e) +: tail => selectDynamic(e).$extract(tail)
+        case Right(e) +: tail => selectDynamic(e)(null).$extract(tail)
       }
 
   override def toBareString =
@@ -182,7 +182,7 @@ class XmlBuffer(val $root: MutableCell, val $path: Vector[Either[Int, String]] =
     else
       sp match {
         case Left(i) +: tail => apply(i).$extract(tail)
-        case Right(e) +: tail => selectDynamic(e).$extract(tail)
+        case Right(e) +: tail => selectDynamic(e)(null).$extract(tail)
       }
 
   override def toBareString =

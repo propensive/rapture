@@ -31,6 +31,59 @@ trait Formatter[-AstType <: DataAst] {
 
 object DataCompanion { object Empty }
 
+object serializedNames {
+  object inUnderscoreStyle {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name.flatMap {
+        case lower if lower.isLower => lower.toString
+        case upper if upper.isUpper => s"_$upper".toLowerCase
+        case other => other.toString
+      }
+
+      def decode(name: String): String = name.foldLeft(("", false)) {
+        case ((acc, _), '_') => (acc, true)
+        case ((acc, true), other) => (acc+other.toString.toUpperCase, false)
+        case ((acc, false), other) => (acc+other, false)
+      }._1
+    }
+  }
+  
+  object inDashedStyle {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name.flatMap {
+        case lower if lower.isLower => lower.toString
+        case upper if upper.isUpper => s"-$upper".toLowerCase
+        case other => other.toString
+      }
+
+      def decode(name: String): String = name.foldLeft(("", false)) {
+        case ((acc, _), '-') => (acc, true)
+        case ((acc, true), other) => (acc+other.toString.toUpperCase, false)
+        case ((acc, false), other) => (acc+other, false)
+      }._1
+    }
+  }
+  
+  object identical {
+    def apply[V, D] = nameMapperImplicit[V, D]
+    implicit def nameMapperImplicit[V, D] = new NameMapper[V, D] {
+      def encode(name: String): String = name
+      def decode(name: String): String = name
+    }
+  }
+}
+
+object NameMapper {
+  implicit def identityNameMapper[V, D]: NameMapper[V, D] = serializedNames.identical[V, D]
+}
+
+trait NameMapper[+Value, +Data] {
+  def encode(name: String): String
+  def decode(name: String): String
+}
+
 trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
   type ParseMethodConstraint <: MethodConstraint
@@ -60,16 +113,40 @@ trait DataCompanion[+Type <: DataType[Type, DataAst], -AstType <: DataAst] {
 
 case class DynamicApplication[D](path: List[Either[Int, String]], application: ForcedConversion2[D])
 
+object dictionaries {
+  object dynamic {
+    implicit val implicitDictionary: Dictionary[Nothing] = new Dictionary[Nothing](Nil)
+  }
+}
+
+object Dictionary {
+
+  implicit def stringToDefineParam[S <: String](s: S): DefineParam[s.type] = new DefineParam[s.type](s)
+  class DefineParam[-T <: String](val value: String)
+
+  def define[T <: String](params: DefineParam[T]*): Dictionary[T] = new Dictionary[T](params.map(_.value))
+}
+@implicitNotFound("the key ${S} is not in the dictionary")
+class Dictionary[+S <: String](params: Seq[String])
+
 case class DynamicPath[D](path: List[Either[Int, String]]) extends Dynamic {
-  def selectDynamic(v: String) = DynamicPath[D](Right(v) :: path)
-  def applyDynamic(v: String)(i: Int) = DynamicPath[D](Left(i) :: Right(v) :: path)
+  def self = selectDynamic("self")(null)
+  def selectDynamic[S <: String](v: S)(implicit dictionary: Dictionary[v.type]) = DynamicPath[D](Right(v) :: path)
+  def applyDynamic[S <: String](v: String)(i: Int)(implicit dictionary: Dictionary[v.type]) = DynamicPath[D](Left(i) :: Right(v) :: path)
   def apply(i: Int) = DynamicPath[D](Left(i) :: path)
 
-  def updateDynamic(p: String)(value: ForcedConversion2[D]) =
-    DynamicApplication(Right(p) :: path, value)
+  def updateDynamic[S <: String](v: String)(value: ForcedConversion2[D])(implicit dictionary: Dictionary[v.type]) =
+    DynamicApplication(Right(v) :: path, value)
 
   def update(i: Int, value: ForcedConversion2[D]) =
     DynamicApplication(Left(i) :: path, value)
+}
+
+case class DynamicAccess[D](path: List[Either[Int, String]]) extends Dynamic {
+  def self = selectDynamic("self")
+  def selectDynamic(v: String) = DynamicAccess[D](Right(v) :: path)
+  def applyDynamic(v: String)(i: Int) = DynamicAccess[D](Left(i) :: Right(v) :: path)
+  def apply(i: Int) = DynamicAccess[D](Left(i) :: path)
 }
 
 case class MutableCell(var value: Any)
@@ -77,7 +154,9 @@ case class MutableCell(var value: Any)
 trait DynamicData[+T <: DynamicData[T, AstType], +AstType <: DataAst] extends Dynamic {
 
   /** Assumes the Json object wraps a `Map`, and extracts the element `key`. */
-  def selectDynamic(key: String): T = $deref(Right(key) +: $path)
+  def selectDynamic[S <: String](key: S)(implicit dictionary: Dictionary[key.type]): T = $deref(Right(key) +: $path)
+  
+  def self = selectDynamic("self")(null)
 
   //def applyDynamic(key: String)(i: Int = 0): T = $deref(Left(i) +: Right(key) +: $path)
 
@@ -110,6 +189,40 @@ object DataType {
       dataType.$wrap(merge(left, right), Vector())
     }
 
+    def delete(pvs: (DynamicAccess[T] => DynamicAccess[_ <: DataType[T, _ <: AstType]])*): T = {
+      dataType.$wrap(pvs.foldLeft(dataType.$normalize) {
+        case (cur, pv) =>
+          val dPath = pv(DynamicAccess(Nil))
+          val ast = dataType.$ast
+
+          def nav(path: List[Either[Int, String]], dest: Any): Any = path match {
+            case Nil =>
+              ???
+
+            case Right(next) :: Nil =>
+              ast.fromObject(ast.getObject(if(ast.isObject(dest)) dest else Map()) - next)
+              
+            case Right(next) :: list =>
+              val d = try ast.dereferenceObject(dest, next)
+              catch { case e: Exception => ast.fromObject(Map()) }
+              val src = ast.getObject(if (ast.isObject(dest)) dest else Map())
+              ast.fromObject(src + ((next, nav(list, d))))
+
+            case Left(next) :: Nil =>
+              val src = if (ast.isArray(dest)) ast.getArray(dest) else Nil
+              ast.fromArray(src.slice(0, next) ++ src.slice(next + 1, src.length))
+
+            case Left(next) :: list =>
+              val d = try ast.dereferenceArray(dest, next)
+              catch { case e: Exception => ast.fromArray(List()) }
+              val src = if (ast.isArray(dest)) ast.getArray(dest) else Nil
+              ast.fromArray(src.padTo(next + 1, ast.fromObject(Map())).updated(next, nav(list, d)))
+          }
+
+          nav(dPath.path.reverse, cur)
+      })
+    }
+    
     def copy(pvs: (DynamicPath[T] => DynamicApplication[_ <: DataType[T, _ <: AstType]])*): T = {
       dataType.$wrap(pvs.foldLeft(dataType.$normalize) {
         case (cur, pv) =>
@@ -153,18 +266,19 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
   def $extract($path: Vector[Either[Int, String]]): T
 
   def \(key: String): T = $deref(Right(key) +: $path)
+  def \(index: Int): T = $deref(Left(index) +: $path)
 
   def \\(key: String): T = $wrap($ast.fromArray(derefRecursive(key, $normalize)))
 
   def toBareString: String
 
-  private def derefRecursive(key: String, any: Any): List[Any] =
-    if (!$ast.isObject(any)) Nil
-    else
-      $ast.getKeys(any).to[List].flatMap {
-        case k if k == key => List($ast.dereferenceObject(any, k))
-        case k => derefRecursive(key, $ast.dereferenceObject(any, k))
-      }
+  private def derefRecursive(key: String, any: Any): Seq[Any] =
+    if ($ast.isObject(any)) $ast.getKeys(any).to[Seq].flatMap {
+      case k if k == key => Seq($ast.dereferenceObject(any, k))
+      case k => derefRecursive(key, $ast.dereferenceObject(any, k))
+    } else if ($ast.isArray(any)) $ast.getArray(any).flatMap(derefRecursive(key, _))
+      
+    else Nil
 
   protected def doNormalize(orEmpty: Boolean): Any = {
     yCombinator[(Any, Vector[Either[Int, String]]), Any] { fn =>
@@ -176,9 +290,14 @@ trait DataType[+T <: DataType[T, AstType], +AstType <: DataAst] {
               try e.bimap($ast.dereferenceArray(j, _), $ast.dereferenceObject(j, _))
               catch {
                 case TypeMismatchException(exp, fnd) => throw TypeMismatchException(exp, fnd)
-                case e: Exception =>
+                case exc: Exception =>
                   if (orEmpty) DataCompanion.Empty
-                  else throw MissingValueException()
+                  else {
+                    e match {
+                      case Left(e) => throw MissingValueException(s"[$e]")
+                      case Right(e) => throw MissingValueException(e)
+                    }
+                  }
               }
             } else
               throw TypeMismatchException(

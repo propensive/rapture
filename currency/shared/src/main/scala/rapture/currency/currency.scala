@@ -131,6 +131,11 @@ case class Money[C <: Currency.Key](currency: Currency { type Key = C }, amount:
 
   def /[N: Numeric](divisor: N): Money[C] = *(1.0 / implicitly[Numeric[N]].toDouble(divisor))
 
+  def <(m: Money[C]) = amount < m.amount
+  def <=(m: Money[C]) = amount <= m.amount
+  def >(m: Money[C]) = amount > m.amount
+  def >=(m: Money[C]) = amount >= m.amount
+
   override def toString = {
     implicit val df: DecimalFormat = DecimalPlaces(currency.decimalPlaces)
     s"${currency.prefix}${String(amount)}${currency.suffix}"

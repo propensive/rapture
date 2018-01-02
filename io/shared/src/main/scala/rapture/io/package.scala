@@ -54,5 +54,7 @@ object `package` {
   implicit def writable[Res](res: Res): Writable.Capability[Res] = alloc(res)
   implicit def movable[Res](res: Res): Movable.Capability[Res] = alloc(res)
   implicit def sizable[Res](res: Res): Sizable.Capability[Res] = alloc(res)
+  implicit def hasResourceName[Res](res: Res): HasResourceName.Capability[Res] = alloc(res)
+  implicit def hasContentType[Res](res: Res): HasContentType.Capability[Res] = alloc(res)
 
 }

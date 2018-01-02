@@ -21,7 +21,7 @@ import rapture.base._
 import rapture.data._
 
 private[xml] object XmlMacros {
-  def xmlExtractorMacro[T: c.WeakTypeTag, Th](c: WhiteboxContext): c.Expr[Extractor[T, Xml] { type Throws = Th }] =
+  def xmlExtractorMacro[T: c.WeakTypeTag, Th](c: WhiteboxContext): c.Expr[Extractor[T, Xml]] =
     Macros.extractorMacro[T, Xml, Th](c)
 
   //def xmlBufferExtractorMacro[T: c.WeakTypeTag](c: Context) =

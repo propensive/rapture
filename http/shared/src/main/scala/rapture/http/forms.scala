@@ -25,7 +25,7 @@ import rapture.uri._
 import rapture.net._
 import rapture.dom._
 import rapture.html._
-import rapture.css._
+import rapture.css._, dynamicCssReferencing._
 
 import scala.collection.mutable.ListBuffer
 
@@ -392,21 +392,21 @@ object Forms extends Widgets with Parsers {
     def hideLabels = false
 
     def wrap[T, F <: Field[T], W <: Widget](field: F, widget: W)(implicit renderer: Renderer[T, F, W]): FormPart =
-      Div(classes = List.strap("control-group", field.validationIssues.headOption.map(x => "error")))(
-          Label(classes = Seq("control-label") /*, forName = field.name.name*/ )(TextNode(field.label)),
-          Div(classes = Seq("controls"))(
+      Div(cls = List.strap("control-group", field.validationIssues.headOption.map(x => "error")))(
+          Label(cls = "control-label" /*, forName = field.name.name*/ )(TextNode(field.label)),
+          Div(cls = 'controls)(
               renderer.render(field, widget),
               Div(
                   Div,
                   field.validationIssues.map { i =>
-                    Span(classes = Seq("help-inline"))(i + " ")
+                    Span(cls = "help-inline")(i + " ")
                   }: _*
               )
           )
       )
 
     def render: RenderedForm =
-      Form(enctype = encoding.toString, classes = Seq("form"), action = formAction, method = postMethod.toString)(
+      Form(enctype = encoding.toString, cls = 'form, action = formAction, method = postMethod.toString)(
           Fieldset(
               formParts.head,
               List.strap(
@@ -420,7 +420,7 @@ object Forms extends Widgets with Parsers {
       Div(
           Input(htmlSyntax.name = Symbol(formName + "_submit"),
                 typ = "submit",
-                classes = Seq("btn", "btn-primary"),
+                cls = List("btn", "btn-primary"),
                 value = submitButtonText))
 
     def submitButtonText = "Save"
@@ -439,7 +439,7 @@ object Forms extends Widgets with Parsers {
     def wrap[T, F <: Field[T], W <: Widget](field: F, widget: W)(implicit renderer: Renderer[T, F, W]): FormPart = {
       List.strap(
           field.validationIssues.map { err =>
-            Tr(Td(colspan = 3)(""), Td(classes = Seq("validation"))(err))
+            Tr(Td(colspan = 3)(""), Td(cls = 'validation)(err))
           },
           Tr(Td,
              List.strap(

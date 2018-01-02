@@ -56,7 +56,7 @@ private[cli] object CliMacros {
           val next: c.Tree = if (inline) {
             val strings = param.map {
               case Left(str) =>
-                Literal(Constant(str))
+                q"$str"
               case Right(tr) =>
                 q"""$tr.elems.mkString(" ")"""
             }
@@ -64,7 +64,7 @@ private[cli] object CliMacros {
           } else {
             val values = param.map {
               case Left(str) =>
-                q"_root_.scala.Vector(${Literal(Constant(str))})"
+                q"_root_.scala.Vector($str)"
               case Right(tr) =>
                 q"$tr.elems"
             }
@@ -92,9 +92,9 @@ private[cli] object CliMacros {
               case chr =>
                 add(chr)
             }
-          case tr: c.Tree =>
+          case tr =>
             inline = inline || singleQuoted || doubleQuoted
-            param = param :+ Right(tr)
+            param = param :+ Right(tr.asInstanceOf[c.Tree])
         }
 
         nextParam()

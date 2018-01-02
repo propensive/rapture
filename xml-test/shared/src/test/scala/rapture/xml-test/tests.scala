@@ -21,8 +21,12 @@ import rapture.core._
 import rapture.xml._
 import rapture.data.Parser
 import rapture.test._
+import rapture.data.dictionaries.dynamic._
 
-import scala.util
+
+class TestRun extends Programme {
+  include(StdlibTests)
+}
 
 private[test] case class Foo(alpha: String, beta: Int)
 private[test] case class Bar(foo: Foo, gamma: Double)
@@ -41,16 +45,12 @@ private[test] case class E(e: F)
 private[test] case class F(f: Int)
 
 import xmlBackends._
-class StdlibTests() extends XmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
+object StdlibTests extends XmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
 
-class MutableStdlibTests() extends MutableXmlTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
+object StdlibPatternMatchTests extends XmlPatternMatchingTests(stdlib.implicitXmlAst, stdlib.implicitXmlStringParser)
 
-abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends TestSuite {
-
-  implicit def implicitAst: XmlAst = ast
-  implicit def implicitParser: Parser[String, XmlAst] = parser
-
-  val source1 = xml"""<source>
+object Data {
+  def source1(implicit ast: XmlAst, parser: Parser[String, XmlAst]) = xml"""<source>
     <string>Hello</string>
     <int>42</int>
     <double>3.14159</double>
@@ -80,6 +80,14 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
     </baz2>
     <self>0</self>
   </source>"""
+}
+
+abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends TestSuite {
+
+  implicit def implicitAst: XmlAst = ast
+  implicit def implicitParser: Parser[String, XmlAst] = parser
+
+  val source1 = Data.source1
 
   val `Extract Int` = test {
     source1.int.as[Int]
@@ -123,7 +131,7 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Extract case class with missing tried value` = test {
     source1.baz.as[Baz2]
-  } returns Baz2("test", util.Failure(MissingValueException()))
+  } returns Baz2("test", util.Failure(MissingValueException("beta")))
 
   val `Extract case class with present optional value` = test {
     source1.baz2.as[Baz]
@@ -167,17 +175,15 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
   val `Check missing value failure` = test {
     source1.nothing.as[Int]
-  } throws MissingValueException()
-
-  // FIXME: Add pattern-matching tests
+  } throws MissingValueException("nothing")
 
   val `Serialize string` = test {
     Xml("Hello World!").toString
-  } returns "Hello World!"
+  } returns "xml\"\"\"Hello World!\"\"\""
 
   val `Serialize int` = test {
     Xml(1648).toString
-  } returns "1648"
+  } returns "xml\"\"\"1648\"\"\""
 
   /*val `Serialize array` = test {
     Json(List(1, 2, 3)).toString
@@ -205,42 +211,41 @@ abstract class XmlTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends Tes
 
 }
 
-abstract class MutableXmlTests(ast: XmlBufferAst, parser: Parser[String, XmlBufferAst]) extends TestSuite {
+abstract class XmlPatternMatchingTests(ast: XmlAst, parser: Parser[String, XmlAst]) extends TestSuite {
+  
+  implicit def implicitAst: XmlAst = ast
+  implicit def implicitParser: Parser[String, XmlAst] = parser
 
-  implicit def implicitAst: XmlBufferAst = ast
-  implicit def implicitParser: Parser[String, XmlBufferAst] = parser
+  val source1 = Data.source1
+  
+  val `Pattern matching` = test {
+    Xml("") match {
+      case xml"""""" => "Match"
+      case _ => "Does not match"
+    }
+  } returns "Match"
 
-  case class Foo(alpha: String, beta: Int)
-  case class Bar(foo: Foo, gamma: Double)
+  val `Match string` = test {
+    source1 match {
+      case xml"""<string>$h<string>""" => h.as[String]
+    }
+  } returns "Hello"
 
-  val source1 = xmlBuffer"""<source>
-    <string>Hello</string>
-    <int>42</int>
-    <double>3.14159</double>
-    <boolean>true</boolean>
-    <list>
-      <item>1</item>
-      <item>2</item>
-      <item>3</item>
-    </list>
-    <foo>
-      <alpha>test</alpha>
-      <beta>1</beta>
-    </foo>
-    <bar>
-      <foo>
-        <alpha>test2</alpha>
-        <beta>2</beta>
-      </foo>
-      <gamma>2.7</gamma>
-    </bar>
-    <baz>
-      <alpha>test</alpha>
-    </baz>
-    <baz2>
-      <alpha>test</alpha>
-      <beta>7</beta>
-    </baz2>
-    <self>0</self>
-  </source>"""
+  val `Match int` = test {
+    source1 match {
+      case xml"""<int>$h<int>""" => h.as[Int]
+    }
+  } returns 42
+
+  val `Match double` = test {
+    source1 match {
+      case xml"""<double>$h<double>""" => h.as[Double]
+    }
+  } returns 3.14159
+
+  val `Match boolean` = test {
+    source1 match {
+      case xml"""<boolean>$h<boolean>""" => h.as[Boolean]
+    }
+  } returns true
 }

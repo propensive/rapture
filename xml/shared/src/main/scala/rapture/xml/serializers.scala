@@ -24,11 +24,11 @@ import language.higherKinds
 
 private[xml] case class DirectXmlSerializer[T](ast: XmlAst)
 
-private[xml] trait Serializers {
+private[xml] case class BasicXmlSerializer[T](serialization: T => Any) extends Serializer[T, Xml] {
+  def serialize(t: T): Any = serialization(t)
+}
 
-  case class BasicXmlSerializer[T](serialization: T => Any) extends Serializer[T, Xml] {
-    def serialize(t: T): Any = serialization(t)
-  }
+private[xml] trait Serializers extends Serializers_1{
 
   implicit def xmlBufferSerializer[T](implicit ser: Serializer[T, Xml]): Serializer[T, XmlBuffer] =
     new Serializer[T, XmlBuffer] { def serialize(t: T): Any = ser.serialize(t) }
@@ -90,4 +90,9 @@ private[xml] trait Serializers {
     BasicXmlSerializer[XmlType]({ j =>
       if (j.$ast == ast) j.$normalize else ast.convert(j.$normalize, j.$ast)
     })
+}
+
+trait Serializers_1 {
+  implicit def generalStringSerializer[S](implicit ast: XmlAst, ss: StringSerializer[S]): Serializer[S, Xml] =
+    BasicXmlSerializer(s => ast fromString ss.serialize(s))
 }

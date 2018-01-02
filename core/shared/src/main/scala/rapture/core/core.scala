@@ -23,7 +23,9 @@ import language.higherKinds
 object AssignedName {
   implicit def assignedNameImplicit: AssignedName = macro CoreMacros.assignedNameMacro
 }
-class AssignedName(val name: String) extends AnyVal
+case class AssignedName(name: String) extends AnyVal {
+  override def toString = s"`$name`"
+}
 
 object MethodName {
   implicit def assignedMethodNameImplicit: MethodName = macro CoreMacros.assignedMethodNameMacro
@@ -50,6 +52,37 @@ object Var {
   }
 }
 
+
+object OptionalParameter {
+  implicit def autoWrapSpecifiedParameter[T](value: T): OptionalParameter[T] = SpecifiedParameter[T](value)
+}
+
+sealed trait OptionalParameter[+T] { def apply(): Option[T] }
+
+
+object SeqParameter {
+  implicit def listToSeqParameter[T](seq: Seq[T]): SeqParameter[T] =
+    SeqParameter(seq: _*)
+  
+  implicit def optionToSeqParameter[T](opt: Option[T]): SeqParameter[T] =
+    SeqParameter(opt.to[Seq]: _*)
+  
+  implicit def anyToSeqParameter[T](value: T): SeqParameter[T] = SeqParameter(value)
+}
+
+case class SeqParameter[T](elements: T*)
+
+
+
+case class SpecifiedParameter[+T] (value: T) extends OptionalParameter[T] {
+  def apply(): Option[T] = Some(value)
+}
+
+case object UnspecifiedParameter extends OptionalParameter[Nothing] {
+  def apply(): Option[Nothing] = None
+}
+
+
 object Annex {
   implicit def annexValueWithTypeclass[V, Tc[_]](v: V)(implicit tc: Tc[V]): Annex[Tc] =
     new Annex[Tc] {
@@ -65,3 +98,5 @@ abstract class Annex[Typeclass[_]] {
   def typeclass: Typeclass[Value]
   def apply[Return](fn: Typeclass[Value] => Value => Return): Return = fn(typeclass)(value)
 }
+
+

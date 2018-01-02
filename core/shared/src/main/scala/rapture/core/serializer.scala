@@ -165,47 +165,46 @@ case class IntegerSignificantFigures(n: Int) extends IntegerFormat {
 }
 
 object StringSerializer {
-  implicit def booleanSerializer(implicit bs: BooleanRepresentation): StringSerializer[Boolean] =
-    new StringSerializer[Boolean] {
-      def serialize(s: Boolean): String = if (s) bs.trueValue else bs.falseValue
-    }
 
-  implicit val charSerializer: StringSerializer[Char] = new StringSerializer[Char] {
-    def serialize(s: Char): String = s.toString
+  def apply[T](f: T => String): StringSerializer[T] = new StringSerializer[T]{
+    override def serialize(ser: T): String = f(ser)
   }
+
+  implicit def booleanSerializer(implicit bs: BooleanRepresentation): StringSerializer[Boolean] =
+    StringSerializer{s => if (s) bs.trueValue else bs.falseValue}
+
+  implicit val charSerializer: StringSerializer[Char] = StringSerializer(_.toString)
 
   implicit def byteSerializer(implicit df: IntegerFormat): StringSerializer[Byte] =
-    new StringSerializer[Byte] { def serialize(s: Byte): String = df.format(BigInt(s)) }
+    StringSerializer{s => df.format(BigInt(s)) }
 
   implicit def shortSerializer(implicit df: IntegerFormat): StringSerializer[Short] =
-    new StringSerializer[Short] { def serialize(s: Short): String = df.format(BigInt(s)) }
+    StringSerializer{s => df.format(BigInt(s)) }
 
   implicit def longSerializer(implicit df: IntegerFormat): StringSerializer[Long] =
-    new StringSerializer[Long] { def serialize(s: Long): String = df.format(BigInt(s)) }
+    StringSerializer{s => df.format(BigInt(s)) }
 
   implicit def intSerializer(implicit df: IntegerFormat): StringSerializer[Int] =
-    new StringSerializer[Int] { def serialize(s: Int): String = df.format(BigInt(s)) }
+    StringSerializer{s => df.format(BigInt(s)) }
 
-  implicit val stringSerializer: StringSerializer[String] = new StringSerializer[String] {
-    def serialize(s: String): String = s
-  }
+  implicit val stringSerializer: StringSerializer[String] = StringSerializer(identity)
 
   implicit def doubleSerializer(implicit df: DecimalFormat): StringSerializer[Double] =
-    new StringSerializer[Double] { def serialize(s: Double): String = df.format(BigDecimal(s)) }
+    StringSerializer{s => df.format(BigDecimal(s)) }
 
   implicit def floatSerializer(implicit df: DecimalFormat): StringSerializer[Float] =
-    new StringSerializer[Float] { def serialize(f: Float): String = df.format(BigDecimal(f.toDouble)) }
+    StringSerializer{f => df.format(BigDecimal(f.toDouble)) }
 
   implicit def bigDecimalSerializer(implicit df: DecimalFormat): StringSerializer[BigDecimal] =
-    new StringSerializer[BigDecimal] { def serialize(s: BigDecimal): String = df.format(s) }
+    StringSerializer{s => df.format(s) }
 
   implicit def bigIntSerializer(implicit df: IntegerFormat): StringSerializer[BigInt] =
-    new StringSerializer[BigInt] { def serialize(s: BigInt): String = df.format(s) }
+    StringSerializer{s => df.format(s) }
 }
 
 /** A generic string serializer */
 @implicitNotFound(
-    "It is not possible to serialize a value of type ${T} to a String without a" +
+    "It is not possible to serialize a value of type $"+"{T} to a String without a" +
       " valid StringSerializer instance in scope.")
 trait StringSerializer[-T] { stringSerializer =>
   def serialize(string: T): String

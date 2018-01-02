@@ -24,10 +24,6 @@ import java.io._
 
 object Tcp {
 
-  /** Listens for incoming connections on the specified port
-    *
-    * @usecase def listen(port: Int): Input[Byte]
-    * @param port the port to listen to */
   def listen[K](port: Int)(implicit ib: InputBuilder[InputStream, K],
                            ob: OutputBuilder[OutputStream, K],
                            mode: Mode[`Tcp.listen`]): mode.Wrap[(Input[K], Output[K]), Exception] = mode.wrap {
@@ -46,13 +42,6 @@ object Tcp {
       }
     }
   }
-
-  /*def listen(port: Int, local: Boolean = true, timeout: Int = 2000) = {
-    val socket = new ServerSocket()
-    socket.setSoTimeout(timeout)
-    if(local) socket.bind(new InetSocketAddress("127.0.0.1", port))
-    else socket.bind(new InetSocketAddress(port))
-  }*/
 }
 
 object SocketUri {

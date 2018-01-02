@@ -17,8 +17,8 @@
 
 package rapture.i18n
 
-import scala.reflect._
 import annotation.unchecked._
+import scala.reflect.runtime.universe._
 
 object languages {
   object aa extends Locale[Aa]()
@@ -207,7 +207,7 @@ object languages {
   object zu extends Locale[Zu]()
 }
 
-case class DefaultLanguage[-L <: Language](tag: ClassTag[L @uncheckedVariance])
+case class DefaultLanguage[-L <: Language](tag: TypeTag[L @uncheckedVariance])
 
 trait Language
 final class Aa extends Language

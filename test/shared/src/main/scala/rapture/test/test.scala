@@ -33,10 +33,10 @@ object Util {
 
   def entriesFromZip(f: FsUrl): Seq[String] = {
     import java.util.zip._
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     val zf = new ZipFile(f.javaFile)
     entries.getOrElseUpdate(f,
-                            zf.entries
+                            enumerationAsScalaIteratorConverter(zf.entries).asScala
                               .to[List]
                               .filter(_.getName
                                     endsWith ".class")
@@ -119,7 +119,7 @@ trait TestSuite {
     type Return
 
     def dependencies = Set[Test]()
-    def action(): Return
+    def action: () => Return
     def check(run: () => Return): TestResult
     def name: String
     def runCheck(): TestResult =
@@ -135,7 +135,7 @@ trait TestSuite {
     def returns(chk: => Return)(implicit assigned: AssignedName) = new Test {
       type Return = thisTest.Return
       def name = assigned.name
-      def action(): Return = thisTest.action()
+      def action: () => Return = thisTest.action
       def check(run: () => Return): TestResult = {
         val result = run()
         val y = chk
@@ -146,7 +146,7 @@ trait TestSuite {
     def satisfies(chk: Return => Boolean)(implicit assigned: AssignedName) = new Test {
       type Return = thisTest.Return
       def name = assigned.name
-      def action(): Return = thisTest.action()
+      def action: () => Return = thisTest.action
       def check(run: () => Return): TestResult = {
         val result = run()
         if (chk(result)) Success else Failure(s"Result $result did not satisfy predicate.")
@@ -156,7 +156,7 @@ trait TestSuite {
     def throws[E <: Throwable: ClassTag](cls: Class[E])(implicit assigned: AssignedName): Test = new Test {
       type Return = thisTest.Return
       def name = assigned.name
-      def action(): Return = thisTest.action()
+      def action: () => Return = thisTest.action
       def check(run: () => Return): TestResult =
         try {
           run()
@@ -170,7 +170,7 @@ trait TestSuite {
     def throws[E <: Throwable](exp: E)(implicit assigned: AssignedName): Test = new Test {
       type Return = thisTest.Return
       def name = assigned.name
-      def action(): Return = thisTest.action()
+      def action: () => Return = thisTest.action
       def check(run: () => Return): TestResult =
         try {
           run()
@@ -203,7 +203,7 @@ trait TestSuite {
     type Return = T
 
     def name = "Unnamed test"
-    def action(): Return = act
+    def action: () => Return = () => act
     def check(run: () => Return): TestResult = Success
   }
 
@@ -264,10 +264,7 @@ object run {
     val matchingMethods = allMethods filter { m =>
       paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test])
     }
-    val methodNames = matchingMethods map { m =>
-      Select(ts.tree, termName(c, m.name.toString))
-    }
-    val listApply = Select(reify(List).tree, termName(c, "apply"))
+    val methodNames = matchingMethods map { m => q"$ts.${m.name.toTermName}" }
 
     c.Expr(q"""_root_.rapture.test.run.doTests(_root_.scala.List(..$methodNames), $mode)""")
   }
@@ -282,11 +279,10 @@ object run {
       paramLists(c)(m).isEmpty && m.returnType.weak_<:<(weakTypeOf[TestSuite#Test])
     }
     val methodNames = matchingMethods map { m =>
-      val sel = Select(suite.tree, termName(c, m.name.toString))
+      val sel = q"${suite.tree}.${m.name.toTermName}"
       val suiteName = cls.toString.replaceAll(".type$", "").split("\\.").last
       q"""($suiteName+" / "+$sel.name, $sel)"""
     }
-    val listApply = Select(reify(List).tree, termName(c, "apply"))
 
     c.Expr[Unit](q"""includeAll(_root_.scala.List(..$methodNames))""")
   }

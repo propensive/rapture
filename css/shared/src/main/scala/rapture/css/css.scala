@@ -17,17 +17,109 @@
 
 package rapture.css
 
-import rapture.data._
+import rapture.dom._
+import rapture.core._
+
+import scala.collection.immutable.ListMap
 
 object Css {
-  implicit def cssSerializer: Serializer[String, Css] =
-    new Serializer[String, Css] { def serialize(s: String) = Css(s) }
+
+  implicit def stringSerializer: StringSerializer[Css] = new StringSerializer[Css] {
+    def serialize(css: Css): String = css.content
+  }
 }
 
-case class Css(content: String) {
+case class Css(properties: ListMap[String, String]) {
+  def content = properties.map { case (k, v) => s"$k: $v;" }.mkString(" ")
   override def toString = s"""css${"\"" * 3}$content${"\"" * 3}"""
+  def +(css: Css) = Css(properties ++ css.properties)
 }
 
-case class CssStylesheet(content: String) {
-  override def toString = s"""cssStylesheet${"\"" * 3}$content${"\"" * 3}"""
+object CssStylesheet { 
+  implicit def stringSerializer: StringSerializer[CssStylesheet] = new StringSerializer[CssStylesheet] {
+    def serialize(css: CssStylesheet): String = css.content
+  }
 }
+case class CssStylesheet(rules: List[CssRule]) {
+  override def toString = s"""cssStylesheet${"\"" * 3}$content${"\"" * 3}"""
+  def content = rules.mkString("\n")
+}
+
+object DomId {
+  def auto(implicit assignedName: AssignedName) = DomId(assignedName.name)
+}
+case class DomId(id: String) {
+  override def toString = s"#$id"
+}
+
+object CssClass {
+  def auto(implicit assignedName: AssignedName) = CssClass(Set(assignedName.name))
+  val empty = CssClass(Set())
+}
+
+case class CssClass(classes: Set[String]) {
+  def +(cssClass: CssClass): CssClass = CssClass(classes ++ cssClass.classes)
+
+  def asString = classes.mkString(" ")
+  
+  override def toString = classes.mkString(".", ".", "")
+}
+
+object CssEmbed {
+  implicit def embedCssClass(cssClass: CssClass): CssEmbed = CssEmbed(cssClass.classes.mkString(".", ".", ""))
+  implicit def embedDomId(domId: DomId): CssEmbed = CssEmbed(s"#${domId.id}")
+}
+case class CssEmbed(content: String)
+
+
+object Embeddable {
+  implicit val domId: Embeddable[DomId, CssStylesheet] = new Embeddable[DomId, CssStylesheet] { def embed(value: DomId): String = s"#${value.id}" }
+  
+  implicit val cssClass: Embeddable[CssClass, CssStylesheet] = new Embeddable[CssClass, CssStylesheet] {
+    def embed(value: CssClass): String = value.classes.mkString(".", ".", "")
+  }
+  
+  implicit val domTag: Embeddable[Tag[_, _, _], CssStylesheet] = new Embeddable[Tag[_, _, _], CssStylesheet] {
+    def embed(value: Tag[_, _, _]): String = value.tagName.toLowerCase
+  }
+  
+  implicit val css: Embeddable[Css, CssStylesheet] = new Embeddable[Css, CssStylesheet] {
+    def embed(value: Css): String = value.content
+  }
+  
+  implicit val string: Embeddable[String, CssStylesheet] = new Embeddable[String, CssStylesheet] {
+    def embed(value: String): String = value
+  }
+  
+  implicit val int: Embeddable[Int, CssStylesheet] = new Embeddable[Int, CssStylesheet] {
+    def embed(value: Int): String = value.toString
+  }
+  
+  implicit val double: Embeddable[Double, CssStylesheet] = new Embeddable[Double, CssStylesheet] {
+    def embed(value: Double): String = value.toString
+  }
+  
+  implicit val cssString: Embeddable[String, Css] = new Embeddable[String, Css] {
+    def embed(value: String): String = value
+  }
+  
+  implicit val cssInt: Embeddable[Int, Css] = new Embeddable[Int, Css] {
+    def embed(value: Int): String = value.toString
+  }
+  
+  implicit val cssDouble: Embeddable[Double, Css] = new Embeddable[Double, Css] {
+    def embed(value: Double): String = value.toString
+  }
+  
+  implicit val cssCss: Embeddable[Css, Css] = new Embeddable[Css, Css] {
+    def embed(value: Css): String = value.content
+  }
+}
+
+trait Embeddable[-From, +To] { def embed(value: From): String }
+
+object Embed {
+  implicit def embed[From, To](value: From)(implicit embeddable: Embeddable[From, To]): Embed[To] = Embed(embeddable.embed(value))
+}
+
+case class Embed[To](content: String)

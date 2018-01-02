@@ -1,15 +1,18 @@
 language: scala
 services:
   - docker
+sudo: required
 git:
   depth: 50
 scala:
 - 2.10.6
 - 2.11.8
+- 2.12.1
+
 jdk:
 - oraclejdk8
 script:
-- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "dev" && $(cat version.sbt) =~ "-SNAPSHOT" ]] ; then sbt ++$TRAVIS_SCALA_VERSION test publish gitSnapshots publish ; else sbt ++$TRAVIS_SCALA_VERSION test publishLocal; fi
+- if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "dev" && $(cat version.sbt) =~ "-SNAPSHOT" ]] ; then sbt ++$TRAVIS_SCALA_VERSION test publish gitSnapshots publish ; else sbt ++$TRAVIS_SCALA_VERSION test ; fi
 notifications:
   webhooks:
     urls:
@@ -22,4 +25,17 @@ env:
   global:
   - secure: DyrwS40Re2KfnuEMXNDkrWHDLeXzBsM1pCUBWy8ApexKEwI2SuO4at2th6yC8QvvLMmOkvDkheRVg1yENYTtUjerx4HATEoQcQ6RFjAfw4RmQLuUYWZFomGJ/q0KQ2EZmCCljbXM1q9vnhETuCgOcAMS5IRYOJf0EPYPFNArt8A=
   - secure: c5OZn0AALmuPiZz8VYDqUNfJzxoUJ6dO/i1J3QQ/b9DQd2gWkdpAvpgqLX7SdyL26IssWPMJ4Zc6utMd8ONLrCdoPaFJr1arflwpSuP+tadxJEl2H0EBjSL2WFsce8j7HbhwGtoVwee2bKJ5gAMilInQXSoMqm9b5EBIN0JA2Ks=
-sudo: false
+
+
+cache:
+  directories:
+  - $HOME/.sbt/0.13/dependency
+  - $HOME/.sbt/boot/
+  - $HOME/.sbt/launchers
+  - $HOME/.ivy2/cache
+
+before_cache:
+  - du -h -d 1 $HOME/.ivy2/cache
+  - du -h -d 2 $HOME/.sbt/
+  - find $HOME/.sbt -name "*.lock" -type f -delete
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete

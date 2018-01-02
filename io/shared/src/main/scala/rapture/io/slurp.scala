@@ -89,13 +89,6 @@ class StringOutput extends {
 object Slurpable {
   class Capability[Res](res: Res) {
 
-    /** Reads in the entirety of the stream and accumulates it into an appropriate object
-      * depending on the availability of implicit Accumulator type class objects in scope.
-      *
-      * @usecase def slurp[Char](): String
-      * @usecase def slurp[Byte](): Array[Byte]
-      * @tparam Data The units of data being slurped
-      * @return The accumulated data */
     def slurp[Data]()(implicit accumulatorBuilder: AccumulatorBuilder[Data],
                       mode: Mode[`Slurpable#slurp`],
                       sr: Reader[Res, Data],
