@@ -1,4 +1,6 @@
 language: scala
+services:
+  - docker
 sudo: required
 git:
   depth: 50
