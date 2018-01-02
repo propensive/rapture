@@ -52,8 +52,8 @@ lazy val rapture = project.in(file("."))
 lazy val raptureJVM = project.in(file(".raptureJVM"))
   .settings(moduleName := "rapture")
   .settings(raptureSettings)
-  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, mailJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsJVM, cssJVM, currencyJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM, java8SupportJVM)
-  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, mailJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsJVM, cssJVM, currencyJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM, java8SupportJVM)
+  .aggregate(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, mailJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsJVM, cssJVM, currencyJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM, java8SupportJVM, unixsocketJVM)
+  .dependsOn(baseJVM, coreJVM, timeJVM, uriJVM, codecJVM, cryptoJVM, csvJVM, ioJVM, fsJVM, netJVM, httpJVM, mimeJVM, cliJVM, mailJVM, logJVM, i18nJVM, googleTranslateJVM, textJVM, latexJVM, testJVM, dataJVM, xmlJVM, jsJVM, cssJVM, currencyJVM, jsonJVM, htmlJVM, domJVM, coreScalazJVM, httpJsonJVM, java8SupportJVMi, unixsocketJVM)
   
 lazy val raptureJS = project.in(file(".raptureJS"))
   .settings(moduleName := "rapture")
@@ -159,6 +159,18 @@ lazy val `net-test` = crossProject.dependsOn(net, test, json, `json-circe`)
 
 lazy val netTestJVM = `net-test`.jvm
 lazy val netTestJS = `net-test`.js
+
+// rapture-unixsocket
+// this is not a scala-js project - it may only be used on the jvm and on linux
+lazy val unixsocketJVM = (project in file("unixsocket/jvm")).dependsOn(io.jvm, core.jvm, net.jvm, uri.jvm)
+  .settings(moduleName := "rapture-unixsocket")
+  .settings(raptureSettings: _*)
+  .settings(libraryDependencies ++= Seq(
+    "com.kohlschutter.junixsocket"  %   "junixsocket-native"        % "2.0.4",
+    "com.kohlschutter.junixsocket"  %   "junixsocket-native-common" % "2.0.4",
+    "com.kohlschutter.junixsocket"  %   "junixsocket-common"        % "2.0.4",
+    "org.apache.httpcomponents"     %   "httpclient"                % "4.5.2"
+  ))
 
 // rapture-time
 lazy val time = crossProject.dependsOn(core)
