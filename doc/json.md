@@ -42,7 +42,7 @@ The following backends are available:
 
 Notes:
  [1] Jackson (`jackson`) is a read-only backend (does not support mutable JSON, i.e. `JsonBuffer` is not supported).
- [2] Scala standard library JSON (`scalaJson`) backend got removed in v.2.0 because it is very slow.
+ [2] Scala standard library JSON (`scalaJson`) backend got removed in v2.0.0 because it is deprecated.
 
 It is also possible to integrate with other JSON backends, though this is not
 covered by this document. Anyone interested should look at the existing
@@ -412,7 +412,7 @@ or define a dictionary
 ```scala
 implicit val dict = rapture.data.Dictionary.define("name", "color", "varieties", ...)
 ```
-in order to compile your code. It goes part of the way towards ensuring you don't write `colo` when you meant `color`.
+in order to compile your code. It goes part of the way towards ensuring you don't write `colour` when you meant `color`.
 
 
 Mutable JSON is not yet available for all backends, though this work is in
