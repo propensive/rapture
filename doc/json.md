@@ -31,14 +31,18 @@ libraries, licensing and policy choices.
 The following backends are available:
 
  - Argonaut (`argonaut`)
- - Jackson (`jackson`)
+ - Jackson (`jackson`) [1]
  - Jawn (`jawn`)
  - JFC (`jfc`)
  - JSON4S (`json4s`)
  - Lift (`lift`)
  - Play (`play`)
- - Scala standard library JSON (`scalaJson`)
+ - Scala standard library JSON (`scalaJson`) [2]
  - Spray (`spray`)
+
+Notes:
+ [1] Jackson (`jackson`) is a read-only backend (does not support mutable JSON, i.e. `JsonBuffer` is not supported).
+ [2] Scala standard library JSON (`scalaJson`) backend got removed in v2.0.0 because it is deprecated.
 
 It is also possible to integrate with other JSON backends, though this is not
 covered by this document. Anyone interested should look at the existing
@@ -399,6 +403,17 @@ It is additionally possible to append items to the end of an array using the
 ```scala
 jb.fruit.varieties += "braeburn"
 ```
+
+Note that it is required to
+```scala
+import rapture.json.dictionaries.dynamic._
+```
+or define a dictionary
+```scala
+implicit val dict = rapture.data.Dictionary.define("name", "color", "varieties", ...)
+```
+in order to compile your code. It goes part of the way towards ensuring you don't write `colour` when you meant `color`.
+
 
 Mutable JSON is not yet available for all backends, though this work is in
 progress. Note that the underlying JSON backend does not need to be inherently
