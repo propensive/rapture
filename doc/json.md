@@ -40,9 +40,9 @@ The following backends are available:
  - Scala standard library JSON (`scalaJson`) [2]
  - Spray (`spray`)
 
-Note:
- 1. Jackson (`jackson`) is a read-only backend (does not support mutable JSON).
- 2. Scala standard library JSON (`scalaJson`) backend (jsonBackends.scalaJson) got removed in v.2.0 because it is very slow.
+Notes:
+ [1] Jackson (`jackson`) is a read-only backend (does not support mutable JSON, i.e. `JsonBuffer` is not supported).
+ [2] Scala standard library JSON (`scalaJson`) backend got removed in v.2.0 because it is very slow.
 
 It is also possible to integrate with other JSON backends, though this is not
 covered by this document. Anyone interested should look at the existing
